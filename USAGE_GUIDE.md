@@ -1,6 +1,7 @@
-# MathInsight 사용 가이드
+# MathInsight 예시 시나리오
 
-학원(원장)·학부모·학생이 각각 다른 화면을 씁니다. 아래 **예시 시나리오**대로 따라 하면 처음부터 끝까지 연결할 수 있습니다.
+전체 사용 설명은 **[README.md](./README.md)** 를 참고하세요.  
+아래는 **이름·이메일 예시**가 있는 따라 하기용 시나리오입니다.
 
 - 기술·DB 설정: [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)
 - 개발 서버: `npm run dev` → [http://localhost:3000](http://localhost:3000)
