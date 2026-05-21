@@ -79,7 +79,7 @@ export function StudentsByStudentView({
                 정보 수정
               </Link>
             </div>
-            <StudentDetail studentId={selected.id} />
+            <StudentDetail studentId={selected.id} embed />
           </>
         )}
       </div>

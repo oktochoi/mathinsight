@@ -46,7 +46,7 @@ export default function ParentPage() {
     return (
       <EmptyState
         title="연결된 자녀가 없습니다"
-        description="학원에서 학부모 계정과 자녀를 연결해 주세요."
+        description="학원 원장이 학생 관리에서 이 계정(학부모) 가입 이메일을 입력·저장해야 합니다. 이메일이 일치하고 저장 후 연결됨(✓)이면 수업·리포트가 보입니다."
       />
     );
   }

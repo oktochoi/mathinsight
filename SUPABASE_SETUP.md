@@ -10,6 +10,7 @@ Supabase Dashboard → **SQL Editor**에서 다음 파일을 실행하세요:
 4. **`supabase/migrations/004_backfill_existing_profiles.sql`** ← 예전에 가입한 계정 프로필 복구
 5. **`supabase/migrations/005_ensure_user_profile_rpc.sql`** ← **필수 권장** 로그인·가입 시 프로필 자동 생성
 6. **`supabase/migrations/006_fix_users_rls_recursion.sql`** ← users RLS 무한 재귀 수정 (003 이후 **필수**)
+7. **`supabase/migrations/007_student_portal_emails.sql`** ← 학부모/학생 이메일 저장·계정 조회 RPC
 
 ### `infinite recursion detected in policy for relation "users"`
 

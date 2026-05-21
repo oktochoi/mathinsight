@@ -44,7 +44,7 @@ export default function StudentPortalPage() {
     return (
       <EmptyState
         title="연결된 학생 프로필이 없습니다"
-        description="학원에서 학생 계정을 연결해 주세요."
+        description="학원에서 학생 관리에 이 계정(학생) 가입 이메일을 입력·저장해 주세요. 가입 이메일과 동일해야 합니다."
       />
     );
   }

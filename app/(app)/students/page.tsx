@@ -1,13 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useStudents } from '@/hooks/useStudents';
 import { useClasses } from '@/hooks/useClasses';
 import { linkStudentPortals } from '@/lib/portalLink';
+import {
+  isParentLinked,
+  isStudentPortalLinked,
+  studentParentEmail,
+  studentPortalEmail,
+} from '@/lib/studentPortal';
+import { ClassesSection } from '@/components/settings/ClassesSection';
+import { StudentsByStudentView } from '@/components/students/StudentsByStudentView';
 import { STATUS_LABELS, STATUS_STYLES } from '@/lib/statusLabels';
-import { ErrorBanner, TableSkeleton, EmptyState } from '@/components/ui/DataStates';
-import type { StudentStatus } from '@/types/database';
+import { ErrorBanner, TableSkeleton, EmptyState, PageLoader } from '@/components/ui/DataStates';
+import type { Student, StudentStatus } from '@/types/database';
 
 const gradeOptions = ['전체', '중1', '중2', '중3', '고1', '고2', '고3'];
 const statusOptions: { label: string; value: string }[] = [
@@ -17,7 +26,8 @@ const statusOptions: { label: string; value: string }[] = [
   { label: STATUS_LABELS.consultation, value: 'consultation' },
 ];
 
-export default function StudentsPage() {
+function StudentsPageContent() {
+  const searchParams = useSearchParams();
   const { students, loading, error, refetch, addStudent, updateStudent, deleteStudent } =
     useStudents();
   const { classes } = useClasses();
@@ -25,6 +35,9 @@ export default function StudentsPage() {
   const [grade, setGrade] = useState('전체');
   const [classFilter, setClassFilter] = useState('전체');
   const [status, setStatus] = useState('전체');
+  const [viewMode, setViewMode] = useState<'list' | 'by-student'>('list');
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [showClasses, setShowClasses] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -40,9 +53,28 @@ export default function StudentsPage() {
     student_email: '',
   });
 
+  const filtered = useMemo(
+    () =>
+      students.filter((s) => {
+        if (search && !s.name.includes(search)) return false;
+        if (grade !== '전체' && s.grade !== grade) return false;
+        if (classFilter !== '전체' && s.class_id !== classFilter) return false;
+        if (status !== '전체' && s.status !== status) return false;
+        return true;
+      }),
+    [students, search, grade, classFilter, status]
+  );
+
+  useEffect(() => {
+    if (filtered.length === 0) return;
+    if (!selectedStudentId || !filtered.some((s) => s.id === selectedStudentId)) {
+      setSelectedStudentId(filtered[0].id);
+    }
+  }, [filtered, selectedStudentId]);
+
   const showToast = (msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
+    setTimeout(() => setToast(''), 4000);
   };
 
   const openCreate = () => {
@@ -59,7 +91,7 @@ export default function StudentsPage() {
     setShowModal(true);
   };
 
-  const openEdit = (s: (typeof students)[0]) => {
+  const openEdit = (s: Student) => {
     setEditingId(s.id);
     setForm({
       name: s.name,
@@ -67,11 +99,18 @@ export default function StudentsPage() {
       class_id: s.class_id ?? '',
       school: s.school ?? '',
       status: s.status,
-      parent_email: s.parent_user?.email ?? '',
-      student_email: s.student_portal?.email ?? '',
+      parent_email: studentParentEmail(s),
+      student_email: studentPortalEmail(s),
     });
     setShowModal(true);
   };
+
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (!editId || loading) return;
+    const target = students.find((s) => s.id === editId);
+    if (target) openEdit(target);
+  }, [searchParams, students, loading]);
 
   const handleSubmit = async () => {
     if (!form.name) return;
@@ -104,11 +143,20 @@ export default function StudentsPage() {
         showToast(linkResult.error);
         return;
       }
+      await refetch();
+      setSubmitting(false);
+      setShowModal(false);
+      const base = editingId ? '저장되었습니다.' : '등록되었습니다.';
+      showToast(
+        linkResult.warnings.length > 0 ? `${base} ${linkResult.warnings.join(' ')}` : base
+      );
+      return;
     }
 
     setSubmitting(false);
-    showToast(editingId ? '수정되었습니다.' : '등록되었습니다.');
     setShowModal(false);
+    showToast(editingId ? '수정되었습니다.' : '등록되었습니다.');
+    await refetch();
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -117,26 +165,18 @@ export default function StudentsPage() {
     showToast(err ? err : '삭제되었습니다.');
   };
 
-  const filtered = students.filter((s) => {
-    if (search && !s.name.includes(search)) return false;
-    if (grade !== '전체' && s.grade !== grade) return false;
-    if (classFilter !== '전체' && s.class_id !== classFilter) return false;
-    if (status !== '전체' && s.status !== status) return false;
-    return true;
-  });
-
   return (
     <div className="space-y-6">
       {toast && (
-        <div className="fixed top-20 right-8 z-50 rounded-xl px-5 py-3 text-sm font-semibold text-white bg-emerald-600 shadow-lg">
+        <div className="fixed top-20 right-8 z-50 max-w-md rounded-xl px-5 py-3 text-sm font-semibold text-white bg-emerald-600 shadow-lg">
           {toast}
         </div>
       )}
 
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Students</h1>
-          <p className="text-sm text-slate-500 mt-1">학생 목록 · Supabase 연동</p>
+          <p className="text-sm text-slate-500 mt-1">반 관리 · 학생별 보기 · 학부모/학생 연결</p>
         </div>
         <button
           type="button"
@@ -149,6 +189,22 @@ export default function StudentsPage() {
       </div>
 
       {error && <ErrorBanner message={error} onRetry={refetch} />}
+
+      <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowClasses((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50 cursor-pointer"
+        >
+          <span>반 이름 추가·수정</span>
+          <i className={showClasses ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}></i>
+        </button>
+        {showClasses && (
+          <div className="px-5 pb-5 border-t border-slate-100">
+            <ClassesSection />
+          </div>
+        )}
+      </div>
 
       <div className="rounded-2xl p-5 flex flex-wrap gap-3 bg-white border border-slate-200">
         <input
@@ -177,7 +233,7 @@ export default function StudentsPage() {
           <option value="전체">전체 반</option>
           {classes.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name}
+              {c.name} ({c.grade})
             </option>
           ))}
         </select>
@@ -192,74 +248,118 @@ export default function StudentsPage() {
             </option>
           ))}
         </select>
+        <div className="flex rounded-xl border border-slate-200 overflow-hidden text-sm">
+          <button
+            type="button"
+            onClick={() => setViewMode('list')}
+            className={`px-4 py-2 cursor-pointer ${viewMode === 'list' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600'}`}
+          >
+            목록
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('by-student')}
+            className={`px-4 py-2 cursor-pointer ${viewMode === 'by-student' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600'}`}
+          >
+            학생별 보기
+          </button>
+        </div>
       </div>
 
       <div className="rounded-2xl overflow-hidden bg-white border border-slate-200">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-slate-100 text-xs text-slate-500 uppercase">
-              <th className="px-6 py-4">학생</th>
-              <th className="px-6 py-4">학년</th>
-              <th className="px-6 py-4">반</th>
-              <th className="px-6 py-4">상태</th>
-              <th className="px-6 py-4"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              <TableSkeleton />
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={5}>
-                  <EmptyState title="학생이 없습니다" description="학생을 등록하거나 필터를 변경해 보세요." />
-                </td>
+        {viewMode === 'by-student' ? (
+          loading ? (
+            <TableSkeleton />
+          ) : (
+            <StudentsByStudentView
+              students={filtered}
+              selectedId={selectedStudentId}
+              onSelect={setSelectedStudentId}
+            />
+          )
+        ) : (
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-slate-100 text-xs text-slate-500 uppercase">
+                <th className="px-6 py-4">학생</th>
+                <th className="px-6 py-4">학년</th>
+                <th className="px-6 py-4">반</th>
+                <th className="px-6 py-4">연결</th>
+                <th className="px-6 py-4">상태</th>
+                <th className="px-6 py-4"></th>
               </tr>
-            ) : (
-              filtered.map((student) => (
-                <tr key={student.id} className="hover:bg-slate-50/50">
-                  <td className="px-6 py-4 font-semibold text-sm">{student.name}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{student.grade}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    {(student.classes as { name?: string })?.name ?? '-'}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${STATUS_STYLES[student.status]}`}
-                    >
-                      {STATUS_LABELS[student.status]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 flex gap-2 justify-end">
-                    <Link href={`/students/${student.id}`}>
-                      <button type="button" className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer">
-                        상세
-                      </button>
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => openEdit(student)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer"
-                    >
-                      수정
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(student.id, student.name)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 cursor-pointer"
-                    >
-                      삭제
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <TableSkeleton />
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>
+                    <EmptyState
+                      title="학생이 없습니다"
+                      description="반을 추가한 뒤 학생을 등록해 보세요."
+                    />
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filtered.map((student) => (
+                  <tr key={student.id} className="hover:bg-slate-50/50">
+                    <td className="px-6 py-4 font-semibold text-sm">{student.name}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{student.grade}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {(student.classes as { name?: string })?.name ?? '-'}
+                    </td>
+                    <td className="px-6 py-4 text-xs text-slate-500">
+                      <span className={isParentLinked(student) ? 'text-emerald-600' : ''}>
+                        부모 {isParentLinked(student) ? '✓' : studentParentEmail(student) ? '…' : '—'}
+                      </span>
+                      <span className="mx-1">·</span>
+                      <span className={isStudentPortalLinked(student) ? 'text-emerald-600' : ''}>
+                        학생 {isStudentPortalLinked(student) ? '✓' : studentPortalEmail(student) ? '…' : '—'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${STATUS_STYLES[student.status]}`}
+                      >
+                        {STATUS_LABELS[student.status]}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 flex gap-2 justify-end">
+                      <Link href={`/students/${student.id}`}>
+                        <button
+                          type="button"
+                          className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer"
+                        >
+                          상세
+                        </button>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => openEdit(student)}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer"
+                      >
+                        수정
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(student.id, student.name)}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 cursor-pointer"
+                      >
+                        삭제
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg bg-white rounded-2xl p-6 border border-slate-200 shadow-xl space-y-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-2xl p-6 border border-slate-200 shadow-xl space-y-4">
             <h2 className="text-lg font-bold">{editingId ? '학생 수정' : '학생 등록'}</h2>
             <input
               placeholder="이름 *"
@@ -290,6 +390,9 @@ export default function StudentsPage() {
                 </option>
               ))}
             </select>
+            {classes.length === 0 && (
+              <p className="text-xs text-amber-600">위 「반 이름 추가」에서 반을 먼저 만드세요.</p>
+            )}
             <input
               placeholder="학교"
               value={form.school}
@@ -308,27 +411,32 @@ export default function StudentsPage() {
               ))}
             </select>
             <div className="pt-2 border-t border-slate-100 space-y-2">
-              <p className="text-xs font-semibold text-slate-600">포털 연결 (회원가입 이메일)</p>
+              <p className="text-xs font-semibold text-slate-600">학부모·학생 포털 (가입 이메일)</p>
               <input
                 type="email"
-                placeholder="학부모 이메일 (비우면 연결 해제)"
+                placeholder="학부모 이메일"
                 value={form.parent_email}
                 onChange={(e) => setForm({ ...form, parent_email: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
               />
               <input
                 type="email"
-                placeholder="학생 이메일 (비우면 연결 해제)"
+                placeholder="학생 계정 이메일"
                 value={form.student_email}
                 onChange={(e) => setForm({ ...form, student_email: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
               />
-              <p className="text-[11px] text-slate-400">
-                학부모·학생 계정이 먼저 가입되어 있어야 합니다. 설정 화면의 안내를 참고하세요.
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                이메일은 학생 정보에 저장됩니다. 해당 역할로 회원가입한 계정이 있으면 자동 연결되며,
+                없으면 가입 후 같은 이메일로 다시 저장하세요.
               </p>
             </div>
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-sm border rounded-xl cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 text-sm border rounded-xl cursor-pointer"
+              >
                 취소
               </button>
               <button
@@ -344,5 +452,13 @@ export default function StudentsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function StudentsPage() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <StudentsPageContent />
+    </Suspense>
   );
 }
