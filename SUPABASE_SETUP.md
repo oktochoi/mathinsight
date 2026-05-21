@@ -1,5 +1,7 @@
 # Supabase 설정
 
+**사이트 사용 방법(역할별 예시):** [USAGE_GUIDE.md](./USAGE_GUIDE.md)
+
 ## 1. SQL 마이그레이션
 
 Supabase Dashboard → **SQL Editor**에서 다음 파일을 실행하세요:

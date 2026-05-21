@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { UserProfile, UserRole } from '@/types/database';
+import type { UserProfile } from '@/types/database';
 
 export type SignupRole = 'admin' | 'parent' | 'student';
 

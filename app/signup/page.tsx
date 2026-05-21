@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signUpWithRole, formatAuthError, type SignupRole } from '@/lib/auth';
+import { signUpWithRole, type SignupRole } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 const roles: { label: string; value: SignupRole; icon: string; desc: string }[] = [

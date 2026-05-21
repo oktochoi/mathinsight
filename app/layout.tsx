@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Pacifico } from "next/font/google";
-import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
 const pacifico = Pacifico({
@@ -40,7 +39,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} antialiased bg-white`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        {children}
       </body>
     </html>
   );

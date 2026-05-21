@@ -1,30 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MathInsight
 
-## Getting Started
+학원 수업·학생 관리와 학부모/학생 포털을 위한 Next.js + Supabase 앱입니다.
 
-First, run the development server:
+## Vercel 배포 시 환경 변수
+
+Project → Settings → Environment Variables:
+
+| 이름 | 설명 |
+|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 또는 `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon / publishable key |
+
+없으면 로그인·DB가 동작하지 않습니다.
+
+## 빠른 시작
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저: [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 문서
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 문서 | 내용 |
+|------|------|
+| **[USAGE_GUIDE.md](./USAGE_GUIDE.md)** | **사이트 사용법** — 원장/학부모/학생 예시 시나리오 |
+| [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) | Supabase SQL 마이그레이션·오류 해결 |
 
-## Learn More
+## 사용 흐름 (요약)
 
-To learn more about Next.js, take a look at the following resources:
+1. **원장** `/signup` → 학원 이름 입력 → 로그인 → **Students**에서 반·학생 등록 → **Lesson Logs**에 수업 입력  
+2. **학부모·학생** 각각 `/signup`으로 가입  
+3. **원장**이 학생 **수정**에서 가입 **이메일** 저장 → 목록에 `부모 ✓` `학생 ✓` 확인  
+4. **학부모** `/parent`, **학생** `/student`에서 조회  
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+자세한 예시(이름·이메일 샘플 포함)는 [USAGE_GUIDE.md](./USAGE_GUIDE.md)를 참고하세요.

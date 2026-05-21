@@ -37,7 +37,7 @@ export default function ParentPage() {
   }, [profile?.id]);
 
   const child = children.find((c) => c.id === selectedId);
-  const { logs, loading: logsLoading } = useLessonLogs({ studentId: selectedId, limit: 30 });
+  const { logs } = useLessonLogs({ studentId: selectedId, limit: 30 });
   const { reports, loading: reportsLoading } = useParentReports(selectedId);
 
   if (loading) return <PageLoader />;
