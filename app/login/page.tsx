@@ -5,12 +5,16 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithRole, roleHomePath } from '@/lib/auth';
 import type { UserRole } from '@/types/database';
+import { AuthPageShell } from '@/components/auth/AuthPageShell';
 
 const roles: { label: string; value: UserRole; icon: string }[] = [
   { label: '원장/강사', value: 'admin', icon: 'ri-user-star-line' },
   { label: '학부모', value: 'parent', icon: 'ri-parent-line' },
   { label: '학생', value: 'student', icon: 'ri-graduation-cap-line' },
 ];
+
+const inputClass =
+  'w-full px-4 py-3 rounded-xl bg-white/80 border border-indigo-100/80 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-shadow';
 
 function parseLoginQuery() {
   if (typeof window === 'undefined') return null;
@@ -49,7 +53,6 @@ export default function LoginPage() {
       setWelcome('회원가입이 완료되었습니다. 가입하신 계정으로 로그인해 주세요.');
     }
 
-    // URL 정리 (새로고침 시 메시지 유지는 선택 — 깔끔하게 쿼리 제거)
     window.history.replaceState({}, '', '/login');
   }, []);
 
@@ -81,104 +84,84 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-6">
-      <div className="absolute top-10 left-10 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-slate-700 flex items-center justify-center">
-          <i className="ri-bar-chart-box-fill text-white text-base"></i>
+    <AuthPageShell title="로그인" subtitle="MathInsight에 다시 오신 것을 환영해요">
+      {welcome && (
+        <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 text-sm text-emerald-800 flex gap-2">
+          <i className="ri-checkbox-circle-line text-emerald-500 shrink-0 mt-0.5"></i>
+          <span>{welcome}</span>
         </div>
-        <span className="text-white text-lg font-bold">MathInsight</span>
-      </div>
-      <Link href="/" className="absolute top-10 right-10 text-sm text-slate-400 hover:text-white">
-        홈으로
-      </Link>
+      )}
 
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-white mb-2 text-center">로그인</h1>
-        <p className="text-slate-400 text-sm text-center mb-8">
-          MathInsight에 오신 것을 환영합니다
-        </p>
+      {error && (
+        <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200/80 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
+      )}
 
-        {welcome && (
-          <div className="mb-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-4 py-3 text-sm text-emerald-200 flex gap-2">
-            <i className="ri-checkbox-circle-line text-emerald-400 shrink-0 mt-0.5"></i>
-            <span>{welcome}</span>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-300">
-            {error}
-          </div>
-        )}
-
-        <form
-          onSubmit={handleLogin}
-          className="rounded-2xl p-8 bg-slate-800/80 border border-slate-700 space-y-5"
-        >
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2">이메일</label>
+      <form onSubmit={handleLogin} className="space-y-5">
+        <div>
+          <label className="soft-label text-[10px] block mb-2 text-indigo-500/80">이메일</label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="soft-label text-[10px] block mb-2 text-indigo-500/80">비밀번호</label>
+          <div className="relative">
             <input
-              type="email"
+              type={showPassword ? 'text' : 'password'}
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-white text-sm focus:outline-none focus:border-blue-500"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={inputClass}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 cursor-pointer"
+            >
+              <i className={showPassword ? 'ri-eye-off-line' : 'ri-eye-line'}></i>
+            </button>
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2">비밀번호</label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-white text-sm focus:outline-none focus:border-blue-500"
-              />
+        </div>
+        <div>
+          <label className="soft-label text-[10px] block mb-2 text-indigo-500/80">계정 유형</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {roles.map((role) => (
               <button
+                key={role.value}
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer"
+                onClick={() => setSelectedRole(role.value)}
+                className={`py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  selectedRole === role.value
+                    ? 'border-indigo-300 bg-indigo-50 text-indigo-700 shadow-sm'
+                    : 'border-slate-200/80 text-slate-500 bg-white/50 hover:border-indigo-200'
+                }`}
               >
-                <i className={showPassword ? 'ri-eye-off-line' : 'ri-eye-line'}></i>
+                <i className={`${role.icon} block mb-1 text-base`}></i>
+                {role.label}
               </button>
-            </div>
+            ))}
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2">계정 유형</label>
-            <div className="grid grid-cols-3 gap-2">
-              {roles.map((role) => (
-                <button
-                  key={role.value}
-                  type="button"
-                  onClick={() => setSelectedRole(role.value)}
-                  className={`py-2.5 rounded-xl text-xs font-semibold border cursor-pointer ${
-                    selectedRole === role.value
-                      ? 'border-blue-500 bg-blue-500/10 text-blue-300'
-                      : 'border-slate-600 text-slate-400'
-                  }`}
-                >
-                  <i className={`${role.icon} block mb-1`}></i>
-                  {role.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
-          >
-            {loading ? '로그인 중...' : '로그인'}
-          </button>
-        </form>
-        <p className="text-center text-xs text-slate-500 mt-6">
-          계정이 없으신가요?{' '}
-          <Link href="/signup" className="text-blue-400 hover:underline">
-            회원가입
-          </Link>
-        </p>
-      </div>
-    </div>
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="soft-btn-primary w-full disabled:opacity-50 cursor-pointer"
+        >
+          {loading ? '로그인 중...' : '로그인'}
+        </button>
+      </form>
+      <p className="text-center text-xs text-slate-500/90 mt-6">
+        계정이 없으신가요?{' '}
+        <Link href="/signup" className="text-indigo-600 font-medium hover:underline">
+          회원가입
+        </Link>
+      </p>
+    </AuthPageShell>
   );
 }

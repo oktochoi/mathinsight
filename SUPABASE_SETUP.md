@@ -13,6 +13,15 @@ Supabase Dashboard → **SQL Editor**에서 다음 파일을 실행하세요:
 5. **`supabase/migrations/005_ensure_user_profile_rpc.sql`** ← **필수 권장** 로그인·가입 시 프로필 자동 생성
 6. **`supabase/migrations/006_fix_users_rls_recursion.sql`** ← users RLS 무한 재귀 수정 (003 이후 **필수**)
 7. **`supabase/migrations/007_student_portal_emails.sql`** ← 학부모/학생 이메일 저장·계정 조회 RPC
+8. **`supabase/migrations/008_schedules_and_followups.sql`** ← 반별 수업 일정·예외·상담 후 확인
+
+### 발표 시연용 시드 (`seed-demo.sql`)
+
+1. Auth에 `okto0914@gmail.com`(admin), `okto0915@gmail.com`(parent), `okto0916@gmail.com`(student) 가입
+2. SQL Editor에서 **`supabase/seed-demo.sql`** 전체 실행
+3. 각 계정으로 로그인해 대시보드·시간표·박서연 학생·학부모/학생 포털 확인
+
+비밀번호: `okto0914!` (3계정 동일)
 
 ### `infinite recursion detected in policy for relation "users"`
 
@@ -97,6 +106,15 @@ Supabase Auth는 **같은 IP/이메일로 짧은 시간에 여러 번 signUp** �
 
 `003_classes_portal_link.sql`이 없으면 이메일로 계정을 찾지 못할 수 있습니다.
 
-## 5. OpenAI 연동 (추후)
+## 5. Gemini AI (학부모 리포트·상담 카드)
 
-`src/lib/reportGenerator.ts`의 함수들을 OpenAI 호출로 교체하면 됩니다. 시그니처는 그대로 유지하세요.
+`.env.local`에 서버 전용 키를 넣습니다 (클라이언트에 노출 금지).
+
+```env
+GEMINI_API_KEY=your_key
+GEMINI_MODEL=gemini-2.0-flash
+```
+
+- 프롬프트: `lib/ai/prompts.ts`
+- API: `POST /api/ai/generate` (`task`: `learningSummary` | `evidenceSummary` | `consultationPoints` | `parentMessage` | `parentReport`)
+- 키가 없거나 API 실패 시 `lib/reportGenerator.ts` 규칙 기반으로 자동 폴백

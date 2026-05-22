@@ -250,7 +250,7 @@ MathInsight는 단순 학원 ERP가 아니라, **학생 기록을 구조화**하
 
 ## 개발·배포 (참고)
 
-```bash
+```bash 
 npm install
 npm run dev
 ```
@@ -262,13 +262,24 @@ npm run dev
 | 이름 | 설명 |
 |------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 또는 `NEXT_PUBLIC_SUPABASE_ANON_KEY` | API 키 |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 또는 `NEXT_PUBLIC_SUPABASE_ANON_KEY` | API 키 |    
+| `GEMINI_API_KEY` | Google Gemini (서버 전용, 상담 카드·학부모 리포트) |
+| `GEMINI_MODEL` | 선택, 기본 `gemini-2.0-flash` |
 
 ### 추가 문서
 
 | 문서 | 내용 |
 |------|------|
 | [USAGE_GUIDE.md](./USAGE_GUIDE.md) | 예시 시나리오(햇살수학, 이준호 등) |
-| [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) | SQL 마이그레이션 001~007, 오류 해결 |
+| [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) | SQL 마이그레이션 001~008, 오류 해결 |
+
+### 발표 시연용 DB 시드
+
+1. Supabase Auth에 아래 3계정을 **앱 회원가입**으로 먼저 만듭니다 (비밀번호 `okto0914!`).
+   - `okto0914@gmail.com` — 원장/강사
+   - `okto0915@gmail.com` — 학부모
+   - `okto0916@gmail.com` — 학생
+2. 마이그레이션 001~008 적용 후, Supabase **SQL Editor**에서 [`supabase/seed-demo.sql`](./supabase/seed-demo.sql) 전체 실행
+3. 로그인 확인: 원장 대시보드·시간표·박서연 학생 상세 / 학부모·학생 포털(박서연)
 
 **기술 스택:** Next.js 15 · Supabase Auth/DB · TypeScript · Tailwind

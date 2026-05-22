@@ -3,6 +3,16 @@ export type StudentStatus = 'stable' | 'attention' | 'consultation';
 export type AttendanceStatus = 'present' | 'late' | 'absent';
 export type HomeworkStatus = 'complete' | 'partial' | 'missing';
 export type ReportTone = 'friendly' | 'objective' | 'exam_focused' | 'encouraging';
+export type ScheduleType = 'regular' | 'makeup' | 'special' | 'canceled';
+export type ScheduleExceptionType = 'makeup' | 'canceled' | 'time_changed' | 'special';
+export type FollowupStatus = 'pending' | 'done';
+
+export type StudentBadgeType =
+  | 'needs_review'
+  | 'homework_check'
+  | 'score_change'
+  | 'followup'
+  | 'stable';
 
 export interface Academy {
   id: string;
@@ -90,6 +100,78 @@ export interface ParentReport {
   students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
 }
 
+export interface ClassSchedule {
+  id: string;
+  academy_id: string;
+  class_id: string;
+  teacher_id: string | null;
+  title: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  schedule_type: ScheduleType;
+  location: string | null;
+  memo: string | null;
+  is_recurring: boolean;
+  is_visible_to_parent: boolean;
+  created_at: string;
+  updated_at: string;
+  classes?: Pick<ClassRow, 'id' | 'name' | 'grade'> | null;
+  teacher?: Pick<UserProfile, 'id' | 'name'> | null;
+}
+
+export interface ScheduleException {
+  id: string;
+  academy_id: string;
+  class_schedule_id: string | null;
+  class_id: string;
+  exception_date: string;
+  exception_type: ScheduleExceptionType;
+  start_time: string | null;
+  end_time: string | null;
+  memo: string | null;
+  is_visible_to_parent: boolean;
+  created_at: string;
+}
+
+export interface ConsultationFollowup {
+  id: string;
+  academy_id: string;
+  student_id: string;
+  consultation_card_id: string | null;
+  title: string;
+  memo: string;
+  due_date: string | null;
+  status: FollowupStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StudentBadge {
+  type: StudentBadgeType;
+  label: string;
+  reason: string;
+}
+
+export interface CalendarLessonEvent {
+  id: string;
+  scheduleId: string | null;
+  exceptionId: string | null;
+  classId: string;
+  className: string;
+  classGrade: string;
+  title: string;
+  date: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  scheduleType: ScheduleType;
+  location: string | null;
+  memo: string | null;
+  teacherName: string | null;
+  isVisibleToParent: boolean;
+}
+
 export interface AttentionStudent {
   id: string;
   name: string;
@@ -98,6 +180,39 @@ export interface AttentionStudent {
   status: StudentStatus;
   reason: string;
   urgency: 'high' | 'medium';
+}
+
+export interface TodayLessonItem {
+  event: CalendarLessonEvent;
+  studentCount: number;
+  attentionCount: number;
+  followupCount: number;
+  hasLogToday: boolean;
+}
+
+export interface ClassFlowSummary {
+  classId: string;
+  className: string;
+  grade: string;
+  avgScore: number | null;
+  homeworkRate: number;
+  recentUnit: string | null;
+  attentionCount: number;
+  hasRecentLog: boolean;
+  nextLesson: CalendarLessonEvent | null;
+}
+
+export interface DashboardPriority {
+  id: string;
+  text: string;
+  href: string;
+  tone: 'success' | 'warning' | 'info' | 'muted' | 'danger';
+}
+
+export interface ActionActivity {
+  time: string;
+  text: string;
+  type: 'lesson' | 'homework' | 'test' | 'consult' | 'report' | 'schedule';
 }
 
 export interface DashboardStats {
@@ -110,7 +225,10 @@ export interface DashboardStats {
   classScoreTrend: { name: string; avg: number }[];
   attentionStudents: AttentionStudent[];
   recentReports: ParentReport[];
-  recentActivities: { time: string; text: string; type: string }[];
+  recentActivities: ActionActivity[];
+  todayLessons: TodayLessonItem[];
+  classFlows: ClassFlowSummary[];
+  todayPriorities: DashboardPriority[];
 }
 
 export interface LessonLogInsert {

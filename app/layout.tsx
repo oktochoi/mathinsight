@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning={true}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} antialiased bg-white`}
+        className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} antialiased bg-white overflow-x-hidden`}
       >
         {children}
       </body>

@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/middleware';
 
 const protectedPrefixes = [
   '/dashboard',
+  '/schedule',
   '/students',
   '/lesson-logs',
   '/consultation-cards',
@@ -50,6 +51,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/schedule/:path*',
     '/students/:path*',
     '/lesson-logs/:path*',
     '/consultation-cards/:path*',

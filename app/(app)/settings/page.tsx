@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ErrorBanner } from '@/components/ui/DataStates';
 import { ClassesSection } from '@/components/settings/ClassesSection';
+import { ClassSchedulesSection } from '@/components/schedules/ClassSchedulesSection';
 import { PortalInviteSection } from '@/components/settings/PortalInviteSection';
 
 export default function SettingsPage() {
@@ -51,12 +52,12 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl w-full min-w-0">
       {toast && <div className="rounded-xl bg-emerald-50 text-emerald-800 px-4 py-3 text-sm">{toast}</div>}
       {error && <ErrorBanner message={error} />}
 
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Settings</h1>
         <p className="text-sm text-slate-500 mt-1">학원·계정 정보 (Supabase)</p>
       </div>
 
@@ -98,6 +99,7 @@ export default function SettingsPage() {
       </div>
 
       <ClassesSection />
+      <ClassSchedulesSection />
       <PortalInviteSection />
 
       <div className="rounded-2xl p-6 bg-slate-50 border border-slate-200 text-xs text-slate-500">

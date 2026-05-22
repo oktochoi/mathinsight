@@ -1,6 +1,11 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
+import { computeStudentBadges } from '@/lib/studentBadges';
+import { StudentBadges } from '@/components/student/StudentBadges';
+import type { LessonLog, ConsultationFollowup } from '@/types/database';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useStudents } from '@/hooks/useStudents';
@@ -16,6 +21,7 @@ import { ClassesSection } from '@/components/settings/ClassesSection';
 import { StudentsByStudentView } from '@/components/students/StudentsByStudentView';
 import { STATUS_LABELS, STATUS_STYLES } from '@/lib/statusLabels';
 import { ErrorBanner, TableSkeleton, EmptyState, PageLoader } from '@/components/ui/DataStates';
+import { PageHeader } from '@/components/ui/PageHeader';
 import type { Student, StudentStatus } from '@/types/database';
 
 const gradeOptions = ['전체', '중1', '중2', '중3', '고1', '고2', '고3'];
@@ -28,8 +34,48 @@ const statusOptions: { label: string; value: string }[] = [
 
 function StudentsPageContent() {
   const searchParams = useSearchParams();
+  const { profile } = useAuth();
   const { students, loading, error, refetch, addStudent, updateStudent, deleteStudent } =
     useStudents();
+  const [logsByStudent, setLogsByStudent] = useState<Map<string, LessonLog[]>>(new Map());
+  const [followupsByStudent, setFollowupsByStudent] = useState<
+    Map<string, ConsultationFollowup[]>
+  >(new Map());
+
+  const loadBadgeData = useCallback(async () => {
+    if (!profile?.academy_id) return;
+    const [logsRes, fuRes] = await Promise.all([
+      supabase
+        .from('lesson_logs')
+        .select('*')
+        .eq('academy_id', profile.academy_id)
+        .order('lesson_date', { ascending: false })
+        .limit(400),
+      supabase
+        .from('consultation_followups')
+        .select('*')
+        .eq('academy_id', profile.academy_id)
+        .eq('status', 'pending'),
+    ]);
+    const logMap = new Map<string, LessonLog[]>();
+    for (const log of (logsRes.data ?? []) as LessonLog[]) {
+      const arr = logMap.get(log.student_id) ?? [];
+      arr.push(log);
+      logMap.set(log.student_id, arr);
+    }
+    const fuMap = new Map<string, ConsultationFollowup[]>();
+    for (const fu of (fuRes.data ?? []) as ConsultationFollowup[]) {
+      const arr = fuMap.get(fu.student_id) ?? [];
+      arr.push(fu);
+      fuMap.set(fu.student_id, arr);
+    }
+    setLogsByStudent(logMap);
+    setFollowupsByStudent(fuMap);
+  }, [profile?.academy_id]);
+
+  useEffect(() => {
+    void loadBadgeData();
+  }, [loadBadgeData, students.length]);
   const { classes } = useClasses();
   const [search, setSearch] = useState('');
   const [grade, setGrade] = useState('전체');
@@ -166,27 +212,22 @@ function StudentsPageContent() {
   };
 
   return (
-    <div className="space-y-6">
-      {toast && (
-        <div className="fixed top-20 right-8 z-50 max-w-md rounded-xl px-5 py-3 text-sm font-semibold text-white bg-emerald-600 shadow-lg">
-          {toast}
-        </div>
-      )}
+    <div className="space-y-6 w-full min-w-0 max-w-full">
+      {toast && <div className="toast-fixed bg-emerald-600">{toast}</div>}
 
-      <div className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Students</h1>
-          <p className="text-sm text-slate-500 mt-1">반 관리 · 학생별 보기 · 학부모/학생 연결</p>
-        </div>
+      <PageHeader
+        title="Students"
+        description="반 관리 · 학생별 보기 · 학부모/학생 연결"
+      >
         <button
           type="button"
           onClick={openCreate}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer"
+          className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer min-h-[44px]"
           style={{ background: 'linear-gradient(135deg, #1e3a5f, #0f1e32)' }}
         >
           <i className="ri-user-add-line"></i>학생 등록
         </button>
-      </div>
+      </PageHeader>
 
       {error && <ErrorBanner message={error} onRetry={refetch} />}
 
@@ -248,7 +289,7 @@ function StudentsPageContent() {
             </option>
           ))}
         </select>
-        <div className="flex rounded-xl border border-slate-200 overflow-hidden text-sm">
+        <div className="flex w-full sm:w-auto rounded-xl border border-slate-200 overflow-hidden text-sm shrink-0">
           <button
             type="button"
             onClick={() => setViewMode('list')}
@@ -278,7 +319,8 @@ function StudentsPageContent() {
             />
           )
         ) : (
-          <table className="w-full text-left">
+          <div className="overflow-x-auto w-full max-w-full">
+          <table className="w-full text-left min-w-[640px]">
             <thead>
               <tr className="border-b border-slate-100 text-xs text-slate-500 uppercase">
                 <th className="px-6 py-4">학생</th>
@@ -286,6 +328,7 @@ function StudentsPageContent() {
                 <th className="px-6 py-4">반</th>
                 <th className="px-6 py-4">연결</th>
                 <th className="px-6 py-4">상태</th>
+                <th className="px-6 py-4">기록 배지</th>
                 <th className="px-6 py-4"></th>
               </tr>
             </thead>
@@ -294,7 +337,7 @@ function StudentsPageContent() {
                 <TableSkeleton />
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={7}>
                     <EmptyState
                       title="학생이 없습니다"
                       description="반을 추가한 뒤 학생을 등록해 보세요."
@@ -325,7 +368,17 @@ function StudentsPageContent() {
                         {STATUS_LABELS[student.status]}
                       </span>
                     </td>
-                    <td className="px-6 py-4 flex gap-2 justify-end">
+                    <td className="px-6 py-4 max-w-[200px]">
+                      <StudentBadges
+                        badges={computeStudentBadges(
+                          logsByStudent.get(student.id) ?? [],
+                          followupsByStudent.get(student.id) ?? []
+                        ).filter((b) => b.type !== 'stable')}
+                        compact
+                      />
+                    </td>
+                    <td className="px-4 sm:px-6 py-4">
+                    <div className="flex flex-wrap gap-2 justify-end">
                       <Link href={`/students/${student.id}`}>
                         <button
                           type="button"
@@ -347,13 +400,15 @@ function StudentsPageContent() {
                         className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 cursor-pointer"
                       >
                         삭제
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+          </div>
         )}
       </div>
 

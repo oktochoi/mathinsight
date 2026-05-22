@@ -1,12 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useLessonLogs } from '@/hooks/useLessonLogs';
+import { usePortalSchedules } from '@/hooks/useClassSchedules';
 import { generateLearningSummary } from '@/lib/reportGenerator';
+import { expandCalendarEvents, getWeekDates } from '@/lib/schedules';
 import { HOMEWORK_LABELS, ATTENDANCE_LABELS } from '@/lib/statusLabels';
 import { PageLoader, EmptyState, ErrorBanner } from '@/components/ui/DataStates';
+import { PortalSchedule } from '@/components/portal/PortalSchedule';
+import { StudentTodayPanel } from '@/components/student/StudentTodayPanel';
+import { eventsToday } from '@/lib/schedules';
 import type { Student, LessonLog } from '@/types/database';
 
 export default function StudentPortalPage() {
@@ -29,6 +34,8 @@ export default function StudentPortalPage() {
     })();
   }, [profile?.id]);
 
+  const classIds = student?.class_id ? [student.class_id] : [];
+  const { schedules, exceptions } = usePortalSchedules(classIds);
   const { logs, loading: logsLoading } = useLessonLogs({
     studentId: student?.id,
     limit: 20,
@@ -37,6 +44,18 @@ export default function StudentPortalPage() {
   const today = new Date().toISOString().slice(0, 10);
   const todayLog = logs.find((l) => l.lesson_date === today);
   const latestScore = logs.find((l) => l.test_score != null);
+
+  const weekEvents = useMemo(
+    () => expandCalendarEvents(schedules, exceptions, getWeekDates(new Date())),
+    [schedules, exceptions]
+  );
+  const todayLessons = useMemo(() => eventsToday(weekEvents, today), [weekEvents, today]);
+  const nextLesson = useMemo(() => {
+    return weekEvents
+      .filter((e) => e.date >= today && e.scheduleType !== 'canceled')
+      .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime))[0] ?? null;
+  }, [weekEvents, today]);
+  const latestMemoLog = logs.find((l) => l.memo?.trim() || (l.tags?.length ?? 0) > 0);
 
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} />;
@@ -61,31 +80,40 @@ export default function StudentPortalPage() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="rounded-2xl p-5 bg-white border">
-          <p className="text-xs text-slate-500 mb-1">오늘 수업</p>
-          <p className="font-semibold">{todayLog ? todayLog.unit || '기록 있음' : '오늘 기록 없음'}</p>
-          {todayLog && (
-            <p className="text-xs text-slate-400 mt-1">
-              {ATTENDANCE_LABELS[todayLog.attendance_status]}
-            </p>
-          )}
-        </div>
-        <div className="rounded-2xl p-5 bg-white border">
-          <p className="text-xs text-slate-500 mb-1">오늘 과제</p>
-          <p className="font-semibold">
-            {todayLog ? HOMEWORK_LABELS[todayLog.homework_status] : '-'}
-          </p>
-        </div>
-        <div className="rounded-2xl p-5 bg-white border">
-          <p className="text-xs text-slate-500 mb-1">최근 점수</p>
-          <p className="font-semibold">{latestScore?.test_score ?? '-'}점</p>
-        </div>
-      </div>
+      <StudentTodayPanel
+        todayLog={todayLog}
+        latestMemoLog={latestMemoLog}
+        nextLesson={nextLesson}
+        todayLessons={todayLessons}
+      />
+
+      {classIds.length > 0 && <PortalSchedule classIds={classIds} />}
 
       <div className="rounded-2xl p-5 bg-blue-50 border border-blue-100">
         <h3 className="text-sm font-bold text-blue-900 mb-2">최근 피드백</h3>
-        <p className="text-sm text-blue-800 leading-relaxed">{feedback}</p>
+        <ul className="text-sm text-blue-800 space-y-2">
+          {logs
+            .filter((l) => l.memo?.trim() || (l.tags?.length ?? 0) > 0)
+            .slice(0, 4)
+            .map((l) => (
+              <li key={l.id} className="leading-relaxed">
+                · {l.memo?.trim() || l.tags?.join(', ')}
+                <span className="text-blue-600/70 text-xs ml-1">({l.lesson_date.slice(5)})</span>
+              </li>
+            ))}
+          {logs.filter((l) => l.memo?.trim() || l.tags?.length).length === 0 && (
+            <li>{feedback}</li>
+          )}
+        </ul>
+      </div>
+
+      <div className="rounded-2xl p-4 bg-white border text-sm flex gap-4">
+        <span>
+          최근 점수: <strong>{latestScore?.test_score ?? '-'}점</strong>
+        </span>
+        {todayLog && (
+          <span className="text-slate-500">{ATTENDANCE_LABELS[todayLog.attendance_status]}</span>
+        )}
       </div>
 
       <div className="rounded-2xl overflow-hidden bg-white border">

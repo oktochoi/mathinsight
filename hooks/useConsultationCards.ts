@@ -48,12 +48,16 @@ export function useConsultationCards(studentId?: string) {
   const saveCard = async (
     payload: Omit<ConsultationCard, 'id' | 'created_at' | 'students'>
   ) => {
-    const { error: err } = await supabase.from('consultation_cards').insert({
-      ...payload,
-      generated_by: profile?.id ?? null,
-    });
+    const { data, error: err } = await supabase
+      .from('consultation_cards')
+      .insert({
+        ...payload,
+        generated_by: profile?.id ?? null,
+      })
+      .select('id')
+      .single();
     if (!err) bumpDataVersion();
-    return { error: err?.message ?? null };
+    return { error: err?.message ?? null, cardId: data?.id as string | undefined };
   };
 
   return { cards, loading, error, refetch: fetchCards, saveCard };

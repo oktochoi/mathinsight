@@ -73,12 +73,16 @@ export function useParentReports(studentId?: string) {
   const saveReport = async (
     payload: Omit<ParentReport, 'id' | 'created_at' | 'students'>
   ) => {
-    const { error: err } = await supabase.from('parent_reports').insert({
-      ...payload,
-      generated_by: profile?.id ?? null,
-    });
+    const { data, error: err } = await supabase
+      .from('parent_reports')
+      .insert({
+        ...payload,
+        generated_by: profile?.id ?? null,
+      })
+      .select('id')
+      .single();
     if (!err) bumpDataVersion();
-    return { error: err?.message ?? null };
+    return { error: err?.message ?? null, reportId: data?.id as string | undefined };
   };
 
   return { reports, loading, error, refetch: fetchReports, saveReport };

@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { parentReportPath } from '@/lib/documentRoutes';
+import { sanitizeParentReportText } from '@/lib/parentReportFormat';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useLessonLogs } from '@/hooks/useLessonLogs';
@@ -10,6 +13,11 @@ import { calculateHomeworkTrend, calculateScoreTrend } from '@/lib/analytics';
 import { PageLoader, EmptyState, ErrorBanner } from '@/components/ui/DataStates';
 import type { Student } from '@/types/database';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
+import { PortalSchedule } from '@/components/portal/PortalSchedule';
+import {
+  buildParentRecentChanges,
+  buildRecentLessonSummaries,
+} from '@/lib/learningFlow';
 
 export default function ParentPage() {
   const { profile } = useAuth();
@@ -56,7 +64,7 @@ export default function ParentPage() {
   const hw = calculateHomeworkTrend(logs);
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 w-full min-w-0">
       {children.length > 1 && (
         <select
           value={selectedId}
@@ -72,7 +80,7 @@ export default function ParentPage() {
       )}
 
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">{child?.name} 학생 학습 현황</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 break-words">{child?.name} 학생 학습 현황</h1>
         <p className="text-sm text-slate-500 mt-1">
           {(child as Student & { academies?: { name: string } })?.academies?.name ?? '연결된 학원'} ·{' '}
           {child?.grade} · 최근 기록 기준
@@ -98,13 +106,42 @@ export default function ParentPage() {
         </div>
       </div>
 
+      <PortalSchedule
+        classIds={[...new Set(children.map((c) => c.class_id).filter(Boolean) as string[])]}
+      />
+
+      {logs.length > 0 && (
+        <div className="rounded-2xl p-5 bg-emerald-50 border border-emerald-100">
+          <h3 className="text-sm font-bold text-emerald-900 mb-3">최근 변화</h3>
+          <ul className="text-sm text-emerald-800 space-y-1">
+            {buildParentRecentChanges(logs).map((line, i) => (
+              <li key={i}>· {line}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="rounded-2xl p-5 bg-white border">
+        <h3 className="text-sm font-bold mb-3">최근 수업 요약</h3>
+        <ul className="space-y-3 text-sm">
+          {buildRecentLessonSummaries(logs, 4).map((s) => (
+            <li key={s.date} className="border-b border-slate-50 pb-2 last:border-0">
+              <p className="font-medium text-slate-800">{s.date.slice(5)} 수업</p>
+              <p className="text-slate-600">· {s.unit}</p>
+              <p className="text-slate-500 text-xs">· 숙제 {s.homework}</p>
+              {s.memo && <p className="text-slate-500 text-xs">· {s.memo}</p>}
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="rounded-2xl p-5 bg-white border">
         <h3 className="text-sm font-bold mb-2">요약</h3>
         <p className="text-sm text-slate-600 leading-relaxed">{summary}</p>
       </div>
 
       {scoreChart.length > 0 && (
-        <div className="rounded-2xl p-5 bg-white border h-56">
+        <div className="rounded-2xl p-4 sm:p-5 bg-white border h-52 sm:h-56 min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={scoreChart}>
               <XAxis dataKey="date" tick={{ fontSize: 10 }} />
@@ -123,13 +160,23 @@ export default function ParentPage() {
         ) : reports.length === 0 ? (
           <EmptyState title="아직 리포트가 없습니다" />
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-3">
             {reports.map((r) => (
-              <li key={r.id} className="border-b border-slate-100 pb-4">
-                <p className="text-xs text-slate-400 mb-2">
-                  {r.period_start} ~ {r.period_end} · {r.created_at.slice(0, 10)}
-                </p>
-                <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans">{r.report_text}</pre>
+              <li key={r.id}>
+                <Link
+                  href={parentReportPath(r.id, 'parent')}
+                  className="block rounded-xl border border-slate-100 p-4 hover:border-indigo-200 hover:bg-indigo-50/30 transition-colors group"
+                >
+                  <p className="text-sm font-medium text-slate-800 group-hover:text-indigo-800">
+                    {r.period_start} ~ {r.period_end}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    저장 {r.created_at.slice(0, 10)} · 전체 보기 →
+                  </p>
+                  <p className="text-sm text-slate-600 mt-2 line-clamp-3 whitespace-pre-wrap font-sans leading-relaxed">
+                    {sanitizeParentReportText(r.report_text)}
+                  </p>
+                </Link>
               </li>
             ))}
           </ul>

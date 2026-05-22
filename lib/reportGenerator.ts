@@ -160,45 +160,61 @@ export function generateParentReport(
   const hw = calculateHomeworkTrend(logs);
   const score = calculateScoreTrend(logs);
 
-  const periodLabel = `${periodStart.replace(/-/g, '.')} ~ ${periodEnd.replace(/-/g, '.')}`;
+  const periodLabel = `${periodStart} ~ ${periodEnd}`;
 
-  let closing =
-    '궁금하신 점은 언제든 연락 주세요.';
+  let closing = '궁금하신 점은 언제든 편하게 연락 주세요.';
   if (tone === 'encouraging') {
     closing = '꾸준히 응원하겠습니다. 함께 목표를 맞춰 가면 좋겠습니다.';
   } else if (tone === 'exam_focused') {
     closing = '다음 평가 전 취약 영역 보완 계획을 공유드리겠습니다.';
   }
 
-  const sections = [
-    `${student.name} 학생 학습 리포트`,
-    periodLabel,
+  const hwLines =
+    hw.recentRate > 0
+      ? `이 기간 숙제 완료율은 기록상 약 ${hw.recentRate}%입니다.${
+          hw.direction === 'down' ? ' 최근 제출이 줄었습니다.' : ''
+        }`
+      : '이 기간 숙제 관련 기록을 확인해 주세요.';
+
+  const scoreLines =
+    score.recentAvg != null
+      ? `기록된 점수 흐름을 보면 최근 평균은 약 ${score.recentAvg}점입니다.${
+          score.direction === 'up'
+            ? ' 이전보다 올라간 흐름이 있습니다.'
+            : score.direction === 'down'
+              ? ' 하락 추세가 기록에 있습니다.'
+              : ''
+        }`
+      : '이 기간 기록된 점수가 없습니다.';
+
+  const unitLines =
+    units.length > 0
+      ? `수업에서는 ${units.join(', ')} 단원을 다루었습니다.`
+      : '이 기간 다룬 단원은 수업 기록을 참고해 주세요.';
+
+  return [
+    `${student.name} 학생 학습 리포트 (${periodLabel})`,
     '',
-    `안녕하세요, ${academyName}입니다.`,
-    `${intro} ${periodLabel} 기간 학습 내용을 전달드립니다.`,
+    `안녕하세요, ${academyName}입니다. ${intro} ${periodLabel} 기간 학습 내용을 전달드립니다.`,
     '',
-    '[학습 요약]',
+    '[이번 기간 한눈에]',
     summary,
     '',
-  ];
-
-  if (units.length > 0) {
-    sections.push('[다룬 단원]', units.join(', '), '');
-  }
-
-  if (hw.recentRate > 0) {
-    sections.push('[숙제]', `최근 완료율 약 ${hw.recentRate}%입니다.`, '');
-  }
-
-  if (score.recentAvg != null) {
-    sections.push(
-      '[테스트]',
-      `최근 평균 약 ${score.recentAvg}점${score.direction === 'down' ? ' (하락 추세)' : ''}.`,
-      ''
-    );
-  }
-
-  sections.push('[기록 근거]', evidence, '', '[맺음말]', closing, '', `${academyName} 드림`);
-
-  return sections.join('\n');
+    '[수업에서 다룬 내용]',
+    unitLines,
+    '',
+    '[숙제와 학습 습관]',
+    hwLines,
+    '',
+    '[평가·시험]',
+    scoreLines,
+    '',
+    '[함께 보면 좋은 부분]',
+    '기록을 바탕으로 가정에서 숙제 루틴과 오답 정리를 함께 점검해 주시면 도움이 됩니다.',
+    '',
+    '[맺음말]',
+    closing,
+    '',
+    `${academyName} 드림`,
+  ].join('\n');
 }

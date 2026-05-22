@@ -70,3 +70,4 @@ create policy "parent_reports_staff" on public.parent_reports for all using (
     where s.id = parent_reports.student_id and s.academy_id = public.current_academy_id()
   )
 );
+ㅅ

@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useClasses, useLessonLogs } from '@/hooks/useLessonLogs';
 import { useStudents } from '@/hooks/useStudents';
 import { ErrorBanner, PageLoader } from '@/components/ui/DataStates';
+import { PageHeader } from '@/components/ui/PageHeader';
 import type { AttendanceStatus, HomeworkStatus, LessonLogInsert } from '@/types/database';
 
 const attendanceOptions: { value: AttendanceStatus; label: string }[] = [
@@ -29,7 +31,9 @@ interface StudentRow {
   note: string;
 }
 
-export default function LessonLogPage() {
+function LessonLogPageContent() {
+  const searchParams = useSearchParams();
+  const classFromUrl = searchParams.get('class');
   const { profile } = useAuth();
   const { classes, loading: classesLoading, error: classesError } = useClasses();
   const { students, loading: studentsLoading } = useStudents();
@@ -49,8 +53,12 @@ export default function LessonLogPage() {
   );
 
   useEffect(() => {
+    if (classFromUrl && classes.some((c) => c.id === classFromUrl)) {
+      setSelectedClassId(classFromUrl);
+      return;
+    }
     if (!selectedClassId && classes[0]) setSelectedClassId(classes[0].id);
-  }, [classes, selectedClassId]);
+  }, [classes, selectedClassId, classFromUrl]);
 
   useEffect(() => {
     const initial: Record<string, StudentRow> = {};
@@ -127,21 +135,12 @@ export default function LessonLogPage() {
   if (classesLoading || studentsLoading) return <PageLoader />;
 
   return (
-    <div className="space-y-6">
-      {toast && (
-        <div className="fixed top-20 right-8 z-50 rounded-xl px-5 py-3 text-sm font-semibold text-white bg-emerald-600">
-          {toast}
-        </div>
-      )}
+    <div className="space-y-6 w-full min-w-0 max-w-full">
+      {toast && <div className="toast-fixed bg-emerald-600">{toast}</div>}
       {error && <ErrorBanner message={error} />}
       {classesError && <ErrorBanner message={classesError} />}
 
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Lesson Log</h1>
-          <p className="text-sm text-slate-500 mt-1">수업 기록을 일괄 저장합니다</p>
-        </div>
-      </div>
+      <PageHeader title="Lesson Log" description="수업 기록을 일괄 저장합니다" />
 
       <div className="rounded-2xl p-5 bg-white border border-slate-200 flex flex-wrap gap-4">
         <div>
@@ -149,7 +148,7 @@ export default function LessonLogPage() {
           <select
             value={selectedClassId}
             onChange={(e) => setSelectedClassId(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 text-sm min-w-[140px]"
+            className="w-full sm:w-auto px-3 py-2 rounded-xl border border-slate-200 text-sm min-h-[44px]"
           >
             {classes.map((c) => (
               <option key={c.id} value={c.id}>
@@ -167,7 +166,7 @@ export default function LessonLogPage() {
             className="px-3 py-2 rounded-xl border border-slate-200 text-sm"
           />
         </div>
-        <div className="flex-1 min-w-[200px]">
+        <div className="w-full sm:flex-1 sm:min-w-[200px]">
           <label className="text-xs font-semibold text-slate-500 block mb-1">단원 *</label>
           <input
             type="text"
@@ -273,5 +272,13 @@ export default function LessonLogPage() {
         {saving ? '저장 중...' : '일괄 저장'}
       </button>
     </div>
+  );
+}
+
+export default function LessonLogPage() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <LessonLogPageContent />
+    </Suspense>
   );
 }

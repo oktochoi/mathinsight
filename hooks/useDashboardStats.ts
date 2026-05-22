@@ -9,7 +9,23 @@ import {
   calculateHomeworkTrend,
   calculateScoreTrend,
 } from '@/lib/analytics';
-import type { DashboardStats, LessonLog, ParentReport, Student } from '@/types/database';
+import { buildClassFlows, buildTodayLessons } from '@/lib/classInsights';
+import {
+  buildActionActivities,
+  buildDashboardPriorities,
+  getLessonFlowState,
+} from '@/lib/learningFlow';
+import { expandCalendarEvents, getWeekDates } from '@/lib/schedules';
+import type {
+  ClassSchedule,
+  ConsultationCard,
+  ConsultationFollowup,
+  DashboardStats,
+  LessonLog,
+  ParentReport,
+  ScheduleException,
+  Student,
+} from '@/types/database';
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -33,7 +49,8 @@ export function useDashboardStats() {
     const academyId = profile.academy_id;
     const today = todayStr();
 
-    const [studentsRes, logsRes, reportsRes] = await Promise.all([
+    const [studentsRes, logsRes, reportsRes, classesRes, schedulesRes, exceptionsRes, followupsRes, cardsRes] =
+      await Promise.all([
       supabase
         .from('students')
         .select('*, classes(name)')
@@ -57,6 +74,31 @@ export function useDashboardStats() {
           .in('student_id', ids)
           .order('created_at', { ascending: false })
           .limit(5);
+      })(),
+      supabase.from('classes').select('id, name, grade').eq('academy_id', academyId),
+      supabase
+        .from('class_schedules')
+        .select('*, classes(id, name, grade)')
+        .eq('academy_id', academyId),
+      supabase.from('schedule_exceptions').select('*').eq('academy_id', academyId).limit(200),
+      supabase
+        .from('consultation_followups')
+        .select('*')
+        .eq('academy_id', academyId)
+        .eq('status', 'pending'),
+      (async () => {
+        const { data: sts } = await supabase
+          .from('students')
+          .select('id')
+          .eq('academy_id', academyId);
+        const ids = (sts ?? []).map((s) => s.id);
+        if (ids.length === 0) return { data: [], error: null };
+        return supabase
+          .from('consultation_cards')
+          .select('*, students(id, name)')
+          .in('student_id', ids)
+          .order('created_at', { ascending: false })
+          .limit(8);
       })(),
     ]);
 
@@ -101,18 +143,45 @@ export function useDashboardStats() {
       avg: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
     }));
 
-    const recentActivities = logs.slice(0, 8).map((l) => {
-      const st = students.find((s) => s.id === l.student_id);
-      return {
-        time: l.lesson_date.slice(5).replace('-', '.'),
-        text: `${st?.name ?? '학생'} · ${l.unit || '수업'} 기록`,
-        type: l.homework_status === 'missing' ? 'homework' : l.test_score != null ? 'test' : 'lesson',
-      };
+    const cards = (cardsRes.data ?? []) as ConsultationCard[];
+    const recentActivities = buildActionActivities({
+      logs,
+      cards,
+      reports: (reportsRes.data ?? []) as ParentReport[],
+      students: students.map((s) => ({ id: s.id, name: s.name })),
+      classes: classesRes.data ?? [],
     });
 
+    const schedules = (schedulesRes.data ?? []) as ClassSchedule[];
+    const exceptions = (exceptionsRes.data ?? []) as ScheduleException[];
+    const followups = (followupsRes.data ?? []) as ConsultationFollowup[];
+    const classes = classesRes.data ?? [];
+    const weekEvents = expandCalendarEvents(schedules, exceptions, getWeekDates(new Date()));
+    const todayLessons = buildTodayLessons(
+      weekEvents,
+      students,
+      logs,
+      followups,
+      today
+    );
+    const classFlows = buildClassFlows(classes, students, logs, weekEvents);
+
+    let missingLogLessons = 0;
+    for (const tl of todayLessons) {
+      const st = getLessonFlowState(tl, today);
+      if (st.emphasizeRecord) missingLogLessons++;
+    }
+    const todayPriorities = buildDashboardPriorities(
+      todayLessons,
+      attentionStudents.length,
+      missingLogLessons
+    );
+
     setStats({
-      todayLessonCount: todayLogs.length,
-      todayClassCount: todayClassIds.size,
+      todayLessonCount: todayLessons.length || todayLogs.length,
+      todayClassCount: todayLessons.length
+        ? new Set(todayLessons.map((t) => t.event.classId)).size
+        : todayClassIds.size,
       missingHomeworkCount,
       consultationRecommendedCount: attentionStudents.filter(
         (s) => s.status === 'consultation'
@@ -123,6 +192,9 @@ export function useDashboardStats() {
       attentionStudents: attentionStudents.slice(0, 8),
       recentReports: (reportsRes.data ?? []) as ParentReport[],
       recentActivities,
+      todayLessons,
+      classFlows,
+      todayPriorities,
     });
     setLoading(false);
   }, [profile?.academy_id]);
