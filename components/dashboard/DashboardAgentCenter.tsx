@@ -69,6 +69,15 @@ export function DashboardAgentCenter({ insight }: { insight: DashboardAgentInsig
             최근 점수·숙제·출결을 보고 「상담」「보강」「학부모 연락」이 필요한 학생만
             골라 두었습니다. 이름을 누르면 학생 상세로 이동합니다.
           </p>
+          <p className="text-xs text-slate-500 mt-2 rounded-lg bg-white/80 border border-slate-100 px-3 py-2">
+            {insight.priorityExplanation}
+            {insight.riskSummary.stable + insight.riskSummary.recovering > 0 ? (
+              <>
+                {' '}
+                · 양호·회복 학생은 목록에 표시하지 않습니다 (학생 관리에서 확인)
+              </>
+            ) : null}
+          </p>
         </div>
       </div>
 

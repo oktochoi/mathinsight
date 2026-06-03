@@ -311,6 +311,14 @@ export interface DashboardAgentInsight {
   consultationStudents: { id: string; name: string; grade: string; reason: string }[];
   makeupStudents: { id: string; name: string; grade: string; reason: string }[];
   parentContactStudents: { id: string; name: string; grade: string; reason: string }[];
+  /** 조치 목록에 안 나오는 양호·회복 인원 요약 */
+  riskSummary: {
+    stable: number;
+    recovering: number;
+    consultation: number;
+    makeup: number;
+    attention: number;
+  };
   priorityExplanation: string;
   agentStatuses: {
     agentType: AgentType;

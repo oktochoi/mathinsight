@@ -25,8 +25,18 @@ export async function buildDashboardAgentInsight(
   const consultationStudents: DashboardAgentInsight['consultationStudents'] = [];
   const makeupStudents: DashboardAgentInsight['makeupStudents'] = [];
   const parentContactStudents: DashboardAgentInsight['parentContactStudents'] = [];
+  const riskSummary: DashboardAgentInsight['riskSummary'] = {
+    stable: 0,
+    recovering: 0,
+    consultation: 0,
+    makeup: 0,
+    attention: 0,
+  };
 
   for (const row of signals) {
+    const level = row.risk_level as keyof typeof riskSummary;
+    if (level in riskSummary) riskSummary[level] += 1;
+
     const st = row.students as { id: string; name: string; grade: string } | null;
     if (!st) continue;
     const entry = { id: st.id, name: st.name, grade: st.grade, reason: row.reason };
@@ -35,7 +45,7 @@ export async function buildDashboardAgentInsight(
     else if (row.risk_level === 'attention') parentContactStudents.push(entry);
   }
 
-  const priorityExplanation = `상담 ${consultationStudents.length}명 · 보강 ${makeupStudents.length}명 · 주의 ${parentContactStudents.length}명 (수업 기록 자동 분석)`;
+  const priorityExplanation = `양호 ${riskSummary.stable}명 · 회복 ${riskSummary.recovering}명 · 상담 ${riskSummary.consultation}명 · 보강 ${riskSummary.makeup}명 · 주의 ${riskSummary.attention}명 (수업 기록 자동 분석)`;
 
   const logs = await fetchLatestAgentLogs(supabase, academyId, 40);
   const agentTypes: AgentType[] = [
@@ -71,6 +81,7 @@ export async function buildDashboardAgentInsight(
     consultationStudents: consultationStudents.slice(0, 8),
     makeupStudents: makeupStudents.slice(0, 8),
     parentContactStudents: parentContactStudents.slice(0, 8),
+    riskSummary,
     priorityExplanation,
     agentStatuses,
   };

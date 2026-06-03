@@ -124,7 +124,13 @@ export function assessStudentRisk(
   if (partialRecent >= 3) {
     signals.push({ id: 'hw_partial', label: `숙제 부분 제출 ${partialRecent}회` });
   }
-  if (repeatedTags.length > 0) {
+  const tagsWithOtherIssues =
+    repeatedTags.length > 0 &&
+    (missingRecent >= 1 ||
+      scoreTrend.direction === 'down' ||
+      stagnant ||
+      partialRecent >= 2);
+  if (tagsWithOtherIssues) {
     signals.push({
       id: 'tags',
       label: `반복 태그: ${repeatedTags.slice(0, 2).join(', ')}`,
@@ -161,8 +167,11 @@ export function assessStudentRisk(
   if (scoreDropStrong) severity += 4;
   else if (scoreDropModerate) severity += 2;
   if (stagnant) severity += 2;
-  if (repeatedTags.length >= 2) severity += 2;
-  else if (repeatedTags.length >= 1 && missingRecent >= 1) severity += 1;
+  if (repeatedTags.length >= 2 && (missingRecent >= 1 || scoreDropModerate || stagnant)) {
+    severity += 2;
+  } else if (repeatedTags.length >= 1 && missingRecent >= 2) {
+    severity += 1;
+  }
   if (afterConsult && lastCard && (missingRecent >= 1 || scoreDropModerate)) severity += 2;
   if (partialRecent >= 3) severity += 1;
   if (pendingFollowupsOnly(followups) && missingRecent >= 1) severity += 1;
@@ -180,7 +189,7 @@ export function assessStudentRisk(
     missingRecent >= 2 ||
     scoreDropModerate ||
     stagnant ||
-    (repeatedTags.length >= 2 && missingRecent >= 1) ||
+    (repeatedTags.length >= 2 && missingRecent >= 1 && scoreTrend.direction !== 'up') ||
     severity >= 2
   ) {
     kind = 'makeup';
