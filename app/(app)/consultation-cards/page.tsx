@@ -13,6 +13,10 @@ import { useAuth } from '@/context/AuthContext';
 import { fetchAiGenerate } from '@/lib/ai/client';
 import { calculateScoreTrend } from '@/lib/analytics';
 import { PageLoader, EmptyState } from '@/components/ui/DataStates';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StaffPageIntro } from '@/components/ui/StaffPageIntro';
+import { STAFF_PAGES } from '@/lib/staffPages';
+import type { ConsultationStatus } from '@/types/database';
 import { AiSourceBadge } from '@/components/ai/AiSourceBadge';
 
 function defaultPeriod() {
@@ -46,6 +50,7 @@ export default function ConsultationCardPage() {
   const [aiBackend, setAiBackend] = useState<string | null>(null);
   const [toast, setToast] = useState('');
   const [followupNotes, setFollowupNotes] = useState('');
+  const [savedFilter, setSavedFilter] = useState<'all' | ConsultationStatus>('all');
 
   const { logs, loading: logsLoading } = useLessonLogs({
     studentId: studentId || undefined,
@@ -184,8 +189,8 @@ export default function ConsultationCardPage() {
       setTimeout(() => setToast(''), 2500);
       return;
     }
-    setToast('저장되었습니다.');
-    setTimeout(() => setToast(''), 2500);
+    setToast('저장됐습니다. 상담 후 카드 상세에서 「상담 완료 처리」를 눌러 주세요.');
+    setTimeout(() => setToast(''), 4000);
     if (cardId) router.push(consultationCardPath(cardId));
   };
 
@@ -199,20 +204,20 @@ export default function ConsultationCardPage() {
         </div>
       )}
 
-      <div className="min-w-0">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">상담 카드</h1>
-        <p className="text-sm text-slate-500 mt-1 flex flex-wrap items-center gap-x-2">
-          상담 전 학생 흐름을 한눈에 정리합니다
-          {hasGenerated && (
-            <AiSourceBadge
-              source={aiSource}
-              backend={aiBackend}
-              fallbackReason={aiFallbackReason}
-              generating={generating}
-            />
-          )}
-        </p>
-      </div>
+      <PageHeader
+        title={STAFF_PAGES['consultation-cards'].title}
+        description={STAFF_PAGES['consultation-cards'].description}
+      >
+        {hasGenerated && (
+          <AiSourceBadge
+            source={aiSource}
+            backend={aiBackend}
+            fallbackReason={aiFallbackReason}
+            generating={generating}
+          />
+        )}
+      </PageHeader>
+      <StaffPageIntro pageKey="consultation-cards" />
 
       <div className="rounded-2xl p-5 sm:p-6 bg-white border border-slate-200 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:items-end">
@@ -374,16 +379,61 @@ export default function ConsultationCardPage() {
         </div>
       )}
 
-      <SavedDocumentList
-        title="저장된 상담 카드"
-        loading={cardsLoading}
-        items={cards.slice(0, 12).map((c) => ({
-          id: c.id,
-          href: consultationCardPath(c.id),
-          primary: `${(c.students as { name?: string })?.name ?? '학생'} · ${c.period_start} ~ ${c.period_end}`,
-          secondary: `저장 ${c.created_at.slice(0, 10)}`,
-        }))}
-      />
+      {(() => {
+        const pendingN = cards.filter((c) => (c.consultation_status ?? 'pending') === 'pending').length;
+        const filtered =
+          savedFilter === 'all'
+            ? cards
+            : cards.filter((c) => (c.consultation_status ?? 'pending') === savedFilter);
+        return (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-slate-500">
+                저장 {cards.length}건
+                {pendingN > 0 && (
+                  <span className="text-amber-700 font-medium"> · 상담 대기 {pendingN}건</span>
+                )}
+              </span>
+              <div className="flex gap-1 ml-auto">
+                {(
+                  [
+                    ['all', '전체'],
+                    ['pending', '대기'],
+                    ['completed', '완료'],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSavedFilter(key)}
+                    className={`text-xs px-3 py-1.5 rounded-full border cursor-pointer ${
+                      savedFilter === key
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <SavedDocumentList
+              title="저장된 상담 카드"
+              loading={cardsLoading}
+              emptyMessage={
+                savedFilter === 'all' ? undefined : '해당 상태의 카드가 없습니다.'
+              }
+              items={filtered.slice(0, 12).map((c) => ({
+                id: c.id,
+                href: consultationCardPath(c.id),
+                primary: `${(c.students as { name?: string })?.name ?? '학생'} · ${c.period_start} ~ ${c.period_end}`,
+                secondary: `저장 ${c.created_at.slice(0, 10)}`,
+                consultationStatus: c.consultation_status ?? 'pending',
+              }))}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -27,9 +27,13 @@ export function LandingProcessFlow() {
     >
       <div className="max-w-6xl mx-auto">
         <FadeUp className="text-center mb-12 sm:mb-16">
-          <p className="soft-label mb-3">흐름이 남습니다</p>
-          <p className="text-sm soft-body max-w-md mx-auto">
-            기록이 모이고, 상담까지 부드럽게 이어져요.
+          <p className="soft-label mb-4">운영 흐름</p>
+          <h2 className="soft-headline soft-headline-md">
+            기록에서 <span className="soft-accent">상담까지</span>
+          </h2>
+          <p className="mt-4 text-sm soft-body max-w-md mx-auto">
+            기록 수집 → 정리 → 분석 → 상담 준비 → 상담 완료까지 한 흐름으로
+            관리합니다.
           </p>
         </FadeUp>
 

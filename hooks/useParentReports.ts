@@ -19,11 +19,12 @@ export function useParentReports(studentId?: string) {
     setError(null);
 
     if (profile?.role === 'parent') {
-      const { data: children } = await supabase
-        .from('students')
-        .select('id')
-        .eq('parent_user_id', profile.id);
-      const ids = (children ?? []).map((c) => c.id);
+      const { data: links } = await supabase
+        .from('student_connections')
+        .select('student_id')
+        .eq('user_id', profile.id)
+        .in('relationship', ['mother', 'father', 'guardian']);
+      const ids = (links ?? []).map((c) => c.student_id as string);
       if (ids.length === 0) {
         setReports([]);
         setLoading(false);

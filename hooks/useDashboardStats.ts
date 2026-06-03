@@ -49,7 +49,7 @@ export function useDashboardStats() {
     const academyId = profile.academy_id;
     const today = todayStr();
 
-    const [studentsRes, logsRes, reportsRes, classesRes, schedulesRes, exceptionsRes, followupsRes, cardsRes] =
+    const [studentsRes, logsRes, reportsRes, classesRes, schedulesRes, exceptionsRes, followupsRes, cardsRes, pendingCardsRes] =
       await Promise.all([
       supabase
         .from('students')
@@ -99,6 +99,19 @@ export function useDashboardStats() {
           .in('student_id', ids)
           .order('created_at', { ascending: false })
           .limit(8);
+      })(),
+      (async () => {
+        const { data: sts } = await supabase
+          .from('students')
+          .select('id')
+          .eq('academy_id', academyId);
+        const ids = (sts ?? []).map((s) => s.id);
+        if (ids.length === 0) return { data: [], error: null };
+        return supabase
+          .from('consultation_cards')
+          .select('id, consultation_status')
+          .in('student_id', ids)
+          .eq('consultation_status', 'pending');
       })(),
     ]);
 
@@ -171,10 +184,20 @@ export function useDashboardStats() {
       const st = getLessonFlowState(tl, today);
       if (st.emphasizeRecord) missingLogLessons++;
     }
+    const pendingConsultationCount = (pendingCardsRes.data ?? []).length;
+
     const todayPriorities = buildDashboardPriorities(
       todayLessons,
       attentionStudents.length,
-      missingLogLessons
+      missingLogLessons,
+      {
+        consultationCount: attentionStudents.filter((s) => s.status === 'consultation')
+          .length,
+        pendingConsultationCount,
+        missingHomeworkCount,
+        todayLessonCount: todayLessons.length,
+        recentReportCount: (reportsRes.data ?? []).length,
+      }
     );
 
     setStats({
@@ -183,13 +206,14 @@ export function useDashboardStats() {
         ? new Set(todayLessons.map((t) => t.event.classId)).size
         : todayClassIds.size,
       missingHomeworkCount,
+      pendingConsultationCount,
       consultationRecommendedCount: attentionStudents.filter(
         (s) => s.status === 'consultation'
       ).length,
       scoreDeclineCount,
       homeworkTrend: allHw.weeklyRates.map((w) => ({ name: w.week, rate: w.rate })),
       classScoreTrend,
-      attentionStudents: attentionStudents.slice(0, 8),
+      attentionStudents: attentionStudents.slice(0, 5),
       recentReports: (reportsRes.data ?? []) as ParentReport[],
       recentActivities,
       todayLessons,

@@ -22,25 +22,24 @@ export function LandingEditorialCta() {
 
           <div className="relative grid lg:grid-cols-[1fr_auto] gap-10 items-center">
             <div>
-              <p className="soft-label mb-4">시작해볼까요</p>
+              <p className="soft-label mb-4">시작하기</p>
               <h2 className="soft-headline soft-headline-md">
-                이제 상담도
+                학부모는 24시간
                 <br />
-                <span className="soft-accent">조금 더 가벼워집니다</span>
+                <span className="soft-accent">자녀 학습을 문의</span>
               </h2>
               <p className="mt-5 soft-body max-w-md">
-                7일 무료로 시작해 보세요.
-                <br />
-                흐름이 남을 거예요.
+                포털 AI가 학원에 쌓인 기록을 바탕으로 답합니다. 원장·강사는 같은
+                데이터로 상담을 준비합니다.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
                 <HoverBounce>
                   <Link href="/signup" className="soft-btn-primary">
-                    무료로 시작하기
+                    시작하기
                   </Link>
                 </HoverBounce>
                 <HoverBounce>
-                  <a href="#hero" className="soft-btn-ghost">
+                  <a href="#scene" className="soft-btn-ghost">
                     화면 예시 보기
                   </a>
                 </HoverBounce>

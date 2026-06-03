@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
-import { deriveStudentStatus } from '@/lib/analytics';
+import { deriveStudentStatusFromRisk } from '@/lib/studentRisk';
 import type { Student, StudentStatus } from '@/types/database';
 
 export function useStudents() {
@@ -88,7 +88,7 @@ export function useStudents() {
       .eq('student_id', studentId)
       .order('lesson_date', { ascending: false })
       .limit(12);
-    const status = deriveStudentStatus((logs ?? []) as import('@/types/database').LessonLog[]);
+    const status = deriveStudentStatusFromRisk((logs ?? []) as import('@/types/database').LessonLog[]);
     await supabase.from('students').update({ status }).eq('id', studentId);
     bumpDataVersion();
   };

@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { ConsultationStatusBadge } from '@/components/consultation/ConsultationStatusBadge';
+import type { ConsultationStatus } from '@/types/database';
 
 export function SavedDocumentList({
   title,
@@ -9,7 +11,13 @@ export function SavedDocumentList({
   title: string;
   loading?: boolean;
   emptyMessage?: string;
-  items: { id: string; href: string; primary: string; secondary: string }[];
+  items: {
+    id: string;
+    href: string;
+    primary: string;
+    secondary: string;
+    consultationStatus?: ConsultationStatus;
+  }[];
 }) {
   if (loading) {
     return <p className="text-xs text-slate-400 py-2">불러오는 중…</p>;
@@ -38,7 +46,12 @@ export function SavedDocumentList({
                 </p>
                 <p className="text-xs text-slate-500 mt-0.5">{item.secondary}</p>
               </div>
-              <i className="ri-arrow-right-s-line text-slate-300 group-hover:text-indigo-500 shrink-0" />
+              <div className="flex items-center gap-2 shrink-0">
+                {item.consultationStatus && (
+                  <ConsultationStatusBadge status={item.consultationStatus} />
+                )}
+                <i className="ri-arrow-right-s-line text-slate-300 group-hover:text-indigo-500" />
+              </div>
             </Link>
           </li>
         ))}

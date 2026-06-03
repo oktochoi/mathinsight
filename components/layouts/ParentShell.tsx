@@ -1,31 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { isStaffProfile } from '@/lib/profileIntegrity';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/cn';
 
 export default function ParentShell({ children }: { children: React.ReactNode }) {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  useEffect(() => {
+    if (!loading && isStaffProfile(profile)) {
+      router.replace('/dashboard');
+    }
+  }, [loading, profile, router]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.replace('/auth');
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-slate-50">
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b border-slate-200/60">
+    <div className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-violet-50/80 via-slate-50 to-slate-50">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/95 border-b border-violet-100/80 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-8 h-8 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center">
-              <i className="ri-bar-chart-box-fill text-white text-sm"></i>
+            <div className="w-8 h-8 shrink-0 rounded-lg bg-violet-600 flex items-center justify-center">
+              <i className="ri-parent-line text-white text-sm"></i>
             </div>
-            <span className="font-bold text-slate-800 text-sm truncate">MathInsight</span>
-            <span className="text-[10px] text-slate-400 uppercase border-l pl-2 ml-0.5 hidden sm:inline shrink-0">
+            <span className="font-bold text-slate-900 text-sm truncate">EduFlow</span>
+            <span className="text-[10px] text-violet-600 font-medium uppercase border-l border-violet-100 pl-2 ml-0.5 hidden sm:inline shrink-0">
               학부모 포털
             </span>
           </div>
@@ -63,7 +70,7 @@ export default function ParentShell({ children }: { children: React.ReactNode })
           </div>
         )}
       </header>
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full min-w-0">{children}</main>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full min-w-0">{children}</main>
     </div>
   );
 }

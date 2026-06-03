@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { supabase } from '@/lib/supabase';
-import { fetchUserProfile } from '@/lib/auth';
+import { resolveProfileAfterAuth } from '@/lib/auth';
 import type { Academy, UserProfile } from '@/types/database';
 
 interface AuthState {
@@ -38,8 +38,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
-    const p = await fetchUserProfile(user.id);
+    const { profile: p, needsChooseRole } = await resolveProfileAfterAuth(user);
     setProfile(p);
+    if (!p && needsChooseRole) {
+      setError('역할·학원 설정이 필요합니다. 잠시 후 역할 선택 화면으로 이동합니다.');
+    } else if (!p) {
+      setError('프로필을 불러오지 못했습니다. 다시 로그인하거나 역할 선택을 완료해 주세요.');
+    }
     if (p?.academy_id) {
       const { data } = await supabase
         .from('academies')

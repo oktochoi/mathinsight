@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
-import { deriveStudentStatus } from '@/lib/analytics';
+import { deriveStudentStatusFromRisk } from '@/lib/studentRisk';
 import type { LessonLog, LessonLogInsert } from '@/types/database';
 
 export function useLessonLogs(filters?: {
@@ -37,7 +37,7 @@ export function useLessonLogs(filters?: {
 
     if (
       profile.academy_id &&
-      (profile.role === 'admin' || profile.role === 'teacher')
+      (profile.role === 'owner' || profile.role === 'teacher')
     ) {
       query = query.eq('academy_id', profile.academy_id);
     }
@@ -82,7 +82,7 @@ export function useLessonLogs(filters?: {
         .eq('student_id', sid)
         .order('lesson_date', { ascending: false })
         .limit(12);
-      const status = deriveStudentStatus((recent ?? []) as LessonLog[]);
+      const status = deriveStudentStatusFromRisk((recent ?? []) as LessonLog[]);
       await supabase.from('students').update({ status }).eq('id', sid);
     }
 

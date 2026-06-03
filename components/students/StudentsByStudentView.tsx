@@ -3,12 +3,7 @@
 import Link from 'next/link';
 import type { Student } from '@/types/database';
 import { STATUS_LABELS, STATUS_STYLES } from '@/lib/statusLabels';
-import {
-  isParentLinked,
-  isStudentPortalLinked,
-  studentParentEmail,
-  studentPortalEmail,
-} from '@/lib/studentPortal';
+import { isParentLinked, isStudentPortalLinked } from '@/lib/studentPortal';
 import StudentDetail from '@/app/(app)/students/[id]/StudentDetail';
 import { cn } from '@/lib/cn';
 
@@ -71,21 +66,21 @@ export function StudentsByStudentView({
           <>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center text-xs text-slate-600">
               <div className="space-y-1 min-w-0">
-                <p className="break-all">
-                  학부모: {studentParentEmail(selected) || '—'}{' '}
+                <p>
+                  학부모 연결:{' '}
                   {isParentLinked(selected) ? (
-                    <span className="text-emerald-600">연결됨</span>
-                  ) : studentParentEmail(selected) ? (
-                    <span className="text-amber-600">미연결</span>
-                  ) : null}
+                    <span className="text-emerald-600">✓</span>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
                 </p>
-                <p className="break-all">
-                  학생 계정: {studentPortalEmail(selected) || '—'}{' '}
+                <p>
+                  학생 연결:{' '}
                   {isStudentPortalLinked(selected) ? (
-                    <span className="text-emerald-600">연결됨</span>
-                  ) : studentPortalEmail(selected) ? (
-                    <span className="text-amber-600">미연결</span>
-                  ) : null}
+                    <span className="text-emerald-600">✓</span>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
                 </p>
               </div>
               <Link

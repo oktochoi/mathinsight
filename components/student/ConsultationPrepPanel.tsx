@@ -5,7 +5,12 @@ import { consultationCardPath } from '@/lib/documentRoutes';
 import type { ConsultationCard, LessonLog, Student } from '@/types/database';
 import { calculateHomeworkTrend, calculateScoreTrend, getRecentUnits } from '@/lib/analytics';
 import { computeStudentBadges } from '@/lib/studentBadges';
+import { buildConsultationBriefing } from '@/lib/consultationBriefing';
+import { assessStudentRisk } from '@/lib/studentRisk';
+import { countPendingConsultations, getLatestConsultationCard } from '@/lib/consultationStatus';
+import { ConsultationStatusBadge } from '@/components/consultation/ConsultationStatusBadge';
 import { buildPostConsultationChanges } from '@/lib/learningFlow';
+import { ConsultationBriefingCard } from '@/components/student/ConsultationBriefingCard';
 import { HOMEWORK_LABELS } from '@/lib/statusLabels';
 import { StudentBadges } from '@/components/student/StudentBadges';
 import type { ConsultationFollowup } from '@/types/database';
@@ -29,9 +34,13 @@ export function ConsultationPrepPanel({
   const hwTrend = calculateHomeworkTrend(recent);
   const units = getRecentUnits(recent, 4);
   const badges = computeStudentBadges(logs, followups);
-  const latestCard = cards[0];
+  const latestCard = getLatestConsultationCard(cards);
+  const latestCompleted = getLatestConsultationCard(cards, { completedOnly: true });
+  const pendingCards = countPendingConsultations(cards);
   const pendingFu = followups.filter((f) => f.status === 'pending');
-  const sinceConsult = buildPostConsultationChanges(logs, latestCard, followups);
+  const sinceConsult = buildPostConsultationChanges(logs, latestCompleted, followups);
+  const briefing = buildConsultationBriefing(student, logs, cards, followups);
+  const risk = assessStudentRisk(logs, { followups, lastCard: latestCompleted });
 
   const talkPoints: string[] = [];
   if (hwTrend.recentRate < 70 && recent.length > 0) {
@@ -66,7 +75,24 @@ export function ConsultationPrepPanel({
         </Link>
       </div>
 
+      <ConsultationBriefingCard
+        headline={briefing.headline}
+        lines={briefing.lines}
+        kindLabel={briefing.kindLabel}
+        kind={risk.kind}
+      />
+
       <StudentBadges badges={badges} />
+
+      {pendingCards > 0 && (
+        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900 flex flex-wrap items-center gap-2">
+          <ConsultationStatusBadge status="pending" />
+          <span>
+            상담 카드 {pendingCards}건이 <strong>대기</strong> 상태입니다. 상담 후 카드 상세에서
+            「상담 완료 처리」를 눌러 주세요.
+          </span>
+        </div>
+      )}
 
       {sinceConsult.length > 0 && (
         <div className="rounded-xl bg-white p-4 border border-indigo-100">

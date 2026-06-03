@@ -22,7 +22,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.replace('/auth');
   };
 
   return (

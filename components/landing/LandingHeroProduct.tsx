@@ -110,7 +110,7 @@ export function LandingHeroProduct() {
           <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
           <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-          <span className="ml-auto text-[11px] text-slate-400 font-mono">mathinsight · live</span>
+          <span className="ml-auto text-[11px] text-slate-400 font-mono">eduflow · live</span>
         </div>
 
         <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-4 bg-white shrink-0">

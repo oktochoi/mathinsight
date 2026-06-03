@@ -1,6 +1,10 @@
-# MathInsight 사용 가이드
+# EduFlow 사용 가이드
 
-MathInsight는 수학학원 **원장·강사**, **학부모**, **학생**이 각각 다른 화면을 사용하는 학생 관리 및 상담 지원 플랫폼입니다.
+**EduFlow**는 학생 흐름 데이터를 기반으로 교육 운영을 자동화하는 AI Workflow Platform입니다.  
+현재 파일럿은 수학학원 **원장·강사**, **학부모**, **학생**이 각각 다른 화면을 사용하는 기록·상담·리포트 흐름을 제공합니다.
+
+> 제품 비전·로드맵: [docs/EDUFLOW.md](./docs/EDUFLOW.md)  
+> **운영자가 할 일:** [docs/YOUR_TASKS.md](./docs/YOUR_TASKS.md)
 
 ---
 
@@ -238,7 +242,7 @@ MathInsight는 수학학원 **원장·강사**, **학부모**, **학생**이 각
 
 ## 핵심 목적
 
-MathInsight는 단순 학원 ERP가 아니라, **학생 기록을 구조화**하여
+EduFlow는 단순 학원 ERP가 아니라, **학생 기록을 구조화**하여
 
 - 상담 준비를 쉽게 하고
 - 학부모 신뢰를 높이며
@@ -272,6 +276,7 @@ npm run dev
 |------|------|
 | [USAGE_GUIDE.md](./USAGE_GUIDE.md) | 예시 시나리오(햇살수학, 이준호 등) |
 | [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) | SQL 마이그레이션 001~008, 오류 해결 |
+| [docs/EDUFLOW.md](./docs/EDUFLOW.md) | EduFlow 비전·기능 로드맵 |
 
 ### 발표 시연용 DB 시드
 
@@ -279,7 +284,7 @@ npm run dev
    - `okto0914@gmail.com` — 원장/강사
    - `okto0915@gmail.com` — 학부모
    - `okto0916@gmail.com` — 학생
-2. 마이그레이션 001~008 적용 후, Supabase **SQL Editor**에서 [`supabase/seed-demo.sql`](./supabase/seed-demo.sql) 전체 실행
+2. 마이그레이션 001~012 적용 후, [`docs/DEMO_SETUP.md`](./docs/DEMO_SETUP.md) 참고 — `npm run demo:auth` → [`supabase/seed-eduflow-demo.sql`](./supabase/seed-eduflow-demo.sql) 실행
 3. 로그인 확인: 원장 대시보드·시간표·박서연 학생 상세 / 학부모·학생 포털(박서연)
 
 **기술 스택:** Next.js 15 · Supabase Auth/DB · TypeScript · Tailwind

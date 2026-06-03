@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/cn';
+import { BrandMark } from '@/components/brand/BrandMark';
 
 const menuItems = [
   { label: '대시보드', href: '/dashboard', icon: 'ri-dashboard-line' },
@@ -30,7 +31,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     onClose?.();
-    router.push('/login');
+    router.replace('/auth');
   };
 
   const initial = profile?.name?.charAt(0) ?? '?';
@@ -53,14 +54,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
           >
             <i className="ri-bar-chart-box-fill text-white text-sm"></i>
           </div>
-          <div className="min-w-0">
-            <span className="text-white text-sm font-bold tracking-tight block truncate">
-              MathInsight
-            </span>
-            <div className="text-[10px] text-blue-400/70 font-medium tracking-wider">
-              학원
-            </div>
-          </div>
+          <BrandMark variant="light" showTagline nameClassName="text-sm" />
         </Link>
         <button
           type="button"
@@ -121,7 +115,19 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-white/5 safe-area-pb">
+      <div className="px-4 pb-3">
+        <Link
+          href="/dashboard"
+          onClick={onClose}
+          className="block rounded-xl p-3 text-[10px] leading-relaxed text-blue-200/90 hover:bg-white/5 transition-colors"
+          style={{ border: '1px solid rgba(59,130,246,0.2)' }}
+        >
+          <span className="font-semibold text-white text-xs block mb-1">사용 순서</span>
+          ① 수업 기록 → ② 대시보드 → ③ 상담(필요 시)
+        </Link>
+      </div>
+
+      <div className="p-4 pt-0 border-t border-white/5 safe-area-pb">
         <button
           type="button"
           onClick={handleLogout}

@@ -13,19 +13,19 @@ export default function StudentShell({ children }: { children: React.ReactNode }
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.replace('/auth');
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-slate-50">
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <div className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-sky-50/80 via-slate-50 to-slate-50">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-sky-100/80 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-8 h-8 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center">
-              <i className="ri-bar-chart-box-fill text-white text-sm"></i>
+            <div className="w-8 h-8 shrink-0 rounded-lg bg-sky-600 flex items-center justify-center">
+              <i className="ri-graduation-cap-line text-white text-sm"></i>
             </div>
-            <span className="font-bold text-slate-800 text-sm truncate">MathInsight</span>
-            <span className="text-[10px] text-slate-400 uppercase border-l pl-2 hidden sm:inline shrink-0">
+            <span className="font-bold text-slate-900 text-sm truncate">EduFlow</span>
+            <span className="text-[10px] text-sky-600 font-medium uppercase border-l border-sky-100 pl-2 hidden sm:inline shrink-0">
               학생 포털
             </span>
           </div>
@@ -63,7 +63,7 @@ export default function StudentShell({ children }: { children: React.ReactNode }
           </div>
         )}
       </header>
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full min-w-0">{children}</main>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full min-w-0">{children}</main>
     </div>
   );
 }

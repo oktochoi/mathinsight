@@ -47,5 +47,19 @@ export function useConsultationCard(id: string | undefined) {
     void fetchCard();
   }, [fetchCard]);
 
-  return { card, loading, error, refetch: fetchCard };
+  const markConsultationComplete = async (note?: string) => {
+    if (!id) return { error: 'ID 없음' };
+    const { error: err } = await supabase
+      .from('consultation_cards')
+      .update({
+        consultation_status: 'completed',
+        consulted_at: new Date().toISOString(),
+        consultation_note: note?.trim() || null,
+      })
+      .eq('id', id);
+    if (!err) await fetchCard();
+    return { error: err?.message ?? null };
+  };
+
+  return { card, loading, error, refetch: fetchCard, markConsultationComplete };
 }

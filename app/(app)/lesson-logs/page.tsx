@@ -7,6 +7,8 @@ import { useClasses, useLessonLogs } from '@/hooks/useLessonLogs';
 import { useStudents } from '@/hooks/useStudents';
 import { ErrorBanner, PageLoader } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { StaffPageIntro } from '@/components/ui/StaffPageIntro';
+import { STAFF_PAGES } from '@/lib/staffPages';
 import type { AttendanceStatus, HomeworkStatus, LessonLogInsert } from '@/types/database';
 
 const attendanceOptions: { value: AttendanceStatus; label: string }[] = [
@@ -140,7 +142,11 @@ function LessonLogPageContent() {
       {error && <ErrorBanner message={error} />}
       {classesError && <ErrorBanner message={classesError} />}
 
-      <PageHeader title="Lesson Log" description="수업 기록을 일괄 저장합니다" />
+      <PageHeader
+        title={STAFF_PAGES['lesson-logs'].title}
+        description={STAFF_PAGES['lesson-logs'].description}
+      />
+      <StaffPageIntro pageKey="lesson-logs" />
 
       <div className="rounded-2xl p-5 bg-white border border-slate-200 flex flex-wrap gap-4">
         <div>

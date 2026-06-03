@@ -22,6 +22,9 @@ import {
 import { ScheduleEventChip, ScheduleTypeLegend } from '@/components/schedules/ScheduleEventChip';
 import type { CalendarLessonEvent, ScheduleType } from '@/types/database';
 import { PageLoader, EmptyState } from '@/components/ui/DataStates';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StaffPageIntro } from '@/components/ui/StaffPageIntro';
+import { STAFF_PAGES } from '@/lib/staffPages';
 import { cn } from '@/lib/cn';
 
 const TYPE_FILTERS: { value: string; label: string }[] = [
@@ -89,82 +92,68 @@ export default function SchedulePage() {
 
   return (
     <div className="space-y-6 w-full min-w-0 max-w-full">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">시간표</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          오늘 수업과 수업 전 확인 — 일정은 수업 준비 도구입니다.
-        </p>
-      </div>
+      <PageHeader title={STAFF_PAGES.schedule.title} description={STAFF_PAGES.schedule.description} />
+      <StaffPageIntro pageKey="schedule" />
 
-      <div className="flex flex-wrap gap-2 items-center">
-        <button
-          type="button"
-          onClick={() => shiftWeek(-1)}
-          className="px-3 py-2 rounded-lg border text-sm cursor-pointer"
-        >
-          ← 이전 주
-        </button>
-        <button
-          type="button"
-          onClick={() => setWeekAnchor(new Date())}
-          className="px-3 py-2 rounded-lg border text-sm cursor-pointer"
-        >
-          이번 주
-        </button>
-        <button
-          type="button"
-          onClick={() => shiftWeek(1)}
-          className="px-3 py-2 rounded-lg border text-sm cursor-pointer"
-        >
-          다음 주 →
-        </button>
-        <select
-          value={classFilter}
-          onChange={(e) => setClassFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border text-sm ml-auto"
-        >
-          <option value="all">전체 반</option>
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border text-sm"
-        >
-          {TYPE_FILTERS.map((f) => (
-            <option key={f.value} value={f.value}>
-              {f.label}
-            </option>
-          ))}
-        </select>
-        <Link href="/settings" className="text-xs text-indigo-600 hover:underline">
-          일정 등록 → 설정
-        </Link>
-      </div>
-
-      <section className="rounded-2xl p-5 bg-indigo-50 border border-indigo-100">
-        <h2 className="text-sm font-bold text-indigo-950 mb-3">오늘 수업</h2>
-        {todayLessons.length === 0 ? (
-          <p className="text-sm text-indigo-700/80">오늘 등록된 수업 일정이 없습니다.</p>
-        ) : (
-          <ul className="space-y-2">
-            {todayLessons.map((item) => (
-              <div key={item.event.id} onClick={() => setSelected(item.event)}>
-                <LessonFlowCard item={item} date={today} compact />
-              </div>
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+        <div className="flex flex-wrap gap-2 items-center">
+          <button
+            type="button"
+            onClick={() => shiftWeek(-1)}
+            className="px-3 py-2 rounded-lg border text-sm cursor-pointer"
+          >
+            ← 이전 주
+          </button>
+          <button
+            type="button"
+            onClick={() => setWeekAnchor(new Date())}
+            className="px-3 py-2 rounded-lg border text-sm cursor-pointer"
+          >
+            이번 주
+          </button>
+          <button
+            type="button"
+            onClick={() => shiftWeek(1)}
+            className="px-3 py-2 rounded-lg border text-sm cursor-pointer"
+          >
+            다음 주 →
+          </button>
+          <select
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+            className="px-3 py-2 rounded-lg border text-sm sm:ml-auto"
+          >
+            <option value="all">전체 반</option>
+            {classes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
             ))}
-          </ul>
-        )}
-      </section>
-
-      <ScheduleTypeLegend className="px-1" />
+          </select>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="px-3 py-2 rounded-lg border text-sm"
+          >
+            {TYPE_FILTERS.map((f) => (
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <Link href="/settings" className="text-xs text-indigo-600 hover:underline w-full sm:w-auto">
+            일정 등록 → 설정
+          </Link>
+        </div>
+        <ScheduleTypeLegend className="px-0" />
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-5 min-w-0">
-        <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white overflow-hidden min-w-0">
+        <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white overflow-hidden min-w-0 order-1">
+          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/80">
+            <h2 className="text-sm font-bold text-slate-900">주간 시간표</h2>
+            <p className="text-xs text-slate-500 mt-0.5">수업을 누르면 오른쪽에서 상세·기록 입력</p>
+          </div>
           <div className="grid grid-cols-7 border-b border-slate-100 text-center text-xs font-semibold text-slate-500">
             {weekDates.map((d) => {
               const dt = new Date(d + 'T12:00:00');
@@ -200,7 +189,7 @@ export default function SchedulePage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 min-w-0">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 min-w-0 order-2">
           <h3 className="text-sm font-bold mb-3">수업 상세</h3>
           {!selected ? (
             <p className="text-sm text-slate-400">캘린더에서 수업을 선택하세요.</p>
@@ -282,6 +271,22 @@ export default function SchedulePage() {
           )}
         </div>
       </div>
+
+      <section className="rounded-2xl p-5 bg-indigo-50 border border-indigo-100 order-3">
+        <h2 className="text-sm font-bold text-indigo-950 mb-1">오늘 수업 요약</h2>
+        <p className="text-xs text-indigo-700/80 mb-3">같은 수업은 위 시간표에서도 선택할 수 있습니다.</p>
+        {todayLessons.length === 0 ? (
+          <p className="text-sm text-indigo-700/80">오늘 등록된 수업 일정이 없습니다.</p>
+        ) : (
+          <ul className="space-y-2">
+            {todayLessons.map((item) => (
+              <div key={item.event.id} onClick={() => setSelected(item.event)}>
+                <LessonFlowCard item={item} date={today} compact />
+              </div>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {schedules.length === 0 && (
         <EmptyState

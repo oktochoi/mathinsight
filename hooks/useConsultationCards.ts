@@ -46,12 +46,16 @@ export function useConsultationCards(studentId?: string) {
   }, [fetchCards, dataVersion]);
 
   const saveCard = async (
-    payload: Omit<ConsultationCard, 'id' | 'created_at' | 'students'>
+    payload: Omit<
+      ConsultationCard,
+      'id' | 'created_at' | 'students' | 'consultation_status' | 'consulted_at' | 'consultation_note'
+    >
   ) => {
     const { data, error: err } = await supabase
       .from('consultation_cards')
       .insert({
         ...payload,
+        consultation_status: 'pending',
         generated_by: profile?.id ?? null,
       })
       .select('id')
@@ -60,5 +64,18 @@ export function useConsultationCards(studentId?: string) {
     return { error: err?.message ?? null, cardId: data?.id as string | undefined };
   };
 
-  return { cards, loading, error, refetch: fetchCards, saveCard };
+  const markConsultationComplete = async (cardId: string, note?: string) => {
+    const { error: err } = await supabase
+      .from('consultation_cards')
+      .update({
+        consultation_status: 'completed',
+        consulted_at: new Date().toISOString(),
+        consultation_note: note?.trim() || null,
+      })
+      .eq('id', cardId);
+    if (!err) bumpDataVersion();
+    return { error: err?.message ?? null };
+  };
+
+  return { cards, loading, error, refetch: fetchCards, saveCard, markConsultationComplete };
 }

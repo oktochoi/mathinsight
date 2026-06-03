@@ -13,7 +13,7 @@ export function LandingProductOverlay({ className = '' }: { className?: string }
       transition={{ duration: 0.5 }}
     >
       <div className="px-4 py-2.5 border-b border-[#1a1816]/6 flex justify-between text-[10px] editorial-muted">
-        <span>mathinsight</span>
+        <span>eduflow</span>
         <span>흐름 · 4</span>
       </div>
       <div className="p-4 space-y-2.5 bg-white">

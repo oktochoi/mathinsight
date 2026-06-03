@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Pacifico } from "next/font/google";
+import { BRAND_DESCRIPTION, BRAND_META_TITLE, BRAND_TAGLINE } from "@/lib/brand";
 import "./globals.css";
 
 const pacifico = Pacifico({
@@ -20,8 +21,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MathInsight - 학생 관리 및 학부모 상담 지원 플랫폼",
-  description: "AI 기반 수학학원 학생 관리 및 학부모 상담 지원 SaaS 플랫폼",
+  title: BRAND_META_TITLE,
+  description: `${BRAND_TAGLINE}. ${BRAND_DESCRIPTION}`,
 };
 
 export const viewport: Viewport = {

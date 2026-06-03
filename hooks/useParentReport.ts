@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { parentCanAccessStudent } from '@/lib/portalStudents';
 import type { ParentReport } from '@/types/database';
 
 export function useParentReport(id: string | undefined) {
@@ -40,7 +41,8 @@ export function useParentReport(id: string | undefined) {
     } | null;
 
     if (profile?.role === 'parent') {
-      if (student?.parent_user_id !== profile.id) {
+      const allowed = await parentCanAccessStudent(profile.id, row.student_id);
+      if (!allowed) {
         setError('이 리포트에 접근할 수 없습니다.');
         setReport(null);
       } else {

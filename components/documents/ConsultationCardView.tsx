@@ -1,6 +1,7 @@
 'use client';
 
 import type { ConsultationCard } from '@/types/database';
+import { ConsultationStatusBadge } from '@/components/consultation/ConsultationStatusBadge';
 
 export function ConsultationCardView({ card }: { card: ConsultationCard }) {
   const studentName = (card.students as { name?: string })?.name ?? '학생';
@@ -18,7 +19,10 @@ export function ConsultationCardView({ card }: { card: ConsultationCard }) {
           {card.period_start} ~ {card.period_end}
           {grade ? ` · ${grade}` : ''}
         </p>
-        <p className="text-xs text-indigo-200/70 mt-2">저장일 {savedAt}</p>
+        <p className="text-xs text-indigo-200/70 mt-2 flex flex-wrap items-center gap-2">
+          저장일 {savedAt}
+          <ConsultationStatusBadge status={card.consultation_status ?? 'pending'} />
+        </p>
       </div>
 
       <div className="p-6 sm:p-8 space-y-7">

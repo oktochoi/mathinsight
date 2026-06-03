@@ -14,8 +14,19 @@ Supabase Dashboard → **SQL Editor**에서 다음 파일을 실행하세요:
 6. **`supabase/migrations/006_fix_users_rls_recursion.sql`** ← users RLS 무한 재귀 수정 (003 이후 **필수**)
 7. **`supabase/migrations/007_student_portal_emails.sql`** ← 학부모/학생 이메일 저장·계정 조회 RPC
 8. **`supabase/migrations/008_schedules_and_followups.sql`** ← 반별 수업 일정·예외·상담 후 확인
+9. **`supabase/migrations/009_profile_setup_pending.sql`** ← Google·이메일 가입 후 역할 선택 (권장)
+10. **`supabase/migrations/010_owner_role_alias.sql`** ← UI 역할 `owner` ↔ DB `admin` 매핑
+11. **`supabase/migrations/011_student_connection_codes.sql`** ← 연결 요청·승인 (기반)
+12. **`supabase/migrations/012_academy_connection_code.sql`** ← **학원당 연결 코드 1개** (011 이후 필수)
 
-### 발표 시연용 시드 (`seed-demo.sql`)
+### 공모전·발표 시연용 시드 (`seed-eduflow-demo.sql`)
+
+자세한 절차: **`docs/DEMO_SETUP.md`**
+
+1. `npm run demo:auth` (또는 `/auth`에서 3계정 가입)
+2. SQL Editor에서 **`supabase/seed-eduflow-demo.sql`** 실행
+
+### 레거시 시드 (`seed-demo.sql` — 사용 비권장)
 
 1. Auth에 `okto0914@gmail.com`(admin), `okto0915@gmail.com`(parent), `okto0916@gmail.com`(student) 가입
 2. SQL Editor에서 **`supabase/seed-demo.sql`** 전체 실행
@@ -39,9 +50,14 @@ Supabase Dashboard → **SQL Editor**에서 다음 파일을 실행하세요:
 ## 2. 환경 변수 (`.env.local`)
 
 ```env
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
 ```
+
+### Google 로그인
+
+Supabase·Google Cloud 설정은 **[docs/GOOGLE_OAUTH_SETUP.md](./docs/GOOGLE_OAUTH_SETUP.md)** 를 따르세요. Client Secret은 Dashboard에만 넣습니다.
 
 ## Next.js 렌더링
 
@@ -62,8 +78,8 @@ Server Page 예시: `app/(app)/dashboard/page.tsx`
 
 ## 3. Auth
 
-- **회원가입** (`/signup`): Auth 사용자 + `academies` + `users` + 기본 `classes` (A반) 생성
-- **로그인** (`/login`): 역할에 따라 `/dashboard`, `/parent`, `/student`로 이동
+- **로그인·가입** (`/auth`): Google 또는 이메일 → 최초 **`/auth/choose-role`** 에서 역할·(원장) 학원 이름 확정
+- 역할 확정 후 `/dashboard`, `/parent`, `/student`로 이동 (`/login`, `/signup`은 `/auth`로 연결)
 
 ### 회원가입 `POST /users` 401 (Unauthorized)
 

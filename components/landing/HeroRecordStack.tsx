@@ -64,7 +64,7 @@ export function HeroRecordStack() {
             <span className="w-2 h-2 rounded-full bg-stone-300" />
             <span className="w-2 h-2 rounded-full bg-stone-300" />
           </div>
-          <span className="text-[10px] text-stone-500 ml-1 font-medium">MathInsight</span>
+          <span className="text-[10px] text-stone-500 ml-1 font-medium">EduFlow</span>
           <span className="ml-auto flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] text-stone-500 tabular-nums">21:04</span>

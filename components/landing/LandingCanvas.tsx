@@ -3,9 +3,17 @@
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
-export function LandingCanvas({ children }: { children: ReactNode }) {
+export function LandingCanvas({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="landing-canvas soft-mesh-bg relative min-h-screen overflow-x-hidden text-slate-900">
+    <div
+      className={`landing-canvas soft-mesh-bg relative min-h-screen overflow-x-hidden text-slate-900 ${className}`}
+    >
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
         <motion.div
           className="soft-blob w-[420px] h-[420px] -top-24 -left-24 bg-violet-300/50 soft-glow-drift"

@@ -3,8 +3,9 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { computeStudentBadges } from '@/lib/studentBadges';
-import { StudentBadges } from '@/components/student/StudentBadges';
+import { StudentSignalCell } from '@/components/students/StudentSignalCell';
+import { STUDENT_SIGNAL_LEGEND, STAFF_PAGES } from '@/lib/staffPages';
+import { StaffPageIntro } from '@/components/ui/StaffPageIntro';
 import type { LessonLog, ConsultationFollowup } from '@/types/database';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -19,17 +20,17 @@ import {
 } from '@/lib/studentPortal';
 import { ClassesSection } from '@/components/settings/ClassesSection';
 import { StudentsByStudentView } from '@/components/students/StudentsByStudentView';
-import { STATUS_LABELS, STATUS_STYLES } from '@/lib/statusLabels';
+import { STATUS_LABELS } from '@/lib/statusLabels';
 import { ErrorBanner, TableSkeleton, EmptyState, PageLoader } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
 import type { Student, StudentStatus } from '@/types/database';
 
 const gradeOptions = ['전체', '중1', '중2', '중3', '고1', '고2', '고3'];
 const statusOptions: { label: string; value: string }[] = [
-  { label: '전체', value: '전체' },
-  { label: STATUS_LABELS.stable, value: 'stable' },
-  { label: STATUS_LABELS.attention, value: 'attention' },
-  { label: STATUS_LABELS.consultation, value: 'consultation' },
+  { label: '등록 상태 전체', value: '전체' },
+  { label: `등록: ${STATUS_LABELS.stable}`, value: 'stable' },
+  { label: `등록: ${STATUS_LABELS.attention}`, value: 'attention' },
+  { label: `등록: ${STATUS_LABELS.consultation}`, value: 'consultation' },
 ];
 
 function StudentsPageContent() {
@@ -41,10 +42,14 @@ function StudentsPageContent() {
   const [followupsByStudent, setFollowupsByStudent] = useState<
     Map<string, ConsultationFollowup[]>
   >(new Map());
+  const [pendingCardsByStudent, setPendingCardsByStudent] = useState<Map<string, number>>(
+    new Map()
+  );
 
   const loadBadgeData = useCallback(async () => {
     if (!profile?.academy_id) return;
-    const [logsRes, fuRes] = await Promise.all([
+    const studentIds = students.map((s) => s.id);
+    const [logsRes, fuRes, cardsRes] = await Promise.all([
       supabase
         .from('lesson_logs')
         .select('*')
@@ -56,6 +61,13 @@ function StudentsPageContent() {
         .select('*')
         .eq('academy_id', profile.academy_id)
         .eq('status', 'pending'),
+      studentIds.length > 0
+        ? supabase
+            .from('consultation_cards')
+            .select('student_id, consultation_status')
+            .in('student_id', studentIds)
+            .eq('consultation_status', 'pending')
+        : Promise.resolve({ data: [], error: null }),
     ]);
     const logMap = new Map<string, LessonLog[]>();
     for (const log of (logsRes.data ?? []) as LessonLog[]) {
@@ -69,9 +81,14 @@ function StudentsPageContent() {
       arr.push(fu);
       fuMap.set(fu.student_id, arr);
     }
+    const pendingMap = new Map<string, number>();
+    for (const row of (cardsRes.data ?? []) as { student_id: string }[]) {
+      pendingMap.set(row.student_id, (pendingMap.get(row.student_id) ?? 0) + 1);
+    }
     setLogsByStudent(logMap);
     setFollowupsByStudent(fuMap);
-  }, [profile?.academy_id]);
+    setPendingCardsByStudent(pendingMap);
+  }, [profile?.academy_id, students]);
 
   useEffect(() => {
     void loadBadgeData();
@@ -168,40 +185,43 @@ function StudentsPageContent() {
       school: form.school,
       status: form.status,
     };
-    const result = editingId
-      ? await updateStudent(editingId, payload)
-      : await addStudent(payload);
-    if (result.error) {
-      setSubmitting(false);
-      showToast(result.error);
-      return;
+    let studentId = editingId ?? '';
+    if (editingId) {
+      const { error: updateErr } = await updateStudent(editingId, payload);
+      if (updateErr) {
+        setSubmitting(false);
+        showToast(updateErr);
+        return;
+      }
+    } else {
+      const { error: addErr, id } = await addStudent(payload);
+      if (addErr) {
+        setSubmitting(false);
+        showToast(addErr);
+        return;
+      }
+      studentId = id ?? '';
     }
-
-    const studentId =
-      editingId ?? ('id' in result && typeof result.id === 'string' ? result.id : undefined);
     if (studentId) {
-      const linkResult = await linkStudentPortals(studentId, {
+      const link = await linkStudentPortals(studentId, {
         parentEmail: form.parent_email,
         studentEmail: form.student_email,
       });
-      if (linkResult.error) {
+      if (link.error) {
         setSubmitting(false);
-        showToast(linkResult.error);
+        showToast(`저장됐으나 연결 실패: ${link.error}`);
+        await refetch();
         return;
       }
-      await refetch();
-      setSubmitting(false);
-      setShowModal(false);
-      const base = editingId ? '저장되었습니다.' : '등록되었습니다.';
-      showToast(
-        linkResult.warnings.length > 0 ? `${base} ${linkResult.warnings.join(' ')}` : base
-      );
-      return;
     }
 
     setSubmitting(false);
     setShowModal(false);
-    showToast(editingId ? '수정되었습니다.' : '등록되었습니다.');
+    showToast(
+      editingId
+        ? '저장되었습니다.'
+        : '등록되었습니다. 학부모·학생 이메일을 입력하면 가입 계정과 자동 연결됩니다.'
+    );
     await refetch();
   };
 
@@ -215,10 +235,7 @@ function StudentsPageContent() {
     <div className="space-y-6 w-full min-w-0 max-w-full">
       {toast && <div className="toast-fixed bg-emerald-600">{toast}</div>}
 
-      <PageHeader
-        title="Students"
-        description="반 관리 · 학생별 보기 · 학부모/학생 연결"
-      >
+      <PageHeader title={STAFF_PAGES.students.title} description={STAFF_PAGES.students.description}>
         <button
           type="button"
           onClick={openCreate}
@@ -228,6 +245,11 @@ function StudentsPageContent() {
           <i className="ri-user-add-line"></i>학생 등록
         </button>
       </PageHeader>
+
+      <StaffPageIntro
+        pageKey="students"
+        legend={STUDENT_SIGNAL_LEGEND.map((x) => ({ label: x.label, desc: x.desc }))}
+      />
 
       {error && <ErrorBanner message={error} onRetry={refetch} />}
 
@@ -326,9 +348,18 @@ function StudentsPageContent() {
                 <th className="px-6 py-4">학생</th>
                 <th className="px-6 py-4">학년</th>
                 <th className="px-6 py-4">반</th>
-                <th className="px-6 py-4">연결</th>
-                <th className="px-6 py-4">상태</th>
-                <th className="px-6 py-4">기록 배지</th>
+                <th className="px-6 py-4">앱 연결</th>
+                <th className="px-6 py-4">
+                  <span className="inline-flex items-center gap-1">
+                    학습 신호
+                    <span
+                      className="normal-case font-normal text-slate-400"
+                      title="수업 기록·상담 후 확인을 자동 분석"
+                    >
+                      (자동)
+                    </span>
+                  </span>
+                </th>
                 <th className="px-6 py-4"></th>
               </tr>
             </thead>
@@ -337,7 +368,7 @@ function StudentsPageContent() {
                 <TableSkeleton />
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={6}>
                     <EmptyState
                       title="학생이 없습니다"
                       description="반을 추가한 뒤 학생을 등록해 보세요."
@@ -354,27 +385,18 @@ function StudentsPageContent() {
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-500">
                       <span className={isParentLinked(student) ? 'text-emerald-600' : ''}>
-                        부모 {isParentLinked(student) ? '✓' : studentParentEmail(student) ? '…' : '—'}
+                        부모 {isParentLinked(student) ? '✓' : '—'}
                       </span>
                       <span className="mx-1">·</span>
                       <span className={isStudentPortalLinked(student) ? 'text-emerald-600' : ''}>
-                        학생 {isStudentPortalLinked(student) ? '✓' : studentPortalEmail(student) ? '…' : '—'}
+                        학생 {isStudentPortalLinked(student) ? '✓' : '—'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${STATUS_STYLES[student.status]}`}
-                      >
-                        {STATUS_LABELS[student.status]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 max-w-[200px]">
-                      <StudentBadges
-                        badges={computeStudentBadges(
-                          logsByStudent.get(student.id) ?? [],
-                          followupsByStudent.get(student.id) ?? []
-                        ).filter((b) => b.type !== 'stable')}
-                        compact
+                      <StudentSignalCell
+                        logs={logsByStudent.get(student.id) ?? []}
+                        followups={followupsByStudent.get(student.id) ?? []}
+                        pendingConsultations={pendingCardsByStudent.get(student.id) ?? 0}
                       />
                     </td>
                     <td className="px-4 sm:px-6 py-4">
@@ -465,27 +487,24 @@ function StudentsPageContent() {
                 </option>
               ))}
             </select>
-            <div className="pt-2 border-t border-slate-100 space-y-2">
-              <p className="text-xs font-semibold text-slate-600">학부모·학생 포털 (가입 이메일)</p>
-              <input
-                type="email"
-                placeholder="학부모 이메일"
-                value={form.parent_email}
-                onChange={(e) => setForm({ ...form, parent_email: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
-              />
-              <input
-                type="email"
-                placeholder="학생 계정 이메일"
-                value={form.student_email}
-                onChange={(e) => setForm({ ...form, student_email: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
-              />
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                이메일은 학생 정보에 저장됩니다. 해당 역할로 회원가입한 계정이 있으면 자동 연결되며,
-                없으면 가입 후 같은 이메일로 다시 저장하세요.
-              </p>
-            </div>
+            <input
+              type="email"
+              placeholder="학부모 가입 이메일 (예: parent@example.com)"
+              value={form.parent_email}
+              onChange={(e) => setForm({ ...form, parent_email: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+            />
+            <input
+              type="email"
+              placeholder="학생 가입 이메일 (예: student@example.com)"
+              value={form.student_email}
+              onChange={(e) => setForm({ ...form, student_email: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+            />
+            <p className="text-[11px] text-slate-500 leading-relaxed border-t border-slate-100 pt-3">
+              가입된 계정이 있으면 저장 시 자동 연결(✓)됩니다. 가입 전이면 이메일만 저장되며, 가입 후
+              다시 저장하면 연결됩니다.
+            </p>
             <div className="flex justify-end gap-2">
               <button
                 type="button"

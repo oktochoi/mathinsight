@@ -20,7 +20,7 @@ export default function NotFound() {
             홈
           </button>
         </Link>
-        <Link href="/login">
+        <Link href="/auth">
           <button
             type="button"
             className="px-6 py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 cursor-pointer"

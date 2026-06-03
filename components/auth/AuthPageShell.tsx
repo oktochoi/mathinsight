@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { BrandMark } from '@/components/brand/BrandMark';
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
@@ -33,7 +34,7 @@ export function AuthPageShell({ children, title, subtitle }: Props) {
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-500 flex items-center justify-center shadow-md shadow-indigo-200/50">
           <i className="ri-bar-chart-box-fill text-white text-base"></i>
         </div>
-        <span className="text-indigo-950 text-lg font-bold tracking-tight">MathInsight</span>
+        <BrandMark nameClassName="text-lg" />
       </Link>
 
       <Link

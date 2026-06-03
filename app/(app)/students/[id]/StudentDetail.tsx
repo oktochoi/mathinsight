@@ -32,13 +32,11 @@ import { ErrorBanner, PageLoader, EmptyState } from '@/components/ui/DataStates'
 import { StudentBadges } from '@/components/student/StudentBadges';
 import { StudentTimeline } from '@/components/student/StudentTimeline';
 import { ConsultationPrepPanel } from '@/components/student/ConsultationPrepPanel';
+import { StudentDigitalTwinPanel } from '@/components/student/StudentDigitalTwinPanel';
 import { StudentFlowHeader } from '@/components/student/StudentFlowHeader';
-import {
-  isParentLinked,
-  isStudentPortalLinked,
-  studentParentEmail,
-  studentPortalEmail,
-} from '@/lib/studentPortal';
+import { StudentConnectionsPanel } from '@/components/student/StudentConnectionsPanel';
+import { StudentConsultationHistory } from '@/components/student/StudentConsultationHistory';
+import { countPendingConsultations } from '@/lib/consultationStatus';
 
 export default function StudentDetail({
   studentId,
@@ -68,6 +66,7 @@ export default function StudentDetail({
   const summary = generateLearningSummary(logs, student.name);
   const badges = computeStudentBadges(logs, followups);
   const timeline = buildStudentTimeline(logs, cards, reports, followups);
+  const pendingCardCount = countPendingConsultations(cards);
 
   const scoreChart = scoreTrend.points.map((p) => ({ label: p.date, score: p.score }));
   const hwChart = hwTrend.weeklyRates;
@@ -110,26 +109,7 @@ export default function StudentDetail({
         <div className="mt-4">
           <StudentBadges badges={badges} compact />
         </div>
-        <div className="mt-4 rounded-xl bg-white/10 border border-white/20 px-4 py-3 text-xs text-slate-300 space-y-1">
-          <p>
-            학부모 이메일:{' '}
-            <span className="text-white">{studentParentEmail(student) || '—'}</span>{' '}
-            {isParentLinked(student) ? (
-              <span className="text-emerald-300">(로그인 연결됨)</span>
-            ) : studentParentEmail(student) ? (
-              <span className="text-amber-200">(계정 미연결)</span>
-            ) : null}
-          </p>
-          <p>
-            학생 이메일:{' '}
-            <span className="text-white">{studentPortalEmail(student) || '—'}</span>{' '}
-            {isStudentPortalLinked(student) ? (
-              <span className="text-emerald-300">(로그인 연결됨)</span>
-            ) : studentPortalEmail(student) ? (
-              <span className="text-amber-200">(계정 미연결)</span>
-            ) : null}
-          </p>
-        </div>
+        <StudentConnectionsPanel student={student} />
         <div className="flex flex-wrap gap-2 sm:gap-3 mt-4">
           <button
             type="button"
@@ -152,6 +132,8 @@ export default function StudentDetail({
       </div>
 
       <StudentFlowHeader logs={logs} followups={followups} />
+
+      <StudentDigitalTwinPanel logs={logs} cards={cards} followups={followups} />
 
       {prepOpen && (
         <ConsultationPrepPanel student={student} logs={logs} cards={cards} followups={followups} />
@@ -254,6 +236,18 @@ export default function StudentDetail({
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="rounded-2xl p-5 sm:p-6 bg-white border border-slate-200">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h3 className="text-sm font-bold">상담 카드 기록</h3>
+          {pendingCardCount > 0 && (
+            <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+              상담 대기 {pendingCardCount}건
+            </span>
+          )}
+        </div>
+        <StudentConsultationHistory cards={cards} />
       </div>
 
       <div className="rounded-2xl p-6 bg-white border border-slate-200">

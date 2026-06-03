@@ -4,13 +4,14 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useConsultationCard } from '@/hooks/useConsultationCard';
 import { ConsultationCardView } from '@/components/documents/ConsultationCardView';
+import { MarkConsultationComplete } from '@/components/consultation/MarkConsultationComplete';
 import { DocumentPageHeader } from '@/components/documents/DocumentPageHeader';
 import { PageLoader, EmptyState, ErrorBanner } from '@/components/ui/DataStates';
 
 export default function ConsultationCardDetailPage() {
   const params = useParams();
   const id = typeof params.id === 'string' ? params.id : '';
-  const { card, loading, error, refetch } = useConsultationCard(id);
+  const { card, loading, error, refetch, markConsultationComplete } = useConsultationCard(id);
 
   if (loading) return <PageLoader />;
 
@@ -46,7 +47,15 @@ export default function ConsultationCardDetailPage() {
       {!error && !card && !loading && (
         <EmptyState title="상담 카드를 찾을 수 없습니다" />
       )}
-      {card && <ConsultationCardView card={card} />}
+      {card && (
+        <div className="space-y-4">
+          <MarkConsultationComplete
+            card={card}
+            onComplete={(note) => markConsultationComplete(note)}
+          />
+          <ConsultationCardView card={card} />
+        </div>
+      )}
     </div>
   );
 }

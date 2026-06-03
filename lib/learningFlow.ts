@@ -254,10 +254,60 @@ export function buildPostConsultationChanges(
 export function buildDashboardPriorities(
   todayLessons: TodayLessonItem[],
   attentionCount: number,
-  missingLogLessons: number
+  missingLogLessons: number,
+  summary?: {
+    consultationCount: number;
+    pendingConsultationCount?: number;
+    missingHomeworkCount: number;
+    todayLessonCount: number;
+    recentReportCount: number;
+  }
 ): DashboardPriority[] {
   const items: DashboardPriority[] = [];
   const today = new Date().toISOString().slice(0, 10);
+
+  if (summary) {
+    if (summary.missingHomeworkCount > 0) {
+      items.push({
+        id: 'homework-missing',
+        text: `오늘 숙제 미제출 ${summary.missingHomeworkCount}명 → 수업 기록`,
+        href: '/lesson-logs',
+        tone: 'warning',
+      });
+    }
+    if ((summary.pendingConsultationCount ?? 0) > 0) {
+      items.push({
+        id: 'consult-pending',
+        text: `상담 대기 ${summary.pendingConsultationCount}건 → 상담 카드`,
+        href: '/consultation-cards',
+        tone: 'warning',
+      });
+    }
+    if (summary.consultationCount > 0) {
+      items.push({
+        id: 'consult-recommended',
+        text: `상담 검토 ${summary.consultationCount}명 → 학생 관리`,
+        href: '/students',
+        tone: 'warning',
+      });
+    }
+    if (summary.todayLessonCount > 0) {
+      items.push({
+        id: 'today-lessons',
+        text: `오늘 수업 ${summary.todayLessonCount}개 → 시간표`,
+        href: '/schedule',
+        tone: 'info',
+      });
+    }
+    if (summary.recentReportCount > 0) {
+      items.push({
+        id: 'recent-reports',
+        text: `저장된 리포트 ${summary.recentReportCount}건`,
+        href: '/parent-reports',
+        tone: 'info',
+      });
+    }
+  }
 
   for (const lesson of todayLessons) {
     const state = getLessonFlowState(lesson, today);
@@ -271,10 +321,17 @@ export function buildDashboardPriorities(
     }
   }
 
-  if (attentionCount > 0) {
+  if (!summary && attentionCount > 0) {
     items.push({
       id: 'attention',
       text: `상담·확인 참고 학생 ${attentionCount}명`,
+      href: '/students',
+      tone: 'info',
+    });
+  } else if (summary && attentionCount > summary.consultationCount) {
+    items.push({
+      id: 'attention',
+      text: `확인 참고 학생 ${attentionCount}명`,
       href: '/students',
       tone: 'info',
     });
@@ -289,7 +346,7 @@ export function buildDashboardPriorities(
     });
   }
 
-  return items.slice(0, 5);
+  return items.slice(0, 8);
 }
 
 export function buildActionActivities(input: {

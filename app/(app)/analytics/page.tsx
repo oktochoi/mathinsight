@@ -1,6 +1,9 @@
 'use client';
 
 import { PageLoader } from '@/components/ui/DataStates';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StaffPageIntro } from '@/components/ui/StaffPageIntro';
+import { STAFF_PAGES } from '@/lib/staffPages';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AnalyticsPage() {
@@ -10,17 +13,15 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6 w-full min-w-0 max-w-full">
-      <div>
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-50 text-blue-600">
-          분석
-        </span>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2">Analytics</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          {profile?.academy_id
-            ? '학원 전반 학습·운영 지표 (추가 분석 기능 예정)'
-            : '학원 정보가 연결되면 분석을 제공합니다.'}
-        </p>
-      </div>
+      <PageHeader
+        title={STAFF_PAGES.analytics.title}
+        description={
+          profile?.academy_id
+            ? STAFF_PAGES.analytics.description
+            : '학원 정보가 연결되면 분석을 제공합니다.'
+        }
+      />
+      <StaffPageIntro pageKey="analytics" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {[
           { icon: 'ri-bar-chart-2-line', title: '학년별 성적 분석' },

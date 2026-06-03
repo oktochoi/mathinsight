@@ -11,6 +11,9 @@ import { useParentReports } from '@/hooks/useParentReports';
 import { useAuth } from '@/context/AuthContext';
 import { fetchAiGenerate } from '@/lib/ai/client';
 import { PageLoader, EmptyState } from '@/components/ui/DataStates';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StaffPageIntro } from '@/components/ui/StaffPageIntro';
+import { STAFF_PAGES } from '@/lib/staffPages';
 import { AiSourceBadge } from '@/components/ai/AiSourceBadge';
 
 function defaultPeriod() {
@@ -130,20 +133,20 @@ export default function ParentReportsPage() {
         </div>
       )}
 
-      <div className="min-w-0">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">학부모 리포트</h1>
-        <p className="text-sm text-slate-500 mt-1 flex flex-wrap items-center gap-x-2">
-          학생 기록을 바탕으로 리포트를 작성합니다
-          {hasGenerated && (
-            <AiSourceBadge
-              source={aiSource}
-              backend={aiBackend}
-              fallbackReason={aiFallbackReason}
-              generating={generating}
-            />
-          )}
-        </p>
-      </div>
+      <PageHeader
+        title={STAFF_PAGES['parent-reports'].title}
+        description={STAFF_PAGES['parent-reports'].description}
+      >
+        {hasGenerated && (
+          <AiSourceBadge
+            source={aiSource}
+            backend={aiBackend}
+            fallbackReason={aiFallbackReason}
+            generating={generating}
+          />
+        )}
+      </PageHeader>
+      <StaffPageIntro pageKey="parent-reports" />
 
       <div className="rounded-2xl p-5 sm:p-6 bg-white border border-slate-200 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:items-end">

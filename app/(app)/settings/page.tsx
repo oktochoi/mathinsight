@@ -7,6 +7,11 @@ import { ErrorBanner } from '@/components/ui/DataStates';
 import { ClassesSection } from '@/components/settings/ClassesSection';
 import { ClassSchedulesSection } from '@/components/schedules/ClassSchedulesSection';
 import { PortalInviteSection } from '@/components/settings/PortalInviteSection';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StaffPageIntro } from '@/components/ui/StaffPageIntro';
+import { STAFF_PAGES } from '@/lib/staffPages';
+import { AcademyConnectionCodeSection } from '@/components/settings/AcademyConnectionCodeSection';
+import { ConnectionRequestsSection } from '@/components/settings/ConnectionRequestsSection';
 
 export default function SettingsPage() {
   const { profile, academy, refresh } = useAuth();
@@ -56,10 +61,8 @@ export default function SettingsPage() {
       {toast && <div className="rounded-xl bg-emerald-50 text-emerald-800 px-4 py-3 text-sm">{toast}</div>}
       {error && <ErrorBanner message={error} />}
 
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-sm text-slate-500 mt-1">학원·계정 정보 (Supabase)</p>
-      </div>
+      <PageHeader title={STAFF_PAGES.settings.title} description={STAFF_PAGES.settings.description} />
+      <StaffPageIntro pageKey="settings" />
 
       <div className="rounded-2xl p-6 bg-white border border-slate-200 space-y-4">
         <h3 className="text-sm font-bold">학원 정보</h3>
@@ -100,6 +103,8 @@ export default function SettingsPage() {
 
       <ClassesSection />
       <ClassSchedulesSection />
+      <AcademyConnectionCodeSection />
+      <ConnectionRequestsSection />
       <PortalInviteSection />
 
       <div className="rounded-2xl p-6 bg-slate-50 border border-slate-200 text-xs text-slate-500">

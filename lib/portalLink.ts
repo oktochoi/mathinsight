@@ -1,10 +1,14 @@
 import { supabase } from '@/lib/supabase';
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export async function findPortalUserByEmail(
   email: string,
   role: 'parent' | 'student'
 ): Promise<{ id: string; email: string; name: string } | null> {
-  const normalized = email.trim();
+  const normalized = normalizeEmail(email);
   if (!normalized) return null;
 
   const { data, error } = await supabase.rpc('find_portal_user_by_email', {
@@ -12,73 +16,68 @@ export async function findPortalUserByEmail(
     p_role: role,
   });
 
-  if (!error && data && Array.isArray(data) && data.length > 0) {
-    const row = data[0] as { id: string; email: string; name: string };
-    return row;
-  }
-
-  const { data: fallback, error: fbErr } = await supabase
-    .from('users')
-    .select('id, email, name, role')
-    .ilike('email', normalized)
-    .eq('role', role)
-    .maybeSingle();
-
-  if (fbErr || !fallback) return null;
-  return { id: fallback.id, email: fallback.email, name: fallback.name };
+  if (error || !data?.length) return null;
+  const row = data[0] as { id: string; email: string; name: string };
+  return row;
 }
 
+async function upsertStudentConnection(
+  studentId: string,
+  userId: string,
+  relationship: 'guardian' | 'student'
+): Promise<string | null> {
+  const { error } = await supabase.from('student_connections').upsert(
+    { student_id: studentId, user_id: userId, relationship },
+    { onConflict: 'student_id,user_id' }
+  );
+  return error?.message ?? null;
+}
+
+/** 학부모·학생 계정 이메일로 연결 (가입된 계정이 있으면 즉시 연결) */
 export async function linkStudentPortals(
   studentId: string,
-  options: { parentEmail?: string | null; studentEmail?: string | null }
-): Promise<{ error: string | null; warnings: string[] }> {
+  options: { parentEmail?: string; studentEmail?: string }
+): Promise<{
+  error: string | null;
+  parentLinked: boolean;
+  studentLinked: boolean;
+}> {
+  const parentEmail = options.parentEmail?.trim() ?? '';
+  const studentEmail = options.studentEmail?.trim() ?? '';
+
   const updates: {
+    parent_invite_email: string | null;
+    student_invite_email: string | null;
     parent_user_id?: string | null;
     student_user_id?: string | null;
-    parent_invite_email?: string | null;
-    student_invite_email?: string | null;
-  } = {};
-  const warnings: string[] = [];
+  } = {
+    parent_invite_email: parentEmail || null,
+    student_invite_email: studentEmail || null,
+  };
 
-  if (options.parentEmail !== undefined) {
-    const raw = options.parentEmail?.trim() ?? '';
-    updates.parent_invite_email = raw || null;
-    if (!raw) {
-      updates.parent_user_id = null;
-    } else {
-      const parent = await findPortalUserByEmail(raw, 'parent');
-      if (!parent) {
-        updates.parent_user_id = null;
-        warnings.push(
-          `학부모(${raw}): 가입된 「학부모」 계정을 찾지 못했습니다. 이메일은 저장했으며, 가입 후 다시 저장하면 연결됩니다.`
-        );
-      } else {
-        updates.parent_user_id = parent.id;
-      }
+  let parentLinked = false;
+  let studentLinked = false;
+
+  if (parentEmail) {
+    const parent = await findPortalUserByEmail(parentEmail, 'parent');
+    if (parent) {
+      updates.parent_user_id = parent.id;
+      parentLinked = true;
+      const connErr = await upsertStudentConnection(studentId, parent.id, 'guardian');
+      if (connErr) return { error: connErr, parentLinked, studentLinked };
     }
   }
 
-  if (options.studentEmail !== undefined) {
-    const raw = options.studentEmail?.trim() ?? '';
-    updates.student_invite_email = raw || null;
-    if (!raw) {
-      updates.student_user_id = null;
-    } else {
-      const student = await findPortalUserByEmail(raw, 'student');
-      if (!student) {
-        updates.student_user_id = null;
-        warnings.push(
-          `학생(${raw}): 가입된 「학생」 계정을 찾지 못했습니다. 이메일은 저장했으며, 가입 후 다시 저장하면 연결됩니다.`
-        );
-      } else {
-        updates.student_user_id = student.id;
-      }
+  if (studentEmail) {
+    const portalUser = await findPortalUserByEmail(studentEmail, 'student');
+    if (portalUser) {
+      updates.student_user_id = portalUser.id;
+      studentLinked = true;
+      const connErr = await upsertStudentConnection(studentId, portalUser.id, 'student');
+      if (connErr) return { error: connErr, parentLinked, studentLinked };
     }
   }
-
-  if (Object.keys(updates).length === 0) return { error: null, warnings: [] };
 
   const { error } = await supabase.from('students').update(updates).eq('id', studentId);
-  if (error) return { error: error.message, warnings: [] };
-  return { error: null, warnings };
+  return { error: error?.message ?? null, parentLinked, studentLinked };
 }

@@ -5,6 +5,7 @@ import type {
   ParentReport,
 } from '@/types/database';
 import { consultationCardPath, parentReportPath } from '@/lib/documentRoutes';
+import { formatConsultationStatusLine } from '@/lib/consultationStatus';
 import { HOMEWORK_LABELS } from '@/lib/statusLabels';
 
 export type TimelineEntryType =
@@ -33,12 +34,14 @@ export function buildStudentTimeline(
   const entries: TimelineEntry[] = [];
 
   for (const c of cards) {
+    const done = c.consultation_status === 'completed';
     entries.push({
       id: `card-${c.id}`,
       type: 'consultation_card',
-      date: c.created_at.slice(0, 10),
-      title: '상담 카드 생성',
-      detail: `${c.period_start} ~ ${c.period_end} · ${c.learning_summary.slice(0, 80)}${c.learning_summary.length > 80 ? '…' : ''}`,
+      date: (done && c.consulted_at ? c.consulted_at : c.created_at).slice(0, 10),
+      title: done ? '상담 완료' : '상담 카드 저장 (대기)',
+      detail: `${c.period_start} ~ ${c.period_end} · ${formatConsultationStatusLine(c)}`,
+      href: consultationCardPath(c.id),
     });
   }
 

@@ -1,4 +1,5 @@
-export type UserRole = 'admin' | 'teacher' | 'parent' | 'student';
+/** 앱 표시 역할 (DB `admin` → owner) */
+export type UserRole = 'owner' | 'teacher' | 'parent' | 'student';
 export type StudentStatus = 'stable' | 'attention' | 'consultation';
 export type AttendanceStatus = 'present' | 'late' | 'absent';
 export type HomeworkStatus = 'complete' | 'partial' | 'missing';
@@ -6,6 +7,7 @@ export type ReportTone = 'friendly' | 'objective' | 'exam_focused' | 'encouragin
 export type ScheduleType = 'regular' | 'makeup' | 'special' | 'canceled';
 export type ScheduleExceptionType = 'makeup' | 'canceled' | 'time_changed' | 'special';
 export type FollowupStatus = 'pending' | 'done';
+export type ConsultationStatus = 'pending' | 'completed';
 
 export type StudentBadgeType =
   | 'needs_review'
@@ -18,6 +20,8 @@ export interface Academy {
   id: string;
   name: string;
   owner_id: string;
+  /** 마이그레이션 012 이후 */
+  connection_code?: string;
   created_at: string;
 }
 
@@ -39,10 +43,38 @@ export interface ClassRow {
   created_at: string;
 }
 
+export type ConnectionRelationship = 'mother' | 'father' | 'guardian' | 'student';
+export type ConnectionRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface StudentConnection {
+  id: string;
+  student_id: string;
+  user_id: string;
+  relationship: ConnectionRelationship;
+  created_at: string;
+  user?: Pick<UserProfile, 'id' | 'email' | 'name'> | null;
+}
+
+export interface StudentConnectionRequest {
+  id: string;
+  academy_id: string | null;
+  student_id: string | null;
+  user_id: string;
+  relationship: ConnectionRelationship;
+  requested_student_name: string | null;
+  status: ConnectionRequestStatus;
+  created_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  user?: Pick<UserProfile, 'id' | 'email' | 'name'> | null;
+  student?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+}
+
 export interface Student {
   id: string;
   academy_id: string;
   class_id: string | null;
+  connection_code?: string | null;
   parent_user_id: string | null;
   student_user_id: string | null;
   parent_invite_email: string | null;
@@ -84,6 +116,9 @@ export interface ConsultationCard {
   evidence_summary: string;
   consultation_points: string[];
   parent_message: string;
+  consultation_status: ConsultationStatus;
+  consulted_at: string | null;
+  consultation_note: string | null;
   created_at: string;
   students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
 }
@@ -180,6 +215,8 @@ export interface AttentionStudent {
   status: StudentStatus;
   reason: string;
   urgency: 'high' | 'medium';
+  riskKindLabel?: string;
+  riskKind?: 'consultation' | 'makeup' | 'attention' | 'recovering' | 'stable';
 }
 
 export interface TodayLessonItem {
@@ -219,6 +256,7 @@ export interface DashboardStats {
   todayLessonCount: number;
   todayClassCount: number;
   missingHomeworkCount: number;
+  pendingConsultationCount: number;
   consultationRecommendedCount: number;
   scoreDeclineCount: number;
   homeworkTrend: { name: string; rate: number }[];

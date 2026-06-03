@@ -61,21 +61,21 @@ export function LandingEditorialScene() {
             }}
           >
             <p className="soft-label text-[10px] mb-2">live</p>
-            <p className="text-sm font-semibold text-slate-800">흐름이 겹쳐요</p>
-            <p className="text-xs soft-body mt-1">4건 연결 · 상담 전</p>
+            <p className="text-sm font-semibold text-slate-800">기록 연동</p>
+            <p className="text-xs soft-body mt-1">4건 · 상담 전</p>
           </motion.div>
         </FadeUp>
 
         <FadeUp delay={0.1} className="relative lg:pl-4 lg:-mt-6">
-          <p className="soft-label mb-4">손글씨 위에</p>
+          <p className="soft-label mb-4">기록 연동</p>
           <h2 className="soft-headline soft-headline-md">
-            종이 기록 위에
+            종이·엑셀 기록을
             <br />
-            <span className="soft-accent">디지털 흐름</span>을 겹쳐요
+            <span className="soft-accent">디지털 타임라인</span>으로
           </h2>
           <p className="mt-5 soft-body max-w-md">
-            상담 전, 학생 상황이 부드럽게 이어집니다.
-            다시 찾느라 시간 쓰지 않아도 돼요.
+            상담 전에 시험·숙제·메모를 한 화면에서 확인합니다. 학부모는 같은
+            맥락을 24시간 AI에게 문의할 수 있습니다.
           </p>
 
           <motion.div
@@ -84,7 +84,7 @@ export function LandingEditorialScene() {
             transition={{ type: 'spring', stiffness: 400, damping: 24 }}
           >
             <div className="px-5 py-3 border-b border-white/50 flex items-center justify-between">
-              <span className="text-[11px] font-mono text-slate-400/90">mathinsight</span>
+              <span className="text-[11px] font-mono text-slate-400/90">eduflow</span>
               <motion.span
                 className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 border border-indigo-100"
                 animate={{ scale: [1, 1.05, 1] }}
