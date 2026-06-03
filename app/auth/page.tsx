@@ -89,7 +89,7 @@ function AuthPageContent() {
           return;
         }
       } else {
-        const { error: err, profile, user, needsChooseRole } = await signInWithRole(
+        const { error: err, profile, user, needsChooseRole, rawDbRole } = await signInWithRole(
           email,
           password
         );
@@ -106,7 +106,7 @@ function AuthPageContent() {
           return;
         }
         const fresh = (await fetchUserProfile(user.id)) ?? profile;
-        const dest = resolvePostLoginPath(user, fresh, searchParams.get('next'));
+        const dest = resolvePostLoginPath(user, fresh, searchParams.get('next'), rawDbRole);
         router.replace(dest);
       }
     } finally {

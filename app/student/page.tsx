@@ -16,22 +16,15 @@ import { PageLoader, EmptyState, ErrorBanner } from '@/components/ui/DataStates'
 import { PortalSchedule } from '@/components/portal/PortalSchedule';
 import { StudentLessonHistory } from '@/components/portal/StudentLessonHistory';
 import { StudentTodayPanel } from '@/components/student/StudentTodayPanel';
+import { StudentPortalGuide } from '@/components/student/StudentPortalGuide';
+import { StudentStudyTips } from '@/components/student/StudentStudyTips';
+import { StudentCharts } from '@/components/student/StudentCharts';
+import { StudentSection, StudentStat, StudentSubheading } from '@/components/student/StudentUI';
 import {
   buildStudentProgressLines,
   buildStudentStudyTips,
 } from '@/lib/studentPortalInsights';
 import type { Student } from '@/types/database';
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from 'recharts';
 
 export default function StudentPortalPage() {
   const { profile } = useAuth();
@@ -83,14 +76,14 @@ export default function StudentPortalPage() {
   if (error) return <ErrorBanner message={error} />;
   if (!student) {
     return (
-      <div className="space-y-6 flex flex-col items-center max-w-lg mx-auto py-8">
+      <div className="max-w-lg mx-auto space-y-5 py-6">
         <EmptyState
-          title="연결된 학생 프로필이 없습니다"
-          description="학원에서 학생 등록 시 입력한 학생 이메일과 동일한 계정으로 가입·로그인해야 합니다."
+          title="연결된 학생 프로필이 없어요"
+          description="학원 등록 시 적은 학생 이메일과 로그인 이메일이 같아야 합니다."
         />
-        <p className="text-sm text-slate-600 max-w-md text-center leading-relaxed">
-          로그인 이메일: <strong className="text-slate-900">{profile?.email}</strong>
-        </p>
+        <div className="student-card p-5 text-sm text-slate-600">
+          로그인: <strong className="text-slate-900">{profile?.email}</strong>
+        </div>
       </div>
     );
   }
@@ -110,193 +103,157 @@ export default function StudentPortalPage() {
   const latestScore = scoreChart.length > 0 ? scoreChart[scoreChart.length - 1].score : null;
   const feedbackLogs = logs.filter((l) => l.memo?.trim() || (l.tags?.length ?? 0) > 0);
 
-  return (
-    <div className="w-full min-w-0 max-w-3xl mx-auto space-y-8 pb-10">
-      <header
-        className="rounded-2xl p-5 sm:p-6 text-white shadow-lg"
-        style={{ background: 'linear-gradient(135deg, #0369a1 0%, #0284c7 50%, #0ea5e9 100%)' }}
-      >
-        <p className="text-xs font-medium text-sky-100 uppercase tracking-wide">{academyName}</p>
-        <h1 className="text-2xl sm:text-3xl font-bold mt-1">안녕하세요, {student.name}님</h1>
-        <p className="text-sm text-sky-100/95 mt-1">
+  const heroCard = (
+    <header
+      className="student-card overflow-hidden h-full"
+      style={{
+        background: 'linear-gradient(135deg, #0369a1 0%, #0284c7 45%, #0ea5e9 100%)',
+      }}
+    >
+      <div className="p-5 sm:p-6 lg:p-7">
+        <p className="text-xs font-semibold text-sky-100 tracking-wide">{academyName}</p>
+        <h1 className="text-2xl lg:text-3xl font-bold text-white mt-1 tracking-tight">
+          안녕하세요, {student.name}님
+        </h1>
+        <p className="text-sm text-sky-100 mt-1">
           {student.grade} · {className}
         </p>
-
-        <div className="grid grid-cols-3 gap-3 mt-5">
-          <div className="rounded-xl bg-white/15 border border-white/20 px-3 py-3 text-center backdrop-blur-sm">
-            <p className="text-[10px] font-medium text-sky-100 uppercase">최근 점수</p>
-            <p className="text-xl font-bold mt-0.5 tabular-nums">
-              {latestScore != null ? `${latestScore}점` : '—'}
-            </p>
-          </div>
-          <div className="rounded-xl bg-white/15 border border-white/20 px-3 py-3 text-center backdrop-blur-sm">
-            <p className="text-[10px] font-medium text-sky-100 uppercase">숙제 제출</p>
-            <p className="text-xl font-bold mt-0.5 tabular-nums">
-              {logs.length > 0 ? `${hw.recentRate}%` : '—'}
-            </p>
-          </div>
-          <div className="rounded-xl bg-white/15 border border-white/20 px-3 py-3 text-center backdrop-blur-sm">
-            <p className="text-[10px] font-medium text-sky-100 uppercase">수업 기록</p>
-            <p className="text-xl font-bold mt-0.5 tabular-nums">{logs.length}건</p>
-          </div>
+        <div className="grid grid-cols-3 gap-3 lg:gap-4 mt-6 lg:max-w-md">
+          <StudentStat
+            label="최근 점수"
+            value={latestScore != null ? `${latestScore}점` : '—'}
+          />
+          <StudentStat
+            label="숙제 제출"
+            value={logs.length > 0 ? `${hw.recentRate}%` : '—'}
+          />
+          <StudentStat label="수업 기록" value={`${logs.length}건`} />
         </div>
-      </header>
+      </div>
+    </header>
+  );
 
-      <StudentTodayPanel
-        todayLog={todayLog}
-        latestMemoLog={latestMemoLog}
-        nextLesson={nextLesson}
-        todayLessons={todayLessons}
-      />
+  return (
+    <div className="space-y-6 lg:space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+        <div className="lg:col-span-3">
+          <StudentPortalGuide />
+        </div>
+        <div className="lg:col-span-9">{heroCard}</div>
+      </div>
 
-      <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 sm:p-6">
-        <h2 className="text-sm font-bold text-sky-950 flex items-center gap-2 mb-3">
-          <i className="ri-lightbulb-line text-sky-600" aria-hidden />
-          오늘의 학습 포인트
-        </h2>
-        <ul className="space-y-2.5">
-          {studyTips.map((tip, i) => (
-            <li
-              key={i}
-              className="text-[15px] text-sky-950 leading-relaxed flex gap-2 bg-white/80 rounded-xl px-4 py-3 border border-sky-100"
-            >
-              <span className="text-sky-500 font-bold shrink-0">{i + 1}.</span>
-              <span>{tip}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <div className="lg:col-span-8 xl:col-span-8 space-y-6 lg:space-y-8 min-w-0">
+          <StudentSection
+            id="learn"
+            step="1"
+            title="내 학습 흐름"
+            description="요약·점수·숙제를 한곳에서 확인하세요."
+          >
+            <StudentSubheading>학습 요약</StudentSubheading>
+            <p className="text-[15px] lg:text-base text-slate-700 leading-relaxed student-card-soft p-4 lg:p-5">
+              {summary}
+            </p>
+            {recentUnits.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {recentUnits.map((u) => (
+                  <span
+                    key={u}
+                    className="text-xs px-3 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200"
+                  >
+                    {u}
+                  </span>
+                ))}
+              </div>
+            )}
 
-      <section className="space-y-4">
-        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-          <i className="ri-line-chart-line text-sky-600" aria-hidden />
-          내 학습 흐름
-        </h2>
-
-        <div className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 mb-2">학습 요약</h3>
-          <p className="text-[15px] text-slate-700 leading-relaxed">{summary}</p>
-          {recentUnits.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {recentUnits.map((u) => (
-                <span
-                  key={u}
-                  className="text-xs px-3 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200"
-                >
-                  {u}
-                </span>
-              ))}
+            <div className="mt-8">
+              <StudentCharts
+                scoreTrend={scoreTrend}
+                scoreChart={scoreChart}
+                hwChart={hwChart}
+              />
             </div>
+
+            <div className="mt-8">
+              <StudentSubheading>최근 변화</StudentSubheading>
+              <ul className="space-y-2">
+                {progressLines.map((line, i) => (
+                  <li
+                    key={i}
+                    className="text-sm text-slate-700 pl-3 border-l-2 border-sky-300 leading-relaxed"
+                  >
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </StudentSection>
+
+          {classIds.length > 0 && (
+            <StudentSection
+              id="schedule"
+              step="2"
+              title="이번 주 수업 일정"
+              description="시간표에 등록된 수업입니다."
+            >
+              <PortalSchedule classIds={classIds} />
+            </StudentSection>
           )}
-        </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900 mb-3">점수 추이</h3>
-            {scoreChart.length === 0 ? (
-              <p className="text-sm text-slate-500">점수 기록이 없어요.</p>
+          <StudentSection
+            id="feedback"
+            step="3"
+            title="선생님 피드백"
+            description="수업 메모·태그가 있을 때 표시됩니다."
+          >
+            <ul className="divide-y divide-sky-50">
+              {feedbackLogs.length === 0 ? (
+                <li className="py-6 text-sm text-slate-500 text-center">{summary}</li>
+              ) : (
+                feedbackLogs.slice(0, 8).map((l) => (
+                  <li key={l.id} className="py-4 first:pt-0">
+                    <p className="text-xs text-slate-500 tabular-nums">{l.lesson_date}</p>
+                    <p className="text-[15px] text-slate-800 mt-1 leading-relaxed">
+                      {l.memo?.trim() || l.tags?.join(', ')}
+                    </p>
+                    {l.tags?.length && l.memo?.trim() ? (
+                      <p className="text-xs text-sky-700 mt-1.5">태그: {l.tags.join(', ')}</p>
+                    ) : null}
+                  </li>
+                ))
+              )}
+            </ul>
+          </StudentSection>
+
+          <StudentSection
+            id="history"
+            step="4"
+            title="수업 기록 전체"
+            description={`최근 ${logs.length}건`}
+          >
+            {logsLoading ? (
+              <PageLoader />
             ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={scoreChart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="score"
-                    stroke="#0284c7"
-                    fill="#0284c7"
-                    fillOpacity={0.15}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <StudentLessonHistory logs={logs} />
             )}
-            {scoreTrend.direction === 'up' && scoreTrend.delta != null && (
-              <p className="text-xs text-emerald-700 mt-2">최근 점수가 올라가는 흐름이에요.</p>
-            )}
-            {scoreTrend.direction === 'down' && scoreTrend.delta != null && (
-              <p className="text-xs text-amber-800 mt-2">
-                최근 점수가 조금 내려갔어요. 복습해 볼까요?
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900 mb-3">숙제 제출 (주별)</h3>
-            {hwChart.length === 0 || hwChart.every((w) => w.rate === 0) ? (
-              <p className="text-sm text-slate-500">숙제 기록이 아직 없어요.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={hwChart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="week" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Bar dataKey="rate" fill="#0369a1" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+          </StudentSection>
         </div>
 
-        <div className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 mb-3">최근 변화</h3>
-          <ul className="text-sm text-slate-700 space-y-2 leading-relaxed">
-            {progressLines.map((line, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="text-sky-500 shrink-0">·</span>
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="lg:col-span-4 xl:col-span-4 space-y-5 lg:sticky lg:top-6 scroll-mt-24">
+          <StudentTodayPanel
+            todayLog={todayLog}
+            latestMemoLog={latestMemoLog}
+            nextLesson={nextLesson}
+            todayLessons={todayLessons}
+          />
+          <StudentStudyTips tips={studyTips} />
         </div>
-      </section>
+      </div>
 
-      {classIds.length > 0 && (
-        <section className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 mb-3">이번 주 수업 일정</h3>
-          <PortalSchedule classIds={classIds} />
-        </section>
-      )}
-
-      <section className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 bg-sky-50/50">
-          <h3 className="text-sm font-bold text-sky-950">선생님 피드백</h3>
-          <p className="text-xs text-slate-500 mt-1">수업 메모·태그가 있을 때 표시됩니다</p>
-        </div>
-        <ul className="divide-y divide-slate-100 px-5 py-2">
-          {feedbackLogs.length === 0 ? (
-            <li className="py-6 text-sm text-slate-500 leading-relaxed">{summary}</li>
-          ) : (
-            feedbackLogs.slice(0, 6).map((l) => (
-              <li key={l.id} className="py-4">
-                <p className="text-xs text-slate-500">{l.lesson_date}</p>
-                <p className="text-[15px] text-slate-800 mt-1 leading-relaxed">
-                  {l.memo?.trim() || l.tags?.join(', ')}
-                </p>
-                {l.tags?.length && l.memo?.trim() ? (
-                  <p className="text-xs text-sky-700 mt-1">태그: {l.tags.join(', ')}</p>
-                ) : null}
-              </li>
-            ))
-          )}
-        </ul>
-      </section>
-
-      <section className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-2">
-          <h3 className="text-sm font-bold text-slate-900">수업 기록 전체</h3>
-          <span className="text-xs text-slate-500">{logs.length}건</span>
-        </div>
-        {logsLoading ? (
-          <div className="p-6">
-            <PageLoader />
-          </div>
-        ) : (
-          <StudentLessonHistory logs={logs} />
-        )}
-      </section>
+      <footer className="text-center text-xs text-slate-500 pb-2">
+        궁금한 점은 학원 선생님께 물어보세요. 이 화면은 학원 기록을 보여 줍니다.
+      </footer>
     </div>
   );
 }

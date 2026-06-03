@@ -19,9 +19,8 @@ export function ActionCenter({ items }: { items: DashboardPriority[] }) {
 
   return (
     <section className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
-        오늘 확인
-      </h3>
+      <h3 className="text-sm font-semibold text-slate-800 mb-1">바로 가기</h3>
+      <p className="text-xs text-slate-500 mb-3">자주 쓰는 메뉴로 이동합니다</p>
       <ul className="flex flex-wrap gap-2">
         {visible.map((item) => (
           <li key={item.id}>

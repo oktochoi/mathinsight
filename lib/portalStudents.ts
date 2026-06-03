@@ -28,9 +28,13 @@ export async function fetchParentLinkedStudents(userId: string): Promise<{
   const { data, error } = await supabase
     .from('students')
     .select('*, academies(id, name)')
-    .in('id', ids);
+    .in('id', ids)
+    .order('name');
 
-  return { students: (data ?? []) as Student[], error: error?.message ?? null };
+  const students = ((data ?? []) as Student[]).sort((a, b) =>
+    a.name.localeCompare(b.name, 'ko')
+  );
+  return { students, error: error?.message ?? null };
 }
 
 /** 학생: 본인 연결 프로필 */

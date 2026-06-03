@@ -2,16 +2,28 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getSuggestedParentQuestions, type ParentAgentChatMessage } from '@/lib/parentAgent';
+import type { RagCitation } from '@/lib/vectorRag/types';
+import { RagCitations } from '@/components/portal/RagCitations';
 import { cn } from '@/lib/cn';
+
+type ChatMessage = ParentAgentChatMessage & {
+  citations?: RagCitation[];
+  ragMode?: 'vector' | 'keyword';
+};
 
 export function ParentAgentChat({
   studentId,
   studentName,
+  academyName = '학원',
+  desktopSticky,
 }: {
   studentId: string;
   studentName: string;
+  academyName?: string;
+  /** PC: 사이드 열 높이에 맞춘 채팅 영역 */
+  desktopSticky?: boolean;
 }) {
-  const [messages, setMessages] = useState<ParentAgentChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +45,7 @@ export function ParentAgentChat({
     if (!q || loading) return;
     setError(null);
     setLoading(true);
-    const userMsg: ParentAgentChatMessage = { role: 'user', content: q };
+    const userMsg: ChatMessage = { role: 'user', content: q };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
 
@@ -51,74 +63,67 @@ export function ParentAgentChat({
         ok: boolean;
         answer?: string;
         error?: string;
-        source?: string;
-        fallbackReason?: string;
+        citations?: RagCitation[];
+        ragMode?: 'vector' | 'keyword';
       };
 
       if (!data.ok || !data.answer) {
-        setError(data.error ?? '답변을 받지 못했습니다.');
+        setError(data.error ?? '답변을 받지 못했습니다. 잠시 후 다시 시도해 주세요.');
         setMessages((prev) => prev.slice(0, -1));
         return;
       }
 
+      const answer = data.answer;
       setMessages((prev) => [
         ...prev,
         {
-          role: 'assistant',
-          content:
-            data.answer +
-            (data.fallbackReason ? `\n\n(${data.fallbackReason})` : ''),
+          role: 'assistant' as const,
+          content: answer,
+          citations: data.citations,
+          ragMode: data.ragMode,
         },
       ]);
     } catch {
-      setError('네트워크 오류가 발생했습니다.');
+      setError('인터넷 연결을 확인한 뒤 다시 시도해 주세요.');
       setMessages((prev) => prev.slice(0, -1));
     } finally {
       setLoading(false);
     }
   };
 
+  const suggestions = getSuggestedParentQuestions();
+
   return (
     <section
-      id="learning-agent"
-      className="rounded-3xl border-2 border-violet-200 bg-white shadow-lg shadow-violet-100/60 overflow-hidden scroll-mt-6"
+      className={cn(
+        'parent-card overflow-hidden flex flex-col',
+        desktopSticky && 'lg:min-h-[calc(100vh-7rem)] lg:max-h-[calc(100vh-5rem)]'
+      )}
     >
-      <div
-        className="px-5 sm:px-7 py-5 sm:py-6 text-white"
-        style={{ background: 'linear-gradient(135deg, #5b21b6 0%, #4f46e5 50%, #4338ca 100%)' }}
-      >
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-              <i className="ri-robot-2-line text-2xl" aria-hidden />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-violet-200">
-                EduFlow 학습 Agent
-              </p>
-              <h2 className="text-lg sm:text-xl font-bold mt-0.5">궁금한 점을 물어보세요</h2>
-              <p className="text-sm text-violet-100/95 mt-1 leading-relaxed max-w-xl">
-                <strong className="text-white">{studentName}</strong> 학생의 기록만 조회합니다.
-                다른 학생 정보는 사용하지 않습니다.
-              </p>
-            </div>
+      <div className="px-5 sm:px-6 py-5 border-b border-stone-100">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-200/50">
+            <i className="ri-chat-smile-2-line text-xl" aria-hidden />
           </div>
-          <span className="text-xs font-medium px-3 py-1.5 rounded-full bg-white/15 border border-white/20 shrink-0">
-            기록 기반
-          </span>
+          <div>
+            <h2 className="text-lg font-semibold text-stone-900">학습 상담 도우미</h2>
+            <p className="text-sm text-stone-500 mt-0.5">
+              {studentName} · {academyName} 기록만 사용
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="px-5 sm:px-7 py-4 sm:py-5 bg-violet-50/50 border-b border-violet-100">
-        <p className="text-xs font-semibold text-violet-900 mb-2.5">자주 묻는 질문</p>
-        <div className="grid sm:grid-cols-2 gap-2">
-          {getSuggestedParentQuestions().map((q) => (
+      <div className="px-4 sm:px-5 py-4 bg-stone-50/80 border-b border-stone-100 shrink-0">
+        <p className="text-xs font-semibold text-stone-500 mb-2.5">자주 묻는 질문</p>
+        <div className="flex flex-wrap gap-2 lg:grid lg:grid-cols-2 lg:gap-2">
+          {suggestions.map((q) => (
             <button
               key={q}
               type="button"
               disabled={loading}
               onClick={() => void send(q)}
-              className="text-left text-sm px-4 py-3 rounded-xl border border-violet-200/80 bg-white text-violet-950 hover:border-violet-400 hover:bg-violet-50 disabled:opacity-50 cursor-pointer transition-colors shadow-sm"
+              className="text-left text-sm px-3.5 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-800 hover:border-indigo-300 hover:shadow-sm disabled:opacity-50 cursor-pointer transition-all max-w-full"
             >
               {q}
             </button>
@@ -126,54 +131,58 @@ export function ParentAgentChat({
         </div>
       </div>
 
-      <div className="px-5 sm:px-7 py-4 sm:py-5">
+      <div className={cn('px-4 sm:px-5 py-4 flex flex-col flex-1 min-h-0', desktopSticky && 'lg:flex-1')}>
         <div
           ref={scrollRef}
-          className="rounded-2xl border border-slate-200 bg-slate-50/80 min-h-[min(52vh,440px)] max-h-[min(72vh,640px)] overflow-y-auto p-4 sm:p-5 space-y-4"
+          className={cn(
+            'rounded-2xl bg-stone-100/70 overflow-y-auto p-4 space-y-4 flex-1 min-h-[280px]',
+            desktopSticky
+              ? 'lg:min-h-0 lg:max-h-none lg:flex-1'
+              : 'max-h-[min(55vh,520px)]'
+          )}
         >
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center text-center py-12 sm:py-16 px-4">
-              <div className="w-14 h-14 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center mb-4">
-                <i className="ri-chat-smile-3-line text-2xl" aria-hidden />
+            <div className="flex flex-col items-center justify-center text-center py-14 px-3">
+              <div className="w-12 h-12 rounded-2xl bg-white border border-stone-200 flex items-center justify-center text-indigo-500 mb-3">
+                <i className="ri-message-3-line text-2xl" aria-hidden />
               </div>
-              <p className="text-base font-medium text-slate-700">
-                위 질문을 누르거나 아래에 직접 입력해 보세요
-              </p>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-md">
-                답변은 여러 문단으로 자세히 안내됩니다. 스크롤하여 전체 내용을 확인할 수 있습니다.
+              <p className="text-sm font-medium text-stone-700">질문을 선택하거나 직접 입력하세요</p>
+              <p className="text-xs text-stone-500 mt-2 max-w-xs leading-relaxed">
+                답변은 학원 수업·숙제 기록을 바탕으로 작성됩니다.
               </p>
             </div>
           )}
           {messages.map((m, i) => (
             <div
               key={i}
-              className={cn(
-                'flex',
-                m.role === 'user' ? 'justify-end' : 'justify-start'
-              )}
+              className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}
             >
               <div
                 className={cn(
-                  'max-w-[92%] sm:max-w-[85%] rounded-2xl px-4 py-3.5 leading-relaxed whitespace-pre-wrap break-words',
+                  'max-w-[88%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words shadow-sm',
                   m.role === 'user'
-                    ? 'text-[15px] text-white bg-violet-600 rounded-br-md shadow-sm'
-                    : 'text-[15px] text-slate-800 bg-white border border-slate-200 rounded-bl-md shadow-sm'
+                    ? 'bg-indigo-600 text-white rounded-br-md'
+                    : 'bg-white text-stone-800 border border-stone-200/80 rounded-bl-md'
                 )}
               >
                 {m.role === 'assistant' && (
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-violet-600 mb-2">
-                    학습 Agent
-                  </p>
+                  <p className="text-[11px] font-semibold text-indigo-600 mb-2">답변</p>
                 )}
                 {m.content}
+                {m.role === 'assistant' && m.citations && m.citations.length > 0 && (
+                  <RagCitations citations={m.citations} />
+                )}
               </div>
             </div>
           ))}
           {loading && (
-            <div className="flex justify-start">
-              <p className="text-sm text-slate-500 bg-white border border-slate-200 rounded-2xl px-4 py-3 animate-pulse">
-                기록을 확인하고 답변을 작성하고 있습니다…
-              </p>
+            <div className="flex gap-2 items-center text-sm text-stone-500 bg-white rounded-2xl px-4 py-3 border border-stone-200 w-fit">
+              <span className="flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" />
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:0.15s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:0.3s]" />
+              </span>
+              기록을 확인하는 중…
             </div>
           )}
         </div>
@@ -185,7 +194,7 @@ export function ParentAgentChat({
         )}
 
         <form
-          className="flex flex-col sm:flex-row gap-2 mt-4"
+          className="mt-4 flex gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             void send(input);
@@ -194,22 +203,21 @@ export function ParentAgentChat({
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="예: 최근 숙제는 잘 하고 있나요?"
-            className="flex-1 px-4 py-3.5 rounded-xl border-2 border-violet-100 focus:border-violet-400 focus:outline-none text-base bg-white"
+            placeholder="궁금한 점을 적어 주세요"
+            className="flex-1 min-w-0 px-4 py-3.5 rounded-xl border border-stone-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
             disabled={loading}
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="px-6 py-3.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-base font-semibold disabled:opacity-50 cursor-pointer shrink-0 shadow-md shadow-violet-200"
+            className="px-5 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold disabled:opacity-40 cursor-pointer shrink-0 transition-colors"
           >
-            {loading ? '답변 중…' : '질문하기'}
+            전송
           </button>
         </form>
 
-        <p className="text-xs text-slate-500 mt-4 leading-relaxed">
-          답변은 학원에 기록된 데이터를 참고한 안내이며, 최종 확인은 담임 선생님·학원 상담을 통해
-          해 주세요.
+        <p className="text-[11px] text-stone-400 mt-3 text-center leading-relaxed">
+          AI 답변은 참고용입니다. 확실한 안내는 {academyName}에 문의해 주세요.
         </p>
       </div>
     </section>

@@ -43,7 +43,8 @@
 
 | # | 기능 | 설명 | 상태 |
 |---|------|------|------|
-| 1 | **AI 학부모 상담 Agent** | 포털 채팅, `/api/parent-agent`, 기록·근거 기반 | ✅ v1 |
+| 1 | **AI 학부모 상담 Agent (RAG)** | 질문→검색→Context→Gemini, `/api/parent-agent` | ✅ v1 |
+| 9 | **Agent Architecture** | Risk·Dashboard·Counseling·Parent Communication + `agent_logs` | ✅ v1 |
 | 4 | **Student Digital Twin** | 학생 상세 프로필 패널 (`lib/studentDigitalTwin.ts`) | ✅ v1 |
 
 ### Phase 3 — 외부 연동

@@ -18,6 +18,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=   # 또는 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 # AI 생성 (상담 카드·학부모 리포트) — 없으면 규칙 기반 폴백
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash   # 선택
+SUPABASE_SERVICE_ROLE_KEY=      # Proactive Cron
+CRON_SECRET=                    # Vercel Cron Bearer (권장)
 ```
 
 ## 3. 로컬 실행 확인

@@ -19,8 +19,8 @@ export default function ParentReportPortalDetailPage() {
     <div className="space-y-6 w-full min-w-0 max-w-full">
       <DocumentPageHeader
         backHref="/parent"
-        backLabel="학습 현황"
-        title={studentName ? `${studentName} · 리포트` : '학부모 리포트'}
+        backLabel="돌아가기"
+        title={studentName ? `${studentName} 학부모 안내문` : '학부모 안내문'}
         subtitle={
           report
             ? `${report.period_start} ~ ${report.period_end}`

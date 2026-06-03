@@ -15,9 +15,9 @@ export const STAFF_PAGES: Record<
   { title: string; description: string; tasks: string[]; href: string; icon: string }
 > = {
   dashboard: {
-    title: '대시보드',
-    description: '① 수업 기록 후, 조치가 필요한 학생만 확인하는 곳입니다.',
-    tasks: ['오늘 수업·조치 필요 학생', '필요 시 학생 상세·상담'],
+    title: '오늘 할 일',
+    description: '수업 기록을 입력한 뒤, 상담·보강이 필요한 학생만 확인하세요.',
+    tasks: ['지금 조치할 학생', '오늘 수업·상담 카드'],
     href: '/dashboard',
     icon: 'ri-dashboard-line',
   },

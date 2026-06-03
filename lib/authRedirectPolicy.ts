@@ -1,7 +1,20 @@
 import type { User } from '@supabase/supabase-js';
 import { hasAssignedDbRole, needsProfileSetup } from '@/lib/authProfileSetup';
-import { fromDbRole, isStaffRole, roleHomePath } from '@/lib/roles';
+import { fromDbRole, isStaffRole, roleHomePath, toDbRole } from '@/lib/roles';
 import type { UserProfile } from '@/types/database';
+
+/** DB role · 프로필 · metadata 중 할당된 역할 문자열 */
+export function resolveDbRole(
+  user: Pick<User, 'user_metadata'>,
+  profile: UserProfile | null,
+  rawDbRole?: string | null
+): string | null {
+  if (hasAssignedDbRole(rawDbRole)) return rawDbRole!.trim();
+  if (profile?.role) return toDbRole(profile.role);
+  const meta = user.user_metadata?.role as string | undefined;
+  if (meta && fromDbRole(meta)) return toDbRole(meta);
+  return null;
+}
 
 const staffPrefixes = [
   '/dashboard',
@@ -55,12 +68,13 @@ export function portalRedirectForProtectedPath(
 }
 
 export function postAuthDestination(
-  _user: Pick<User, 'user_metadata'>,
-  _profile: UserProfile | null,
+  user: Pick<User, 'user_metadata'>,
+  profile: UserProfile | null,
   rawDbRole?: string | null
 ): string {
-  if (!hasAssignedDbRole(rawDbRole)) {
+  const dbRole = resolveDbRole(user, profile, rawDbRole);
+  if (!hasAssignedDbRole(dbRole)) {
     return '/auth/choose-role';
   }
-  return roleHomePath(rawDbRole);
+  return roleHomePath(dbRole);
 }

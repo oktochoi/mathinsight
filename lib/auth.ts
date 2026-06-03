@@ -14,7 +14,7 @@ import {
   type SignupRole,
   type UserRole,
 } from '@/lib/roles';
-import { getClientSiteOrigin } from '@/lib/siteUrl';
+import { getClientSiteOrigin, getConfiguredSiteOrigin } from '@/lib/siteUrl';
 import { postAuthDestination } from '@/lib/authRedirectPolicy';
 import { repairProfileRole } from '@/lib/profileIntegrity';
 import type { UserProfile } from '@/types/database';
@@ -234,11 +234,7 @@ export async function resolveProfileAfterAuth(
     return { profile, needsChooseRole: true };
   }
 
-  if (profile) {
-    return { profile, needsChooseRole: false };
-  }
-
-  return { profile: null, needsChooseRole: true };
+  return { profile, needsChooseRole: false };
 }
 
 /** 이메일 가입 — 역할은 /auth/choose-role 에서 선택 */
@@ -247,11 +243,15 @@ export async function signUpWithEmail(params: {
   password: string;
   name: string;
 }): Promise<SignUpResult> {
+  const origin = getClientSiteOrigin();
+  const emailRedirectTo = `${origin}/auth/callback`;
+
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: params.email,
     password: params.password,
     options: {
       data: pendingSignupMetadata(params.name),
+      emailRedirectTo,
     },
   });
 
@@ -306,26 +306,38 @@ export async function signInWithRole(
   profile: UserProfile | null;
   user: User | null;
   needsChooseRole?: boolean;
+  rawDbRole?: string | null;
 }> {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: formatAuthError(error), profile: null, user: null };
 
+  const { data: roleRow } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', data.user.id)
+    .maybeSingle();
+  const rawDbRole = (roleRow?.role as string | null) ?? null;
+
   const { profile, needsChooseRole } = await resolveProfileAfterAuth(data.user, email);
 
   if (needsChooseRole) {
-    return { error: null, profile: null, user: data.user, needsChooseRole: true };
+    return { error: null, profile, user: data.user, needsChooseRole: true, rawDbRole };
   }
 
-  if (!profile) {
-    return {
-      error:
-        '프로필을 불러오지 못했습니다. 역할 선택(/auth/choose-role)에서 다시 설정해 주세요.',
-      profile: null,
-      user: data.user,
-    };
-  }
+  const resolvedProfile = profile ?? (await fetchUserProfile(data.user.id));
 
-  return { error: null, profile, user: data.user };
+  return {
+    error: null,
+    profile: resolvedProfile,
+    user: data.user,
+    needsChooseRole: false,
+    rawDbRole,
+  };
+}
+
+/** 서버·문서용 프로덕션 사이트 origin */
+export function getAuthEmailRedirectOrigin(): string {
+  return getConfiguredSiteOrigin() ?? getClientSiteOrigin();
 }
 
 /** 로그인·OAuth 직후 이동 경로 (상대 경로) */

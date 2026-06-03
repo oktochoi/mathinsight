@@ -11,12 +11,29 @@ import { generateLearningSummary } from '@/lib/reportGenerator';
 import { calculateHomeworkTrend, calculateScoreTrend } from '@/lib/analytics';
 import { PageLoader, EmptyState, ErrorBanner } from '@/components/ui/DataStates';
 import type { Student } from '@/types/database';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
-import { PortalSchedule } from '@/components/portal/PortalSchedule';
+import { ParentPortalGuide } from '@/components/portal/ParentPortalGuide';
 import { ParentAgentChat } from '@/components/portal/ParentAgentChat';
+import { ParentRecentLessons } from '@/components/portal/ParentRecentLessons';
+import { ParentScoreChart } from '@/components/portal/ParentScoreChart';
+import { PortalSchedule } from '@/components/portal/PortalSchedule';
+import { PortalSection, PortalStat, PortalSubheading } from '@/components/portal/ParentUI';
 import { fetchParentLinkedStudents } from '@/lib/portalStudents';
 import { buildParentRecentChanges } from '@/lib/learningFlow';
 import { cn } from '@/lib/cn';
+
+function homeworkHint(rate: number, hasLogs: boolean): { text: string; warn: boolean } {
+  if (!hasLogs) return { text: '—', warn: false };
+  if (rate >= 85) return { text: '잘 하고 있어요', warn: false };
+  if (rate >= 60) return { text: '가끔 빠뜨려요', warn: true };
+  return { text: '챙겨 주세요', warn: true };
+}
+
+function pickDefaultChild(students: Student[], userId: string): string {
+  const linked = students.find((s) => s.parent_user_id === userId);
+  if (linked) return linked.id;
+  const sorted = [...students].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  return sorted[0]?.id ?? '';
+}
 
 export default function ParentPage() {
   const { profile } = useAuth();
@@ -32,8 +49,9 @@ export default function ParentPage() {
 
     if (err) setError('자녀 정보를 불러오지 못했습니다.');
     else {
-      setChildren(students);
-      if (students[0]) setSelectedId(students[0].id);
+      const sorted = [...students].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      setChildren(sorted);
+      setSelectedId(pickDefaultChild(sorted, profile.id));
     }
     setLoading(false);
   }, [profile?.id]);
@@ -51,158 +69,198 @@ export default function ParentPage() {
 
   if (children.length === 0) {
     return (
-      <div className="space-y-6 flex flex-col items-center max-w-lg mx-auto py-8">
+      <div className="max-w-lg mx-auto space-y-5 py-6">
         <EmptyState
-          title="연결된 자녀가 없습니다"
-          description="학원에서 학생 등록 시 입력한 학부모 이메일과 동일한 계정으로 가입·로그인해야 합니다. 연결 후 수업·리포트를 볼 수 있습니다."
+          title="연결된 자녀가 없어요"
+          description="학원 등록 시 적은 학부모 이메일과 로그인 이메일이 같아야 합니다."
         />
-        <p className="text-sm text-slate-600 max-w-md text-center leading-relaxed">
-          로그인 이메일: <strong className="text-slate-900">{profile?.email}</strong>
-          <br />
-          원장이 Students에서 해당 이메일을 저장한 뒤, 다시 저장하면 연결됩니다.
-        </p>
+        <div className="parent-card p-5 text-sm text-stone-600 space-y-2">
+          <p>
+            로그인: <strong className="text-stone-900">{profile?.email}</strong>
+          </p>
+          <p className="text-stone-500">학원에 연결 확인을 요청해 주세요.</p>
+        </div>
       </div>
     );
   }
 
-  const summary = child ? generateLearningSummary(logs, child.name) : '';
+  if (!child) return null;
+
+  const summary = generateLearningSummary(logs, child.name);
   const scoreTrend = calculateScoreTrend(logs);
-  const scoreChart = scoreTrend.points;
   const hw = calculateHomeworkTrend(logs);
+  const hwHint = homeworkHint(hw.recentRate, logs.length > 0);
   const recentChanges = buildParentRecentChanges(logs);
-  const latestScore = scoreChart.length > 0 ? scoreChart[scoreChart.length - 1].score : null;
+  const latestScore = scoreTrend.recentAvg;
   const academyName =
     (child as Student & { academies?: { name: string } })?.academies?.name ?? '학원';
 
+  const heroCard = (
+    <header className="parent-card overflow-hidden h-full">
+      <div className="h-1.5 bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-400" />
+      <div className="p-5 sm:p-6 lg:p-7">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-16 h-16 lg:w-[4.5rem] lg:h-[4.5rem] rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 border border-indigo-100 flex items-center justify-center text-3xl font-bold text-indigo-700 shrink-0">
+              {child.name.slice(0, 1)}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-indigo-600">{academyName}</p>
+              <h1 className="text-2xl lg:text-3xl font-bold text-stone-900 tracking-tight mt-0.5">
+                {child.name}
+              </h1>
+              <p className="text-sm text-stone-500 mt-1">{child.grade}</p>
+            </div>
+          </div>
+          <p className="text-sm text-stone-600 sm:max-w-xs lg:max-w-sm leading-relaxed sm:text-right">
+            <span className="font-medium text-stone-800">{profile?.name ?? '학부모'}</span>님,
+            학원에 기록된 학습 정보입니다.
+          </p>
+        </div>
+
+        {children.length > 1 && (
+          <div className="mt-5 pt-5 border-t border-stone-100">
+            <p className="text-xs font-medium text-stone-500 mb-2">자녀 선택</p>
+            <div className="flex flex-wrap gap-2">
+              {children.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedId(c.id)}
+                  className={cn(
+                    'px-4 py-2 rounded-xl text-sm font-semibold border cursor-pointer transition-all',
+                    c.id === selectedId
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                      : 'bg-stone-50 text-stone-700 border-stone-200 hover:border-indigo-200'
+                  )}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 sm:grid-cols-3 gap-3 lg:gap-4 mt-6 lg:max-w-xl">
+          <PortalStat
+            label="최근 점수"
+            value={latestScore != null ? `${latestScore}점` : '—'}
+            accent="score"
+          />
+          <PortalStat
+            label="숙제"
+            value={hwHint.text}
+            sub={logs.length > 0 ? `제출률 ${hw.recentRate}%` : undefined}
+            accent={hwHint.warn ? 'homework' : 'neutral'}
+          />
+          <PortalStat
+            label="수업 기록"
+            value={`${logs.length}회`}
+            accent="neutral"
+          />
+        </div>
+      </div>
+    </header>
+  );
+
   return (
-    <div className="w-full min-w-0 max-w-3xl mx-auto space-y-8 pb-10">
-      {child && (
-        <>
-          <header className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-            <p className="text-xs font-medium text-violet-600 uppercase tracking-wide">
-              {academyName}
-            </p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">{child.name}</h1>
-            <p className="text-base text-slate-600 mt-1">{child.grade}</p>
+    <div className="space-y-6 lg:space-y-8">
+      {/* 상단: PC에서 가이드 + 프로필 나란히 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+        <div className="lg:col-span-3">
+          <ParentPortalGuide />
+        </div>
+        <div className="lg:col-span-9">{heroCard}</div>
+      </div>
 
-            {children.length > 1 && (
-              <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100">
-                {children.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setSelectedId(c.id)}
-                    className={cn(
-                      'px-4 py-2 rounded-full text-sm font-medium border cursor-pointer transition-colors',
-                      c.id === selectedId
-                        ? 'bg-violet-600 text-white border-violet-600'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-violet-300'
-                    )}
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="grid grid-cols-3 gap-3 mt-5">
-              <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-3 text-center">
-                <p className="text-[10px] font-medium text-slate-500 uppercase">최근 점수</p>
-                <p className="text-xl font-bold text-slate-900 mt-0.5 tabular-nums">
-                  {latestScore != null ? `${latestScore}점` : '—'}
-                </p>
-              </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-3 text-center">
-                <p className="text-[10px] font-medium text-slate-500 uppercase">숙제 제출</p>
-                <p className="text-xl font-bold text-slate-900 mt-0.5 tabular-nums">
-                  {logs.length > 0 ? `${hw.recentRate}%` : '—'}
-                </p>
-              </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-3 text-center">
-                <p className="text-[10px] font-medium text-slate-500 uppercase">수업 기록</p>
-                <p className="text-xl font-bold text-slate-900 mt-0.5 tabular-nums">
-                  {logs.length}건
-                </p>
-              </div>
-            </div>
-          </header>
-
-          <ParentAgentChat studentId={child.id} studentName={child.name} />
-
-          <section className="space-y-4">
-            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <i className="ri-bar-chart-line text-violet-600" aria-hidden />
-              학습 현황
-            </h2>
-
-            <div className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-900 mb-2">학습 요약</h3>
-              <p className="text-[15px] text-slate-700 leading-relaxed">{summary}</p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-900 mb-3">점수 추이</h3>
-                {scoreChart.length === 0 ? (
-                  <p className="text-sm text-slate-500">아직 점수 기록이 없습니다.</p>
-                ) : (
-                  <ResponsiveContainer width="100%" height={200}>
-                    <AreaChart data={scoreChart}>
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                      <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                      <Tooltip />
-                      <Area
-                        type="monotone"
-                        dataKey="score"
-                        stroke="#7c3aed"
-                        fill="#7c3aed"
-                        fillOpacity={0.12}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+      {/* 본문: PC 2열 — 왼쪽 정보 / 오른쪽 AI 채팅 고정 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <div className="lg:col-span-7 xl:col-span-8 space-y-6 lg:space-y-8 min-w-0">
+          <PortalSection
+            id="overview"
+            step="1"
+            title="우리 아이, 요즘 어떤가요?"
+            description="선생님 메모와 최근 수업을 확인하세요."
+          >
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:gap-8">
+              <div className="xl:col-span-1 space-y-6">
+                <div>
+                  <PortalSubheading>한 줄 요약</PortalSubheading>
+                  <p className="text-[15px] lg:text-base text-stone-700 leading-relaxed parent-card-soft p-4 lg:p-5">
+                    {summary || '수업 기록이 쌓이면 요약이 표시됩니다.'}
+                  </p>
+                </div>
+                {recentChanges.length > 0 && (
+                  <div>
+                    <PortalSubheading>최근 변화</PortalSubheading>
+                    <ul className="space-y-2">
+                      {recentChanges.map((line, i) => (
+                        <li
+                          key={i}
+                          className="text-sm text-stone-700 pl-3 border-l-2 border-indigo-200 leading-relaxed"
+                        >
+                          {line.replace(/\(기록\)/g, '')}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
-
-              <div className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-900 mb-3">최근 변화</h3>
-                <ul className="text-sm text-slate-700 space-y-2 leading-relaxed">
-                  {recentChanges.map((line, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="text-violet-500 shrink-0">·</span>
-                      <span>{line}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="xl:col-span-1">
+                <PortalSubheading>최근 수업</PortalSubheading>
+                <ParentRecentLessons logs={logs} />
               </div>
             </div>
+          </PortalSection>
 
-            <div className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-900 mb-3">이번 주 수업 일정</h3>
-              <PortalSchedule classIds={child.class_id ? [child.class_id] : []} />
+          <PortalSection
+            id="details"
+            step="3"
+            title="점수와 일정"
+            description="그래프와 이번 주 수업 일정입니다."
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+              <div>
+                <PortalSubheading>점수 그래프</PortalSubheading>
+                <ParentScoreChart trend={scoreTrend} />
+              </div>
+              <div>
+                <PortalSubheading>이번 주 일정</PortalSubheading>
+                <PortalSchedule classIds={child.class_id ? [child.class_id] : []} />
+              </div>
             </div>
-          </section>
+          </PortalSection>
 
-          <section className="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900 mb-3">학부모 리포트</h3>
-            <p className="text-xs text-slate-500 mb-3">
-              원장이 작성·저장한 기간별 안내 문서입니다. Agent와는 별도입니다.
-            </p>
+          <PortalSection
+            id="reports"
+            step="4"
+            title="원장님 안내문"
+            description="학원에서 작성·공유한 기간별 리포트입니다."
+          >
             {reportsLoading ? (
-              <PageLoader />
+              <p className="text-sm text-stone-500">불러오는 중…</p>
             ) : reports.length === 0 ? (
-              <p className="text-sm text-slate-500">발송된 리포트가 없습니다.</p>
+              <p className="text-sm text-stone-500 parent-card-soft py-10 text-center">
+                아직 안내문이 없습니다.
+              </p>
             ) : (
-              <ul className="space-y-2">
-                {reports.slice(0, 5).map((r) => (
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {reports.slice(0, 8).map((r) => (
                   <li key={r.id}>
                     <Link
                       href={parentReportPath(r.id, 'parent')}
-                      className="block rounded-xl border border-slate-100 px-4 py-3 hover:border-violet-200 hover:bg-violet-50/30 transition-colors"
+                      className="group block parent-card-soft p-4 lg:p-5 h-full hover:border-indigo-200 hover:shadow-md transition-all"
                     >
-                      <p className="text-sm font-medium text-violet-700">
-                        {r.created_at.slice(0, 10)} 리포트
-                      </p>
-                      <p className="text-sm text-slate-600 mt-1 line-clamp-3 leading-relaxed">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-indigo-700">
+                          {r.period_start} ~ {r.period_end}
+                        </p>
+                        <i
+                          className="ri-arrow-right-s-line text-stone-400 group-hover:text-indigo-600"
+                          aria-hidden
+                        />
+                      </div>
+                      <p className="text-sm text-stone-600 mt-2 line-clamp-3 leading-relaxed">
                         {sanitizeParentReportText(r.report_text)}
                       </p>
                     </Link>
@@ -210,9 +268,29 @@ export default function ParentPage() {
                 ))}
               </ul>
             )}
-          </section>
-        </>
-      )}
+          </PortalSection>
+        </div>
+
+        <div
+          id="ask"
+          className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 scroll-mt-24 min-w-0"
+        >
+          <p className="text-xs font-semibold text-stone-500 mb-3 hidden lg:flex items-center gap-2">
+            <span className="parent-section-badge">2</span>
+            궁금하면 오른쪽에서 바로 질문하세요
+          </p>
+          <ParentAgentChat
+            studentId={child.id}
+            studentName={child.name}
+            academyName={academyName}
+            desktopSticky
+          />
+        </div>
+      </div>
+
+      <footer className="text-center text-xs text-stone-400 leading-relaxed pb-2 lg:pb-0">
+        문의는 학원으로 연락해 주세요. AI 답변은 참고용이며 최종 안내는 학원에서 드립니다.
+      </footer>
     </div>
   );
 }

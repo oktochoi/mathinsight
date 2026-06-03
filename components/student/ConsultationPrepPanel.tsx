@@ -11,6 +11,7 @@ import { countPendingConsultations, getLatestConsultationCard } from '@/lib/cons
 import { ConsultationStatusBadge } from '@/components/consultation/ConsultationStatusBadge';
 import { buildPostConsultationChanges } from '@/lib/learningFlow';
 import { ConsultationBriefingCard } from '@/components/student/ConsultationBriefingCard';
+import { CounselingAgentPanel } from '@/components/student/CounselingAgentPanel';
 import { HOMEWORK_LABELS } from '@/lib/statusLabels';
 import { StudentBadges } from '@/components/student/StudentBadges';
 import type { ConsultationFollowup } from '@/types/database';
@@ -66,6 +67,8 @@ export function ConsultationPrepPanel({
 
   return (
     <div className="rounded-2xl border border-indigo-100 bg-indigo-50/30 p-5 sm:p-6 space-y-5">
+      <CounselingAgentPanel studentId={student.id} studentName={student.name} />
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-bold text-indigo-950">상담 준비 모드</h3>
         <Link href={`/consultation-cards?student=${student.id}`}>

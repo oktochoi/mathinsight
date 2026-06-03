@@ -269,6 +269,65 @@ export interface DashboardStats {
   todayPriorities: DashboardPriority[];
 }
 
+export type StoredRiskLevel =
+  | 'stable'
+  | 'attention'
+  | 'consultation'
+  | 'makeup'
+  | 'recovering';
+
+export type AgentType =
+  | 'risk_detection'
+  | 'counseling'
+  | 'parent_communication'
+  | 'dashboard'
+  | 'parent_rag';
+
+export type AgentLogStatus = 'running' | 'completed' | 'failed' | 'pending';
+
+export interface StudentRiskSignal {
+  id: string;
+  academy_id: string;
+  student_id: string;
+  risk_level: StoredRiskLevel;
+  reason: string;
+  signals: { id: string; label: string }[];
+  created_at: string;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+}
+
+export interface AgentLog {
+  id: string;
+  academy_id: string;
+  agent_type: AgentType;
+  student_id: string | null;
+  status: AgentLogStatus;
+  action: string;
+  result: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface DashboardAgentInsight {
+  consultationStudents: { id: string; name: string; grade: string; reason: string }[];
+  makeupStudents: { id: string; name: string; grade: string; reason: string }[];
+  parentContactStudents: { id: string; name: string; grade: string; reason: string }[];
+  priorityExplanation: string;
+  agentStatuses: {
+    agentType: AgentType;
+    label: string;
+    status: AgentLogStatus;
+    lastRunAt: string | null;
+  }[];
+}
+
+export interface CounselingAgentResult {
+  summary: string;
+  mainIssues: string[];
+  consultationPoints: string[];
+  recommendedActions: string[];
+  source: 'gemini' | 'rules';
+}
+
 export interface LessonLogInsert {
   academy_id: string;
   class_id: string;

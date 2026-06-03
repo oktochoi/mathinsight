@@ -19,19 +19,16 @@ export function StudentTodayPanel({
   const todaySchedule = todayLessons[0];
 
   return (
-    <section className="rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white p-5 sm:p-6 shadow-sm shadow-sky-100/50">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center">
-          <i className="ri-calendar-check-line text-lg" aria-hidden />
-        </div>
-        <h2 className="text-base font-bold text-sky-950">오늘 & 다가오는 수업</h2>
+    <div className="student-card overflow-hidden" id="today">
+      <div className="px-5 py-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white">
+        <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i className="ri-calendar-check-line text-sky-600 text-lg" aria-hidden />
+          오늘 & 다가오는 수업
+        </h2>
       </div>
-
-      <div className="grid sm:grid-cols-2 gap-3">
-        <div className="rounded-xl bg-white p-4 border border-sky-100 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
-            오늘 수업
-          </p>
+      <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="student-card-soft p-4">
+          <p className="text-xs font-semibold text-slate-500 mb-2">오늘 수업</p>
           {todaySchedule ? (
             <>
               <p className="font-semibold text-slate-900">
@@ -55,10 +52,8 @@ export function StudentTodayPanel({
           )}
         </div>
 
-        <div className="rounded-xl bg-white p-4 border border-sky-100 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
-            오늘 숙제
-          </p>
+        <div className="student-card-soft p-4">
+          <p className="text-xs font-semibold text-slate-500 mb-2">오늘 숙제</p>
           <p className="font-semibold text-slate-900 text-lg">
             {todayLog ? HOMEWORK_LABELS[todayLog.homework_status] : '—'}
           </p>
@@ -68,10 +63,8 @@ export function StudentTodayPanel({
         </div>
 
         {nextLesson && (
-          <div className="rounded-xl bg-white p-4 border border-sky-100 shadow-sm sm:col-span-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
-              다음 수업
-            </p>
+          <div className="student-card-soft p-4 sm:col-span-2">
+            <p className="text-xs font-semibold text-slate-500 mb-2">다음 수업</p>
             <p className="font-semibold text-slate-900">
               {nextLesson.date} {nextLesson.startTime.slice(0, 5)} · {nextLesson.title}
             </p>
@@ -81,23 +74,13 @@ export function StudentTodayPanel({
           </div>
         )}
 
-        <div className="rounded-xl bg-white p-4 border border-sky-100 shadow-sm sm:col-span-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
-            선생님 메모
-          </p>
-          <p className="text-[15px] text-slate-700 leading-relaxed">
-            {latestMemoLog?.memo?.trim() ||
-              (latestMemoLog?.tags?.length
-                ? latestMemoLog.tags.join(', ')
-                : '아직 메모가 없어요. 수업이 진행되면 여기에 표시됩니다.')}
-          </p>
-          {latestMemoLog?.lesson_date && (
-            <p className="text-xs text-slate-400 mt-2">
-              ({latestMemoLog.lesson_date.slice(0, 10)} 기록)
-            </p>
-          )}
-        </div>
+        {latestMemoLog?.memo?.trim() && (
+          <div className="student-card-soft p-4 sm:col-span-2 border-l-4 border-l-sky-400">
+            <p className="text-xs font-semibold text-slate-500 mb-2">선생님 한마디</p>
+            <p className="text-sm text-slate-700 leading-relaxed">{latestMemoLog.memo}</p>
+          </div>
+        )}
       </div>
-    </section>
+    </div>
   );
 }

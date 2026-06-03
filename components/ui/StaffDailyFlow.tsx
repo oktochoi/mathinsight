@@ -9,14 +9,14 @@ export function StaffDailyFlow() {
     <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/90 to-white p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-            이렇게 쓰세요
+          <p className="text-xs font-semibold text-indigo-700">
+            원장님 매일 루틴 (3단계)
           </p>
           <h2 className="text-base sm:text-lg font-bold text-slate-900 mt-0.5">
-            매일 ① 기록 → ② 대시보드 → ③ 필요 시 상담
+            수업 끝나면 기록 → 여기서 학생 확인 → 필요할 때만 상담
           </h2>
           <p className="text-sm text-slate-600 mt-1">
-            모든 메뉴를 볼 필요 없습니다. 아래 순서만 따라가면 됩니다.
+            왼쪽 메뉴 전부 볼 필요 없습니다. 아래 3가지만 기억하세요.
           </p>
         </div>
       </div>

@@ -38,7 +38,7 @@ export interface StudentRiskAssessment {
   briefingLines: string[];
 }
 
-const KIND_LABELS: Record<RiskDisplayKind, string> = {
+export const KIND_LABELS: Record<RiskDisplayKind, string> = {
   consultation: '상담 권장',
   makeup: '보강 권장',
   attention: '주의 필요',

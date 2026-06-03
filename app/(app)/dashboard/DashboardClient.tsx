@@ -6,7 +6,10 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { ErrorBanner, PageLoader, EmptyState } from '@/components/ui/DataStates';
 import { StaffDailyFlow } from '@/components/ui/StaffDailyFlow';
 import { ActionCenter } from '@/components/dashboard/ActionCenter';
-import { STAFF_PAGES } from '@/lib/staffPages';
+import { AgentArchitecturePanel } from '@/components/dashboard/AgentArchitecturePanel';
+import { DashboardAgentCenter } from '@/components/dashboard/DashboardAgentCenter';
+import { DashboardAiAssist } from '@/components/dashboard/DashboardAiAssist';
+import { useDashboardAgent } from '@/hooks/useDashboardAgent';
 import { RISK_KIND_STYLES } from '@/lib/studentRisk';
 
 function todayLabel() {
@@ -19,37 +22,38 @@ function todayLabel() {
 
 export default function DashboardClient() {
   const { stats, loading, error, refetch } = useDashboardStats();
-  const guide = STAFF_PAGES.dashboard;
+  const agent = useDashboardAgent({ refreshRiskOnLoad: true });
 
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} onRetry={refetch} />;
   if (!stats) {
     return (
       <EmptyState
-        title="학원 데이터가 없습니다"
-        description="학생 관리에서 학생을 등록한 뒤 수업 기록을 입력하세요."
+        title="아직 학생·수업 기록이 없습니다"
+        description="「학생 관리」에서 학생을 등록하고, 「수업 기록」에서 오늘 수업을 입력하면 이 화면이 채워집니다."
       />
     );
   }
 
+  const needActionCount = stats.attentionStudents.length;
   const kpis = [
     {
       label: '오늘 수업',
-      sub: '시간표 기준',
+      sub: '시간표에 잡힌 수업 수',
       value: stats.todayLessonCount,
       href: '/schedule',
       accent: 'text-indigo-600',
     },
     {
-      label: '조치 필요',
-      sub: '상담·보강 권장',
-      value: stats.attentionStudents.length,
+      label: '지금 조치할 학생',
+      sub: '상담·보강이 필요한 학생',
+      value: needActionCount,
       href: '/students',
-      accent: stats.attentionStudents.length > 0 ? 'text-violet-600' : 'text-slate-900',
+      accent: needActionCount > 0 ? 'text-violet-600' : 'text-slate-900',
     },
     {
       label: '오늘 숙제 미제출',
-      sub: '기록된 수업만',
+      sub: '오늘 수업 기록 기준',
       value: stats.missingHomeworkCount,
       href: '/lesson-logs',
       accent: stats.missingHomeworkCount > 0 ? 'text-amber-600' : 'text-slate-900',
@@ -62,9 +66,13 @@ export default function DashboardClient() {
         <div>
           <p className="text-sm text-slate-500">{todayLabel()}</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mt-1">
-            {guide.title}
+            오늘 할 일
           </h1>
-          <p className="text-sm text-slate-500 mt-1">{guide.description}</p>
+          <p className="text-sm text-slate-600 mt-1 max-w-lg leading-relaxed">
+            원장님께 필요한 것만 모았습니다.{' '}
+            <strong className="text-slate-800">수업 기록 → 조치할 학생 확인</strong> 순서로
+            보시면 됩니다.
+          </p>
         </div>
         <div className="flex gap-2 shrink-0">
           <Link
@@ -87,7 +95,7 @@ export default function DashboardClient() {
 
       <StaffDailyFlow />
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {kpis.map((k) => (
           <Link
             key={k.label}
@@ -102,90 +110,131 @@ export default function DashboardClient() {
       </div>
 
       {stats.pendingConsultationCount > 0 && (
-        <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          상담 카드 <strong>{stats.pendingConsultationCount}건</strong>이 아직 「완료」 처리 전입니다.{' '}
-          <Link href="/consultation-cards" className="font-semibold underline">
-            상담 카드에서 처리
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-amber-900">
+              상담 카드 {stats.pendingConsultationCount}건 — 아직 상담 전입니다
+            </p>
+            <p className="text-xs text-amber-800/90 mt-1">
+              상담을 마치셨다면 「완료 처리」를 눌러 주세요. 학부모에게 보낼 문구는 카드에
+              적혀 있습니다.
+            </p>
+          </div>
+          <Link
+            href="/consultation-cards"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-amber-800 text-white text-sm font-semibold hover:bg-amber-900 shrink-0"
+          >
+            상담 카드 열기
           </Link>
-        </p>
+        </div>
       )}
 
       <ActionCenter items={stats.todayPriorities} />
 
-      <div className="space-y-6 min-w-0">
-          {stats.todayLessons.length > 0 ? (
-            <section className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                <div>
-                  <h2 className="text-base font-semibold text-slate-900">오늘 수업</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">카드를 누르면 수업 준비·기록으로 이동</p>
-                </div>
-                <Link href="/schedule" className="text-xs text-indigo-600 hover:underline font-medium shrink-0">
-                  시간표
+      {/* ① 가장 중요: 바로 연락·상담할 학생 */}
+      <section className="rounded-2xl border-2 border-violet-200/90 bg-white overflow-hidden shadow-sm shadow-violet-100/50">
+        <div className="px-5 py-4 border-b border-violet-100 bg-violet-50/50">
+          <p className="text-xs font-bold text-violet-800">① 오늘 가장 먼저 보세요</p>
+          <h2 className="text-lg font-bold text-slate-900 mt-0.5">지금 조치할 학생</h2>
+          <p className="text-sm text-slate-600 mt-1">
+            상담·보강이 필요하다고 판단된 학생만 표시합니다. 양호한 학생은 나오지 않습니다.
+          </p>
+        </div>
+        {stats.attentionStudents.length === 0 ? (
+          <div className="p-10 text-center">
+            <p className="text-base font-medium text-slate-700">오늘은 특별히 조치할 학생이 없습니다</p>
+            <p className="text-sm text-slate-500 mt-2">
+              수업 기록을 계속 입력하시면, 점수·숙제가 나빠질 때 자동으로 여기에 표시됩니다.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {stats.attentionStudents.map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={`/students/${s.id}`}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-violet-50/30 transition-colors"
+                >
+                  <div className="w-11 h-11 rounded-full bg-violet-100 flex items-center justify-center text-sm font-bold text-violet-800 shrink-0">
+                    {s.name.slice(0, 1)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-slate-900">
+                      {s.name}
+                      <span className="text-slate-400 font-normal text-sm ml-1.5">{s.grade}</span>
+                    </p>
+                    <p className="text-sm text-slate-600 mt-0.5">{s.reason}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                      RISK_KIND_STYLES[s.riskKind ?? (s.urgency === 'high' ? 'consultation' : 'makeup')]
+                    }`}
+                  >
+                    {s.riskKindLabel}
+                  </span>
                 </Link>
-              </div>
-              <ul className="p-4 space-y-2">
-                {stats.todayLessons.map((item) => (
-                  <LessonFlowCard key={item.event.id} item={item} compact />
-                ))}
-              </ul>
-            </section>
-          ) : (
-            <section className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-              <p className="text-sm text-slate-500">오늘 일정이 없습니다.</p>
-              <Link href="/schedule" className="text-xs text-indigo-600 hover:underline mt-2 inline-block">
-                시간표에서 수업 등록
-              </Link>
-            </section>
-          )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 text-center">
+          <Link href="/students" className="text-sm font-medium text-indigo-600 hover:underline">
+            전체 학생 목록 보기
+          </Link>
+        </div>
+      </section>
 
-          <section className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <div>
-                <h2 className="text-base font-semibold text-slate-900">조치가 필요한 학생</h2>
-                <p className="text-xs text-slate-500 mt-0.5">상담·보강 권장만 (양호·가벼운 주의는 제외)</p>
-              </div>
-              <Link href="/students" className="text-xs text-indigo-600 hover:underline font-medium">
-                학생 관리
-              </Link>
-            </div>
-            {stats.attentionStudents.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">
-                상담·보강이 필요한 학생이 없습니다. 대부분 양호한 상태입니다.
-              </div>
-            ) : (
-              <ul className="divide-y divide-slate-100">
-                {stats.attentionStudents.map((s) => (
-                  <li key={s.id}>
-                    <Link
-                      href={`/students/${s.id}`}
-                      className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/80 transition-colors"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-600 shrink-0">
-                        {s.name.slice(0, 1)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-slate-900">
-                          {s.name}
-                          <span className="text-slate-400 font-normal text-sm ml-1.5">{s.grade}</span>
-                        </p>
-                        <p className="text-xs text-slate-500 mt-0.5 truncate">{s.reason}</p>
-                      </div>
-                      <span
-                        className={`shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-full border ${
-                          RISK_KIND_STYLES[s.riskKind ?? (s.urgency === 'high' ? 'consultation' : 'makeup')]
-                        }`}
-                      >
-                        {s.riskKindLabel}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+      {/* ② 유형별 분류 */}
+      {agent.error ? (
+        <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          자동 분류를 불러오지 못했습니다. 위 「조치할 학생」 목록은 정상적으로 보입니다. (
+          {agent.error})
+        </p>
+      ) : (
+        <DashboardAgentCenter insight={agent.insight} />
+      )}
 
-      </div>
+      {/* ③ 오늘 수업 */}
+      <section className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <div>
+            <p className="text-xs font-semibold text-slate-500">② 오늘 일정</p>
+            <h2 className="text-base font-bold text-slate-900 mt-0.5">오늘 수업</h2>
+            <p className="text-xs text-slate-500 mt-0.5">카드를 누르면 수업 준비·기록 화면으로 이동합니다</p>
+          </div>
+          <Link href="/schedule" className="text-sm text-indigo-600 hover:underline font-medium shrink-0">
+            시간표 수정
+          </Link>
+        </div>
+        {stats.todayLessons.length > 0 ? (
+          <ul className="p-4 space-y-2">
+            {stats.todayLessons.map((item) => (
+              <LessonFlowCard key={item.event.id} item={item} compact />
+            ))}
+          </ul>
+        ) : (
+          <div className="p-8 text-center">
+            <p className="text-sm text-slate-600">오늘 등록된 수업이 없습니다.</p>
+            <Link href="/schedule" className="text-sm text-indigo-600 hover:underline mt-2 inline-block font-medium">
+              시간표에서 수업 추가하기
+            </Link>
+          </div>
+        )}
+      </section>
+
+      {/* ④ AI 자동 도움 (접기 가능) */}
+      <DashboardAiAssist
+        notifications={agent.notifications}
+        jobs={agent.jobs}
+        feed={agent.feed}
+        loading={agent.loading}
+      />
+
+      <AgentArchitecturePanel
+        insight={agent.insight}
+        logs={agent.logs}
+        loading={agent.loading}
+      />
     </div>
   );
 }
