@@ -31,10 +31,6 @@ export function AcademyConnectionCodeSection() {
     <div className="rounded-2xl p-6 bg-white border border-indigo-100 space-y-4">
       <div>
         <h3 className="text-sm font-bold text-slate-900">학원 연결 코드</h3>
-        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-          학부모·학생에게 <strong>학원 코드 1개</strong>만 안내하세요. 포털에서 코드와 학생 이름을 입력하면
-          아래 「연결 요청」에 표시되며, 승인 시 연결됩니다.
-        </p>
       </div>
 
       {code ? (

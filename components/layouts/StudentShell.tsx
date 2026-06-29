@@ -10,9 +10,10 @@ import { useEffect } from 'react';
 const NAV = [
   { href: '#today', label: '오늘', icon: 'ri-calendar-check-line' },
   { href: '#learn', label: '학습 흐름', icon: 'ri-line-chart-line' },
+  { href: '#homework', label: '숙제', icon: 'ri-task-line' },
+  { href: '#exams', label: '시험', icon: 'ri-medal-line' },
   { href: '#schedule', label: '일정', icon: 'ri-calendar-line' },
   { href: '#feedback', label: '피드백', icon: 'ri-chat-3-line' },
-  { href: '#history', label: '수업 기록', icon: 'ri-history-line' },
 ] as const;
 
 function NavLinks({ vertical }: { vertical?: boolean }) {
@@ -41,14 +42,19 @@ export default function StudentShell({ children }: { children: React.ReactNode }
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && isStaffProfile(profile)) {
+    if (loading) return;
+    if (profile?.onboarding_complete === false) {
+      router.replace('/onboarding');
+      return;
+    }
+    if (isStaffProfile(profile)) {
       router.replace('/dashboard');
     }
   }, [loading, profile, router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.replace('/auth');
+    router.replace('/login');
   };
 
   return (

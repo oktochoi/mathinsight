@@ -4,18 +4,20 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
+import { useStaffScope } from '@/hooks/useStaffScope';
 import type { ClassRow } from '@/types/database';
 
 export function useClasses() {
   const { profile } = useAuth();
   const dataVersion = useAppStore((s) => s.dataVersion);
   const bumpDataVersion = useAppStore((s) => s.bumpDataVersion);
+  const scope = useStaffScope();
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchClasses = useCallback(async () => {
-    if (!profile?.academy_id) {
+    if (!profile?.academy_id || scope.loading) {
       setClasses([]);
       setLoading(false);
       return;
@@ -33,10 +35,16 @@ export function useClasses() {
       setError('반 목록을 불러오지 못했습니다.');
       setClasses([]);
     } else {
-      setClasses((data ?? []) as ClassRow[]);
+      const all = (data ?? []) as ClassRow[];
+      // teacher는 담당 반만 표시
+      const filtered =
+        scope.isTeacher && scope.classIds.length > 0
+          ? all.filter((c) => scope.classIds.includes(c.id))
+          : all;
+      setClasses(filtered);
     }
     setLoading(false);
-  }, [profile?.academy_id]);
+  }, [profile?.academy_id, scope.loading, scope.isTeacher, scope.classIds]);
 
   useEffect(() => {
     fetchClasses();

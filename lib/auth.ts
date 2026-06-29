@@ -7,6 +7,7 @@ import {
   shouldSyncMetadataFromProfile,
   syncAuthMetadataFromProfile,
 } from '@/lib/authProfileSetup';
+
 import {
   fromDbRole,
   normalizeUserProfile,
@@ -17,6 +18,7 @@ import {
 import { getClientSiteOrigin, getConfiguredSiteOrigin } from '@/lib/siteUrl';
 import { postAuthDestination } from '@/lib/authRedirectPolicy';
 import { repairProfileRole } from '@/lib/profileIntegrity';
+import { resolveUserRoleState } from '@/lib/resolveUserRole';
 import type { UserProfile } from '@/types/database';
 import type { AuthError, User } from '@supabase/supabase-js';
 
@@ -182,6 +184,7 @@ async function bootstrapProfileFromMetadata(
   if (!appRole) return null;
   const signupRole: SignupRole =
     appRole === 'owner' || appRole === 'parent' || appRole === 'student' ? appRole : 'parent';
+  // desk/teacher는 초대로만 가입 → parent로 fallback (기존 동작 유지)
 
   const name =
     (user.user_metadata?.name as string | undefined)?.trim() ||
@@ -214,43 +217,37 @@ async function bootstrapProfileFromMetadata(
 /** 로그인·세션 직후 프로필 확보 */
 export async function resolveProfileAfterAuth(
   user: User,
-  emailHint?: string
-): Promise<{ profile: UserProfile | null; needsChooseRole: boolean }> {
-  let profile = await fetchUserProfile(user.id);
-
-  const {
-    data: { user: refreshed },
-  } = await supabase.auth.getUser();
-  const activeUser = refreshed ?? user;
-
-  const { data: roleRow } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
-  const rawDbRole = (roleRow?.role as string | undefined) ?? null;
-
-  if (!hasAssignedDbRole(rawDbRole)) {
-    return { profile, needsChooseRole: true };
-  }
-
-  return { profile, needsChooseRole: false };
+  _emailHint?: string
+): Promise<{ profile: UserProfile | null; needsChooseRole: boolean; rawDbRole: string | null }> {
+  const state = await resolveUserRoleState(supabase, user, { syncMetadata: true });
+  return {
+    profile: state.profile,
+    needsChooseRole: state.needsChooseRole,
+    rawDbRole: state.rawDbRole,
+  };
 }
 
-/** 이메일 가입 — 역할은 /auth/choose-role 에서 선택 */
+/** 이메일 가입 — 회원가입 시 역할을 바로 설정, DB 트리거가 users row 생성 */
 export async function signUpWithEmail(params: {
   email: string;
   password: string;
   name: string;
+  role: SignupRole;
 }): Promise<SignUpResult> {
   const origin = getClientSiteOrigin();
   const emailRedirectTo = `${origin}/auth/callback`;
+
+  const dbRole = params.role === 'owner' ? 'admin' : params.role;
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: params.email,
     password: params.password,
     options: {
-      data: pendingSignupMetadata(params.name),
+      data: {
+        name: params.name.trim(),
+        role: dbRole,
+        profile_setup: PROFILE_SETUP_COMPLETE,
+      },
       emailRedirectTo,
     },
   });
@@ -269,7 +266,7 @@ export async function signUpWithEmail(params: {
   };
 }
 
-/** @deprecated signUpWithEmail + choose-role 사용 */
+/** @deprecated signUpWithEmail 사용 */
 export async function signUpWithRole(params: {
   email: string;
   password: string;
@@ -281,6 +278,7 @@ export async function signUpWithRole(params: {
     email: params.email,
     password: params.password,
     name: params.name,
+    role: params.role,
   });
 }
 
@@ -295,6 +293,7 @@ export async function signUpAcademyOwner(params: {
     email: params.email,
     password: params.password,
     name: params.name,
+    role: 'owner',
   });
 }
 
@@ -311,14 +310,7 @@ export async function signInWithRole(
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: formatAuthError(error), profile: null, user: null };
 
-  const { data: roleRow } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', data.user.id)
-    .maybeSingle();
-  const rawDbRole = (roleRow?.role as string | null) ?? null;
-
-  const { profile, needsChooseRole } = await resolveProfileAfterAuth(data.user, email);
+  const { profile, needsChooseRole, rawDbRole } = await resolveProfileAfterAuth(data.user, email);
 
   if (needsChooseRole) {
     return { error: null, profile, user: data.user, needsChooseRole: true, rawDbRole };
@@ -331,8 +323,23 @@ export async function signInWithRole(
     profile: resolvedProfile,
     user: data.user,
     needsChooseRole: false,
-    rawDbRole,
+    rawDbRole: rawDbRole as string | null,
   };
+}
+
+/** 비밀번호 재설정 메일 발송 */
+export async function sendPasswordResetEmail(email: string): Promise<{ error: string | null }> {
+  const origin = getClientSiteOrigin();
+  const redirectTo = `${origin}/reset-password`;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  return { error: error ? formatAuthError(error) : null };
+}
+
+/** 로그인 상태에서 새 비밀번호 저장 (재설정 링크 직후) */
+export async function updatePassword(password: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.updateUser({ password });
+  return { error: error ? formatAuthError(error) : null };
 }
 
 /** 서버·문서용 프로덕션 사이트 origin */

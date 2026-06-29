@@ -18,16 +18,16 @@ export function StudentFlowHeader({
   const changes = buildStudentPeriodChanges(logs);
 
   return (
-    <div className="rounded-2xl p-5 bg-gradient-to-br from-slate-50 to-white border border-slate-200 space-y-4">
+    <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)' }}>
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-          최근 흐름 (기록 요약)
+        <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--app-ink-4)' }}>
+          최근 학습 현황
         </p>
-        <p className="text-sm text-slate-700 leading-relaxed mt-1">{summary}</p>
+        <p className="text-sm leading-relaxed mt-1" style={{ color: 'var(--app-ink-2)' }}>{summary}</p>
       </div>
       {changes.length > 0 && (
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--app-ink-4)' }}>
             이전 기간 대비
           </p>
           <div className="flex flex-wrap gap-2">
@@ -38,8 +38,8 @@ export function StudentFlowHeader({
                   'text-xs px-3 py-1.5 rounded-lg border font-medium',
                   c.direction === 'up' && 'bg-emerald-50 text-emerald-800 border-emerald-200',
                   c.direction === 'down' && 'bg-amber-50 text-amber-800 border-amber-200',
-                  c.direction === 'stable' && 'bg-slate-50 text-slate-600 border-slate-200'
                 )}
+                style={c.direction === 'stable' ? { background: 'var(--app-surface-2)', color: 'var(--app-ink-2)', border: '1px solid var(--app-border)' } : undefined}
               >
                 {c.label} {c.value}
               </span>

@@ -1,29 +1,36 @@
-import type { User } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 import { hasAssignedDbRole } from '@/lib/authProfileSetup';
 import { postAuthDestination } from '@/lib/authRedirectPolicy';
 import { resolvePostLoginPath } from '@/lib/authRedirect';
-import { normalizeUserProfile } from '@/lib/roles';
+import { resolveUserRoleState } from '@/lib/resolveUserRole';
+import { AUTH_ROUTES, isAuthEntryPath } from '@/lib/authRoutes';
 import type { UserProfile } from '@/types/database';
 
 export function isAuthGatePath(path: string): boolean {
-  return path === '/auth' || path === '/auth/choose-role';
+  return isAuthEntryPath(path) || path === AUTH_ROUTES.chooseRole;
 }
 
 export async function readUserDbRole(
   supabase: SupabaseClient,
-  userId: string
+  userId: string,
+  user?: User
 ): Promise<{ profile: UserProfile | null; rawDbRole: string | null }> {
+  if (user) {
+    const state = await resolveUserRoleState(supabase, user, { syncMetadata: false });
+    return { profile: state.profile, rawDbRole: state.rawDbRole };
+  }
+
   const { data } = await supabase.from('users').select('*').eq('id', userId).maybeSingle();
   if (!data) return { profile: null, rawDbRole: null };
   return {
-    profile: normalizeUserProfile(data as UserProfile),
-    rawDbRole: data.role as string,
+    profile: data as UserProfile,
+    rawDbRole: (data.role as string) ?? null,
   };
 }
 
 /**
- * /auth · /auth/choose-role — 역할 있으면 홈으로, 없으면 choose-role만 허용
+ * Auth 공개 페이지 — 로그인 시 choose-role 또는 앱 홈으로
  * @returns redirect pathname or null (통과)
  */
 export function authGateRedirect(
@@ -35,13 +42,13 @@ export function authGateRedirect(
 ): string | null {
   const hasRole = hasAssignedDbRole(rawDbRole);
 
-  if (path === '/auth/choose-role') {
+  if (path === AUTH_ROUTES.chooseRole) {
     if (!hasRole) return null;
     return postAuthDestination(user, profile, rawDbRole);
   }
 
-  if (path === '/auth') {
-    if (!hasRole) return '/auth/choose-role';
+  if (isAuthEntryPath(path)) {
+    if (!hasRole) return AUTH_ROUTES.chooseRole;
     return resolvePostLoginPath(user, profile, nextParam, rawDbRole);
   }
 

@@ -14,7 +14,8 @@ export function StudentStudyTips({ tips }: { tips: string[] }) {
         {tips.map((tip, i) => (
           <li
             key={i}
-            className="text-sm text-slate-800 leading-relaxed flex gap-2.5 student-card-soft p-3.5"
+            className="text-sm leading-relaxed flex gap-2.5 student-card-soft p-3.5"
+            style={{ color: 'var(--app-ink)' }}
           >
             <span className="w-6 h-6 rounded-lg bg-sky-100 text-sky-700 text-xs font-bold flex items-center justify-center shrink-0">
               {i + 1}

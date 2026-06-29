@@ -66,13 +66,13 @@ export function ConsultationPrepPanel({
   }
 
   return (
-    <div className="rounded-2xl border border-indigo-100 bg-indigo-50/30 p-5 sm:p-6 space-y-5">
+    <div className="rounded-2xl border border-indigo-100 p-5 sm:p-6 space-y-5" style={{ background: 'var(--app-surface)' }}>
       <CounselingAgentPanel studentId={student.id} studentName={student.name} />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-bold text-indigo-950">상담 준비 모드</h3>
+        <h3 className="text-sm font-bold" style={{ color: 'var(--app-ink)' }}>상담 준비 모드</h3>
         <Link href={`/consultation-cards?student=${student.id}`}>
-          <span className="text-xs text-indigo-600 hover:underline cursor-pointer">
+          <span className="text-xs hover:underline cursor-pointer" style={{ color: 'var(--app-accent)' }}>
             상담 카드 만들기 →
           </span>
         </Link>
@@ -98,9 +98,9 @@ export function ConsultationPrepPanel({
       )}
 
       {sinceConsult.length > 0 && (
-        <div className="rounded-xl bg-white p-4 border border-indigo-100">
-          <p className="text-xs font-semibold text-indigo-900 mb-2">지난 상담 이후 (기록)</p>
-          <ul className="list-disc pl-5 text-sm text-slate-600 space-y-1">
+        <div className="rounded-xl p-4 border border-indigo-100" style={{ background: 'var(--app-surface-2)' }}>
+          <p className="text-xs font-semibold mb-2" style={{ color: 'var(--app-accent)' }}>지난 상담 이후 (기록)</p>
+          <ul className="list-disc pl-5 text-sm space-y-1" style={{ color: 'var(--app-ink-2)' }}>
             {sinceConsult.map((line, i) => (
               <li key={i}>{line}</li>
             ))}
@@ -109,34 +109,34 @@ export function ConsultationPrepPanel({
       )}
 
       <div className="grid sm:grid-cols-2 gap-4 text-sm">
-        <div className="rounded-xl bg-white p-4 border border-slate-100">
-          <p className="text-xs text-slate-500 mb-1">최근 4주 점수</p>
+        <div className="rounded-xl p-4" style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)' }}>
+          <p className="text-xs mb-1" style={{ color: 'var(--app-ink-3)' }}>최근 4주 점수</p>
           {scoreTrend.points.length === 0 ? (
-            <p className="text-slate-400 text-xs">점수 기록 없음</p>
+            <p className="text-xs" style={{ color: 'var(--app-ink-4)' }}>점수 기록 없음</p>
           ) : (
-            <p className="text-slate-700">
+            <p style={{ color: 'var(--app-ink-2)' }}>
               {scoreTrend.recentAvg != null ? `최근 평균 ${scoreTrend.recentAvg}점` : '-'}
               {scoreTrend.delta != null && (
-                <span className="text-slate-500"> · 변화 {scoreTrend.delta}점(기록)</span>
+                <span style={{ color: 'var(--app-ink-3)' }}> · 변화 {scoreTrend.delta}점(기록)</span>
               )}
             </p>
           )}
         </div>
-        <div className="rounded-xl bg-white p-4 border border-slate-100">
-          <p className="text-xs text-slate-500 mb-1">최근 숙제</p>
-          <p className="text-slate-700">완료율 {hwTrend.recentRate}% (기록 기준)</p>
+        <div className="rounded-xl p-4" style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)' }}>
+          <p className="text-xs mb-1" style={{ color: 'var(--app-ink-3)' }}>최근 숙제</p>
+          <p style={{ color: 'var(--app-ink-2)' }}>완료율 {hwTrend.recentRate}% (기록 기준)</p>
         </div>
       </div>
 
       {units.length > 0 && (
-        <p className="text-xs text-slate-600">
+        <p className="text-xs" style={{ color: 'var(--app-ink-2)' }}>
           <span className="font-medium">최근 단원:</span> {units.join(' → ')}
         </p>
       )}
 
       <div>
-        <p className="text-xs font-semibold text-slate-700 mb-2">상담 시 참고 포인트</p>
-        <ul className="list-disc pl-5 text-sm text-slate-600 space-y-1">
+        <p className="text-xs font-semibold mb-2" style={{ color: 'var(--app-ink)' }}>상담 시 참고 포인트</p>
+        <ul className="list-disc pl-5 text-sm space-y-1" style={{ color: 'var(--app-ink-2)' }}>
           {talkPoints.map((p, i) => (
             <li key={i}>{p}</li>
           ))}
@@ -144,25 +144,26 @@ export function ConsultationPrepPanel({
       </div>
 
       {latestCard && (
-        <div className="rounded-xl bg-white p-4 border border-slate-100">
+        <div className="rounded-xl p-4" style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)' }}>
           <div className="flex items-center justify-between gap-2 mb-1">
-            <p className="text-xs font-semibold text-slate-700">학부모 메시지 초안 (최근 상담 카드)</p>
+            <p className="text-xs font-semibold" style={{ color: 'var(--app-ink)' }}>학부모 메시지 초안 (최근 상담 카드)</p>
             <Link
               href={consultationCardPath(latestCard.id)}
-              className="text-[10px] text-indigo-600 hover:underline shrink-0"
+              className="text-[10px] hover:underline shrink-0"
+              style={{ color: 'var(--app-accent)' }}
             >
               저장 카드 보기 →
             </Link>
           </div>
-          <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed line-clamp-4">
+          <p className="text-sm whitespace-pre-wrap leading-relaxed line-clamp-4" style={{ color: 'var(--app-ink-2)' }}>
             {latestCard.parent_message || '—'}
           </p>
         </div>
       )}
 
       <div>
-        <p className="text-xs font-semibold text-slate-700 mb-2">최근 수업 기록</p>
-        <ul className="text-xs text-slate-600 space-y-1 max-h-32 overflow-y-auto">
+        <p className="text-xs font-semibold mb-2" style={{ color: 'var(--app-ink)' }}>최근 수업 기록</p>
+        <ul className="text-xs space-y-1 max-h-32 overflow-y-auto" style={{ color: 'var(--app-ink-2)' }}>
           {recent.slice(0, 6).map((l) => (
             <li key={l.id}>
               {l.lesson_date} · {l.unit || '수업'} · {HOMEWORK_LABELS[l.homework_status]}

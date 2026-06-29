@@ -1,32 +1,73 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/cn';
 import { BrandMark } from '@/components/brand/BrandMark';
-
-const menuItems = [
-  { label: '대시보드', href: '/dashboard', icon: 'ri-dashboard-line' },
-  { label: '시간표', href: '/schedule', icon: 'ri-calendar-line' },
-  { label: '학생 관리', href: '/students', icon: 'ri-group-line' },
-  { label: '수업 기록', href: '/lesson-logs', icon: 'ri-book-open-line' },
-  { label: '상담 카드', href: '/consultation-cards', icon: 'ri-chat-check-line' },
-  { label: '학부모 리포트', href: '/parent-reports', icon: 'ri-file-chart-line' },
-  { label: '분석', href: '/analytics', icon: 'ri-bar-chart-2-line' },
-  { label: '설정', href: '/settings', icon: 'ri-settings-3-line' },
-];
+import {
+  STAFF_NAV_SECTIONS,
+  TODAY_HUB_HREF,
+  getActiveSectionId,
+  isNavItemActive,
+  isSectionActive,
+  type NavSection,
+} from '@/lib/staffNavigation';
+import { useStaffPermissions, type PermissionKey } from '@/lib/permissions';
 
 type SidebarProps = {
   open?: boolean;
   onClose?: () => void;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 };
 
-export default function Sidebar({ open = false, onClose }: SidebarProps) {
+function filterItems(section: NavSection, can: (p: PermissionKey) => boolean) {
+  return section.items.filter((item) => {
+    if (item.hidden) return false;
+    if (item.requiredPermissions?.length) {
+      return item.requiredPermissions.every((p) => can(p as PermissionKey));
+    }
+    return true;
+  });
+}
+
+export default function Sidebar({
+  open = false,
+  onClose,
+  collapsed: collapsedProp,
+  onCollapsedChange,
+}: SidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = searchParams.toString();
   const router = useRouter();
   const { profile, academy, loading } = useAuth();
+  const { can } = useStaffPermissions();
+
+  const activeSectionId = getActiveSectionId(pathname);
+
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(() => ({
+    today: true,
+    classes: true,
+    students: true,
+    parents: false,
+    operations: false,
+    reports: true,
+    settings: true,
+  }));
+
+  const [collapsedInternal, setCollapsedInternal] = useState(false);
+  const collapsed = collapsedProp ?? collapsedInternal;
+  const setCollapsed = onCollapsedChange ?? setCollapsedInternal;
+
+  useEffect(() => {
+    if (activeSectionId) {
+      setExpanded((prev) => ({ ...prev, [activeSectionId]: true }));
+    }
+  }, [activeSectionId]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -35,106 +76,226 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
   };
 
   const initial = profile?.name?.charAt(0) ?? '?';
+  const showProfileLoading = loading && !profile;
+
+  const toggleSection = (id: string) => {
+    if (collapsed) {
+      setCollapsed(false);
+      setExpanded((prev) => ({ ...prev, [id]: true }));
+      return;
+    }
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-50 flex h-screen h-[100dvh] w-[min(280px,85vw)] max-w-[280px] flex-col',
-        'transition-transform duration-300 ease-out lg:w-64',
+        'fixed left-0 top-0 z-50 flex h-screen h-[100dvh] flex-col transition-all duration-200 ease-out',
+        collapsed ? 'w-[68px]' : 'w-[min(240px,85vw)] max-w-[240px] lg:w-60',
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}
-      style={{ background: 'linear-gradient(180deg, #0c1829 0%, #0f2040 60%, #0c1829 100%)' }}
-      aria-hidden={!open ? undefined : false}
+      style={{
+        background: 'var(--app-sidebar-bg)',
+        borderRight: '1px solid var(--app-border)',
+      }}
     >
-      <div className="flex items-center justify-between px-5 pt-6 pb-4 lg:px-6 lg:pt-8 lg:pb-6">
-        <Link href="/dashboard" className="flex items-center gap-3 min-w-0" onClick={onClose}>
-          <div
-            className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}
-          >
-            <i className="ri-bar-chart-box-fill text-white text-sm"></i>
-          </div>
-          <BrandMark variant="light" showTagline nameClassName="text-sm" />
-        </Link>
-        <button
-          type="button"
+      {/* 브랜드 로고 */}
+      <div
+        className={cn(
+          'flex items-center justify-between pt-5 pb-4',
+          collapsed ? 'px-2.5 lg:px-2.5' : 'px-4 lg:px-5 lg:pt-6'
+        )}
+      >
+        <Link
+          href={TODAY_HUB_HREF}
+          className={cn('flex items-center min-w-0', collapsed ? 'justify-center w-full' : 'gap-2.5')}
           onClick={onClose}
-          className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer"
-          aria-label="메뉴 닫기"
+          title="오늘 현황"
         >
-          <i className="ri-close-line text-lg"></i>
-        </button>
-      </div>
-
-      <div className="px-4 mb-4">
-        <div
-          className="rounded-xl p-3"
-          style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}
-            >
-              {loading ? '…' : initial}
-            </div>
-            <div className="min-w-0">
-              <div className="text-white text-xs font-semibold truncate">
-                {loading ? '불러오는 중' : profile?.name ?? '사용자'}
-              </div>
-              <div className="text-blue-400/70 text-[10px] truncate">
-                {academy?.name ?? '학원'}
-              </div>
-            </div>
+          <div
+            className="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center"
+            style={{ background: 'var(--app-accent)' }}
+          >
+            <i className="ri-sun-fill text-white text-xs" />
           </div>
-        </div>
+          {!collapsed && <BrandMark variant="dark" nameClassName="text-[13px] font-semibold" />}
+        </Link>
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+            style={{ color: 'var(--app-ink-3)' }}
+            aria-label="메뉴 닫기"
+          >
+            <i className="ri-close-line text-base" />
+          </button>
+        )}
       </div>
 
-      <nav className="flex-1 px-4 overflow-y-auto overscroll-contain">
-        {menuItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/');
+      {/* 메인 네비게이션 */}
+      <nav className="flex-1 px-2 overflow-y-auto overscroll-contain pb-2" aria-label="업무 메뉴">
+        {STAFF_NAV_SECTIONS.map((section) => {
+          const items = filterItems(section, can);
+          if (items.length === 0) return null;
+
+          const sectionActive = isSectionActive(pathname, search, section);
+          const isOpen = expanded[section.id] ?? false;
+
+          // 단일 아이템 섹션 → 바로 링크로 렌더링 (accordion 없음)
+          const isFlat = items.length === 1;
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 text-sm font-medium transition-all min-h-[44px]',
-                active ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+            <div key={section.id}>
+              {/* 구분선 */}
+              {section.dividerAbove && !collapsed && (
+                <div className="mx-1 my-2" style={{ borderTop: '1px solid var(--app-border)' }} />
               )}
-              style={
-                active
-                  ? { background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.25)' }
-                  : {}
-              }
-            >
-              <i className={`${item.icon} text-base shrink-0`}></i>
-              <span className="truncate">{item.label}</span>
-            </Link>
+              {section.dividerAbove && collapsed && (
+                <div className="mx-2 my-2" style={{ borderTop: '1px solid var(--app-border)' }} />
+              )}
+
+              <div className="mb-0.5">
+                {isFlat ? (
+                  // 단일 아이템: 바로 링크
+                  <Link
+                    href={items[0].href}
+                    onClick={onClose}
+                    title={collapsed ? section.label : undefined}
+                    className={cn(
+                      'app-nav-item',
+                      sectionActive && 'app-nav-item-active',
+                      collapsed && 'justify-center px-2'
+                    )}
+                  >
+                    <i
+                      className={cn(
+                        section.icon,
+                        'text-sm shrink-0',
+                        sectionActive ? 'text-[var(--app-accent)]' : 'text-[var(--app-ink-3)]'
+                      )}
+                    />
+                    {!collapsed && <span className="truncate">{section.label}</span>}
+                  </Link>
+                ) : (
+                  // 다중 아이템: accordion
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(section.id)}
+                      title={collapsed ? section.label : undefined}
+                      className={cn(
+                        'app-nav-item w-full cursor-pointer',
+                        sectionActive && !isOpen && 'app-nav-item-active',
+                        collapsed && 'justify-center px-2'
+                      )}
+                      aria-expanded={isOpen}
+                    >
+                      <i
+                        className={cn(
+                          section.icon,
+                          'text-sm shrink-0',
+                          sectionActive ? 'text-[var(--app-accent)]' : 'text-[var(--app-ink-3)]'
+                        )}
+                      />
+                      {!collapsed && (
+                        <>
+                          <span className="truncate flex-1 text-left">{section.label}</span>
+                          <i
+                            className={cn(
+                              'ri-arrow-down-s-line text-xs shrink-0 transition-transform',
+                              isOpen && 'rotate-180'
+                            )}
+                            style={{ color: 'var(--app-ink-4)' }}
+                          />
+                        </>
+                      )}
+                    </button>
+
+                    {!collapsed && isOpen && (
+                      <ul className="mt-0.5 mb-1.5 ml-3 pl-2.5 border-l" style={{ borderColor: 'var(--app-border)' }}>
+                        {items.map((item) => {
+                          const active = isNavItemActive(pathname, search, item.href);
+                          return (
+                            <li key={item.href}>
+                              <Link
+                                href={item.href}
+                                onClick={onClose}
+                                className={cn('app-nav-item text-[13px] py-1.5', active && 'app-nav-item-active')}
+                              >
+                                <i
+                                  className={cn(
+                                    item.icon,
+                                    'text-sm shrink-0',
+                                    active ? 'text-[var(--app-accent)]' : 'text-[var(--app-ink-4)]'
+                                  )}
+                                />
+                                <span className="truncate">{item.label}</span>
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
           );
         })}
       </nav>
 
-      <div className="px-4 pb-3">
-        <Link
-          href="/dashboard"
-          onClick={onClose}
-          className="block rounded-xl p-3 text-[10px] leading-relaxed text-blue-200/90 hover:bg-white/5 transition-colors"
-          style={{ border: '1px solid rgba(59,130,246,0.2)' }}
+      {/* 하단: 접기 버튼 + 프로필 + 로그아웃 */}
+      <div className="px-2 pt-2 pb-3" style={{ borderTop: '1px solid var(--app-border)' }}>
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            'app-nav-item w-full cursor-pointer mb-2 hidden lg:flex',
+            collapsed && 'justify-center px-2'
+          )}
+          aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
         >
-          <span className="font-semibold text-white text-xs block mb-1">사용 순서</span>
-          ① 수업 기록 → ② 대시보드 → ③ 상담(필요 시)
-        </Link>
-      </div>
+          <i
+            className={cn(
+              collapsed ? 'ri-menu-unfold-line' : 'ri-menu-fold-line',
+              'text-sm shrink-0'
+            )}
+            style={{ color: 'var(--app-ink-3)' }}
+          />
+          {!collapsed && <span>접기</span>}
+        </button>
 
-      <div className="p-4 pt-0 border-t border-white/5 safe-area-pb">
+        {!collapsed && (
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg mb-1">
+            <div
+              className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-xs font-bold text-white"
+              style={{ background: 'var(--app-accent)' }}
+            >
+              {showProfileLoading ? '…' : initial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold truncate" style={{ color: 'var(--app-ink)' }}>
+                {showProfileLoading ? '불러오는 중' : profile?.name ?? '사용자'}
+              </p>
+              <p className="text-[10px] truncate" style={{ color: 'var(--app-ink-3)' }}>
+                {academy?.name ?? '학원'}
+              </p>
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer min-h-[44px]"
+          className={cn(
+            'app-nav-item app-btn-ghost w-full cursor-pointer safe-area-pb',
+            collapsed && 'justify-center px-2'
+          )}
+          title={collapsed ? '로그아웃' : undefined}
         >
-          <i className="ri-logout-box-line"></i>
-          로그아웃
+          <i className="ri-logout-box-line text-sm shrink-0" style={{ color: 'var(--app-ink-3)' }} />
+          {!collapsed && <span>로그아웃</span>}
         </button>
       </div>
     </aside>

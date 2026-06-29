@@ -45,9 +45,12 @@ export function useParentReports(studentId?: string) {
 
     let query = supabase
       .from('parent_reports')
-      .select('*, students(id, name, grade, academy_id)')
+      .select('*, students(id, name, grade)')
       .order('created_at', { ascending: false });
 
+    if (profile?.academy_id) {
+      query = query.eq('academy_id', profile.academy_id);
+    }
     if (studentId) query = query.eq('student_id', studentId);
 
     const { data, error: err } = await query;
@@ -55,14 +58,7 @@ export function useParentReports(studentId?: string) {
       setError('리포트를 불러오지 못했습니다.');
       setReports([]);
     } else {
-      let list = (data ?? []) as ParentReport[];
-      if (profile?.academy_id) {
-        list = list.filter(
-          (r) =>
-            (r.students as { academy_id?: string })?.academy_id === profile.academy_id
-        );
-      }
-      setReports(list);
+      setReports((data ?? []) as ParentReport[]);
     }
     setLoading(false);
   }, [studentId, profile?.academy_id, profile?.id, profile?.role]);
@@ -72,13 +68,29 @@ export function useParentReports(studentId?: string) {
   }, [fetchReports, dataVersion]);
 
   const saveReport = async (
-    payload: Omit<ParentReport, 'id' | 'created_at' | 'students'>
+    payload: Omit<ParentReport, 'id' | 'created_at' | 'students' | 'academy_id'>
   ) => {
+    if (!profile?.id) return { error: '로그인 정보가 없습니다.', reportId: undefined };
+
+    let academyId = profile.academy_id ?? null;
+    if (!academyId && payload.student_id) {
+      const { data: student } = await supabase
+        .from('students')
+        .select('academy_id')
+        .eq('id', payload.student_id)
+        .maybeSingle();
+      academyId = (student as { academy_id?: string } | null)?.academy_id ?? null;
+    }
+    if (!academyId) {
+      return { error: '학원 정보가 없어 리포트를 저장할 수 없습니다.', reportId: undefined };
+    }
+
     const { data, error: err } = await supabase
       .from('parent_reports')
       .insert({
         ...payload,
-        generated_by: profile?.id ?? null,
+        academy_id: academyId,
+        generated_by: profile.id,
       })
       .select('id')
       .single();

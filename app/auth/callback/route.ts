@@ -23,13 +23,13 @@ export async function GET(request: Request) {
     searchParams.get('error_description') ?? searchParams.get('error');
 
   if (oauthError) {
-    const authUrl = new URL('/auth', origin);
+    const authUrl = new URL('/login', origin);
     authUrl.searchParams.set('error', oauthError.slice(0, 200));
     return NextResponse.redirect(authUrl);
   }
 
   if (!code) {
-    return NextResponse.redirect(absolutePath('/auth?error=oauth_missing', origin));
+    return NextResponse.redirect(absolutePath('/login?error=oauth_missing', origin));
   }
 
   const cookieStore = await cookies();
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
   if (exchangeError) {
-    return NextResponse.redirect(absolutePath('/auth?error=oauth_exchange', origin));
+    return NextResponse.redirect(absolutePath('/login?error=oauth_exchange', origin));
   }
 
   let {
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(absolutePath('/auth?error=oauth_exchange', origin));
+    return NextResponse.redirect(absolutePath('/login?error=oauth_exchange', origin));
   }
 
   const displayName =

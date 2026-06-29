@@ -18,7 +18,7 @@ const STATUS_LABEL: Record<AgentLogStatus, string> = {
 };
 
 const AGENT_NAME_KO: Record<string, string> = {
-  risk_detection: '학습 위험 점검',
+  risk_detection: '학습 신호 점검',
   counseling: '상담 카드 준비',
   parent_communication: '학부모 리포트',
   dashboard: '대시보드 정리',
@@ -49,22 +49,23 @@ export function AgentArchitecturePanel({
   if (!insight) return null;
 
   return (
-    <details className="rounded-2xl border border-slate-200/80 bg-slate-50/50 group">
-      <summary className="px-5 py-4 cursor-pointer list-none flex items-center justify-between gap-2 text-sm font-medium text-slate-600 hover:text-slate-900">
+    <details className="rounded-2xl group" style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
+      <summary className="px-5 py-4 cursor-pointer list-none flex items-center justify-between gap-2 text-sm font-medium transition-colors" style={{ color: 'var(--app-ink-2)' }}>
         <span>시스템 동작 상태 (선택 · 기술 정보)</span>
         <i className="ri-arrow-down-s-line text-lg group-open:rotate-180 transition-transform" aria-hidden />
       </summary>
-      <div className="px-5 pb-5 space-y-4 border-t border-slate-100 pt-4">
-        <p className="text-xs text-slate-500 leading-relaxed">
+      <div className="px-5 pb-5 space-y-4 pt-4" style={{ borderTop: '1px solid var(--app-border)' }}>
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--app-ink-3)' }}>
           발표·개발 확인용입니다. 평소에는 위 「조치할 학생」 목록만 보셔도 됩니다.
         </p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {insight.agentStatuses.map((a) => (
             <div
               key={a.agentType}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-3"
+              className="rounded-xl px-3 py-3"
+              style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface)' }}
             >
-              <p className="text-xs font-semibold text-slate-800">
+              <p className="text-xs font-semibold" style={{ color: 'var(--app-ink)' }}>
                 {AGENT_NAME_KO[a.agentType] ?? a.label}
               </p>
               <span
@@ -75,14 +76,14 @@ export function AgentArchitecturePanel({
               >
                 {STATUS_LABEL[a.status]}
               </span>
-              <p className="text-[10px] text-slate-400 mt-2">마지막: {formatTime(a.lastRunAt)}</p>
+              <p className="text-[10px] mt-2" style={{ color: 'var(--app-ink-4)' }}>마지막: {formatTime(a.lastRunAt)}</p>
             </div>
           ))}
         </div>
         {logs.length > 0 && (
-          <ul className="max-h-32 overflow-y-auto space-y-1 text-xs text-slate-600">
+          <ul className="max-h-32 overflow-y-auto space-y-1 text-xs" style={{ color: 'var(--app-ink-2)' }}>
             {logs.slice(0, 6).map((log) => (
-              <li key={log.id} className="py-1 border-b border-slate-100 last:border-0 truncate">
+              <li key={log.id} className="py-1 truncate" style={{ borderBottom: '1px solid var(--app-border)' }}>
                 {AGENT_NAME_KO[log.agent_type] ?? log.agent_type} · {log.action}
               </li>
             ))}

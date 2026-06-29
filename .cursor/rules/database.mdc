@@ -1,0 +1,13 @@
+---
+description: Supabase migrations, RLS, types, data lib
+globs: supabase/**/*.sql,types/database.ts,lib/*Data*.ts,lib/retention*.ts,lib/lesson*.ts,lib/analytics.ts
+alwaysApply: false
+---
+
+# Database
+
+- 마이그레이션: `supabase/migrations/` 순차 번호 (현재 027+).
+- 스키마 변경 → `types/database.ts` 동기 + **ADR 추가 검토**.
+- RLS: `academy_id`, portal 연결 관계 필수.
+- 이중 DB: 쓰기 `lesson_logs` 우선, ERP read/sync — [ADR-001](../../docs/adr/ADR-001-dual-database.md), [OPERATIONS_SYSTEMIZATION.md](../../docs/OPERATIONS_SYSTEMIZATION.md).
+- 시드/검증: `supabase/seed-*.sql`, `scripts/verify-erp-migrations.sql` — README 참조만.

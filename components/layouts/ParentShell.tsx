@@ -9,6 +9,9 @@ import { cn } from '@/lib/cn';
 
 const NAV = [
   { href: '#overview', label: '학습 요약', icon: 'ri-file-list-3-line' },
+  { href: '#erp', label: '출결·숙제', icon: 'ri-task-line' },
+  { href: '#notices', label: '공지', icon: 'ri-megaphone-line' },
+  { href: '#inquiry', label: '문의', icon: 'ri-mail-send-line' },
   { href: '#ask', label: 'AI 질문', icon: 'ri-chat-3-line' },
   { href: '#details', label: '점수·일정', icon: 'ri-line-chart-line' },
   { href: '#reports', label: '안내문', icon: 'ri-mail-line' },
@@ -40,14 +43,19 @@ export default function ParentShell({ children }: { children: React.ReactNode })
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && isStaffProfile(profile)) {
+    if (loading) return;
+    if (profile?.onboarding_complete === false) {
+      router.replace('/onboarding');
+      return;
+    }
+    if (isStaffProfile(profile)) {
       router.replace('/dashboard');
     }
   }, [loading, profile, router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.replace('/auth');
+    router.replace('/login');
   };
 
   return (

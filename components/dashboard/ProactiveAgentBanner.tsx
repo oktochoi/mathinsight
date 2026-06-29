@@ -19,7 +19,7 @@ export function ProactiveAgentBanner({
       <p className="text-xs text-violet-800/90 mt-1">
         밤사이 수업 기록을 다시 훑어, 연락이 필요할 수 있는 학생 수를 정리했습니다.
       </p>
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-slate-800">
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm" style={{ color: 'var(--app-ink-2)' }}>
         {consultation > 0 && (
           <li>
             상담 권장 <strong className="text-violet-800">{consultation}명</strong>
@@ -32,7 +32,7 @@ export function ProactiveAgentBanner({
         )}
         {attention > 0 && (
           <li>
-            가벼운 주의 <strong className="text-sky-800">{attention}명</strong>
+            확인 권장 <strong className="text-sky-800">{attention}명</strong>
           </li>
         )}
       </ul>

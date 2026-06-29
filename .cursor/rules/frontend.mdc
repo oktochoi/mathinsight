@@ -1,0 +1,31 @@
+---
+description: Staff/Portal/Marketing UI, hooks, components
+globs: app/**/*.tsx,components/**/*.tsx,hooks/**/*.ts,context/**/*.tsx,store/**/*.ts
+alwaysApply: false
+---
+
+# Frontend
+
+## Staff `(app)/`
+
+- `page.tsx` thin → `PageClient.tsx` — [ADR-003](../../docs/adr/ADR-003-pageclient-pattern.md), Skill [create-page.md](../../skills/create-page.md).
+- `PageHeader`(title만) + `PageLoader` / `EmptyState` / `ErrorBanner`.
+- 탭: `useSearchParams` + `?tab=` + `<Suspense>`.
+- Dashboard 위젯: `components/dashboard/DashboardPrimitives.tsx`.
+- 차트: recharts, 심플 운영형 — 장식용 과다 색 금지.
+
+## Hooks
+
+- Skill [create-hook.md](../../skills/create-hook.md).
+- `useAuth()` → `academy_id` · `useStaffScope()` · `dataVersion` / `bumpDataVersion()`.
+- React Query **금지** — [ADR-002](../../docs/adr/ADR-002-no-react-query.md).
+
+## Shell별
+
+- Marketing: `lib/marketing/ui.ts` — AppShell/Sidebar import 금지.
+- Portal: `components/portal/*`, `ParentShell`.
+- Auth: `components/auth/AuthShell`.
+
+## IA
+
+- 운영 우선 Dashboard — [ADR-006](../../docs/adr/ADR-006-ai-as-assistant-not-hero.md), [PROJECT_GOALS.md](../../PROJECT_GOALS.md).

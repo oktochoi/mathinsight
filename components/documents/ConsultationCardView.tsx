@@ -14,7 +14,7 @@ export function ConsultationCardView({ card }: { card: ConsultationCard }) {
         className="p-6 sm:p-8 text-white"
         style={{ background: 'linear-gradient(135deg, #312e81, #1e1b4b)' }}
       >
-        <h2 className="text-xl font-bold">{studentName} 학생 상담 카드</h2>
+        <h2 className="text-xl font-bold">{studentName} 학생 상담 요약</h2>
         <p className="text-sm text-indigo-200/90 mt-1">
           {card.period_start} ~ {card.period_end}
           {grade ? ` · ${grade}` : ''}
@@ -39,7 +39,7 @@ export function ConsultationCardView({ card }: { card: ConsultationCard }) {
           </pre>
         </section>
         <section>
-          <h3 className="text-sm font-bold text-slate-900 mb-2">상담 포인트</h3>
+          <h3 className="text-sm font-bold text-slate-900 mb-2">상담 준비 메모</h3>
           {card.consultation_points.length === 0 ? (
             <p className="text-sm text-slate-400">등록된 포인트가 없습니다.</p>
           ) : (

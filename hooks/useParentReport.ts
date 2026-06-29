@@ -23,7 +23,7 @@ export function useParentReport(id: string | undefined) {
 
     const { data, error: err } = await supabase
       .from('parent_reports')
-      .select('*, students(id, name, grade, academy_id, parent_user_id)')
+      .select('*, students(id, name, grade, academy_id)')
       .eq('id', id)
       .maybeSingle();
 
@@ -37,7 +37,6 @@ export function useParentReport(id: string | undefined) {
     const row = data as ParentReport;
     const student = row.students as {
       academy_id?: string;
-      parent_user_id?: string | null;
     } | null;
 
     if (profile?.role === 'parent') {

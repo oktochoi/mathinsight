@@ -1,0 +1,16 @@
+---
+description: API routes, agents, AI, auth middleware
+globs: app/api/**/*.ts,lib/agents/**/*.ts,lib/ai/**/*.ts,lib/rag/**/*.ts,lib/vectorRag/**/*.ts,lib/workflows/**/*.ts,lib/server/**/*.ts,lib/api/**/*.ts,proxy.ts,lib/middlewareAuth.ts,lib/auth*.ts
+alwaysApply: false
+---
+
+# Backend
+
+- Skill [create-api.md](../../skills/create-api.md).
+- Route **thin** → domain in `lib/`.
+- Staff API: `requireStaff()` — [lib/api/staffAuth.ts](../../lib/api/staffAuth.ts).
+- Cron: `CRON_SECRET` + [lib/supabase/admin.ts](../../lib/supabase/admin.ts) service role.
+- Response: `{ ok: boolean, error?: string, ... }`.
+- `GEMINI_API_KEY` — **server only**, 클라이언트 노출 금지.
+- Agent 실행 → `agent_logs` ([lib/agents/log.ts](../../lib/agents/log.ts)).
+- RAG/Agent 상세: [AGENT_ARCHITECTURE.md](../../docs/AGENT_ARCHITECTURE.md), [ADR-007](../../docs/adr/ADR-007-gemini-pgvector-rag.md).

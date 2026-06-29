@@ -87,7 +87,9 @@ async function ensureUserProfileClient(
     (user.user_metadata?.academy_name as string | undefined)?.trim() ||
     '';
 
-  if (role === 'owner' && academyName) {
+  const resolvedAcademyName = academyName || '내 학원';
+  if (role === 'owner') {
+    const academyName = resolvedAcademyName;
     let academyId: string | null = null;
 
     const { data: owned } = await client

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
+import { useStaffScope } from '@/hooks/useStaffScope';
+import { fetchLatestRetentionSnapshots } from '@/lib/retentionData';
 import {
   getAttentionStudents,
   calculateHomeworkTrend,
@@ -15,12 +17,30 @@ import {
   buildDashboardPriorities,
   getLessonFlowState,
 } from '@/lib/learningFlow';
+import { buildMorningBrief } from '@/lib/dashboardMorningBrief';
+import {
+  findCompoundStudentAlert,
+  findHighHomeworkClass,
+} from '@/lib/dashboardInsights';
+import {
+  buildAiRecommendations,
+  buildTodayChecklist,
+} from '@/lib/dashboardOperations';
+import {
+  buildConsultationCompletionRate,
+  buildDailyAttendanceTrend,
+  buildStudentCountTrend,
+  buildWeeklyAttendanceTrend,
+  buildWeeklyCounselingTrend,
+} from '@/lib/dashboardTrends';
 import { expandCalendarEvents, getWeekDates } from '@/lib/schedules';
 import type {
   ClassSchedule,
   ConsultationCard,
   ConsultationFollowup,
+  CounselingSession,
   DashboardStats,
+  DashboardUnclosedLesson,
   LessonLog,
   ParentReport,
   ScheduleException,
@@ -33,6 +53,7 @@ function todayStr() {
 
 export function useDashboardStats() {
   const { profile } = useAuth();
+  const scope = useStaffScope();
   const dataVersion = useAppStore((s) => s.dataVersion);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,12 +65,23 @@ export function useDashboardStats() {
       setLoading(false);
       return;
     }
+    if (scope.loading) return;
     setLoading(true);
     setError(null);
     const academyId = profile.academy_id;
     const today = todayStr();
+    const dashboardMode: DashboardStats['dashboardMode'] =
+      scope.isTeacher && !scope.isOwner ? 'teacher' : 'owner';
+    const teacherClassSet =
+      dashboardMode === 'teacher' && scope.classIds.length > 0
+        ? new Set(scope.classIds)
+        : null;
+    const teacherStudentSet =
+      dashboardMode === 'teacher' && scope.studentIds.length > 0
+        ? new Set(scope.studentIds)
+        : null;
 
-    const [studentsRes, logsRes, reportsRes, classesRes, schedulesRes, exceptionsRes, followupsRes, cardsRes, pendingCardsRes] =
+    const [studentsRes, logsRes, reportsRes, classesRes, schedulesRes, exceptionsRes, followupsRes, cardsRes, pendingCardsRes, pendingMessagesRes, paymentsRes, counselingRes, unclosedRes, retentionRet, announcementsRes] =
       await Promise.all([
       supabase
         .from('students')
@@ -113,6 +145,40 @@ export function useDashboardStats() {
           .in('student_id', ids)
           .eq('consultation_status', 'pending');
       })(),
+      supabase
+        .from('parent_messages')
+        .select('id')
+        .eq('academy_id', academyId)
+        .eq('status', 'pending'),
+      supabase
+        .from('student_payments')
+        .select('id, status, due_date')
+        .eq('academy_id', academyId)
+        .eq('status', 'pending'),
+      supabase
+        .from('counseling_sessions')
+        .select('id, student_id, title, status, scheduled_at, students(id, name)')
+        .eq('academy_id', academyId)
+        .order('scheduled_at', { ascending: true, nullsFirst: false })
+        .limit(100),
+      (async () => {
+        let q = supabase
+          .from('lessons')
+          .select('id, class_id, lesson_date, status, classes(name)')
+          .eq('academy_id', academyId)
+          .eq('lesson_date', today)
+          .neq('status', 'closed');
+        if (teacherClassSet) q = q.in('class_id', [...teacherClassSet]);
+        return q;
+      })(),
+      fetchLatestRetentionSnapshots(academyId),
+      supabase
+        .from('announcements')
+        .select('id, title, published_at')
+        .eq('academy_id', academyId)
+        .not('published_at', 'is', null)
+        .order('published_at', { ascending: false })
+        .limit(5),
     ]);
 
     if (studentsRes.error || logsRes.error) {
@@ -121,13 +187,25 @@ export function useDashboardStats() {
       return;
     }
 
-    const students = (studentsRes.data ?? []) as (Student & { classes?: { name: string } })[];
+    let students = (studentsRes.data ?? []) as (Student & { classes?: { name: string } })[];
+    if (teacherStudentSet) {
+      students = students.filter((s) => teacherStudentSet.has(s.id));
+    } else if (teacherClassSet) {
+      students = students.filter((s) => s.class_id && teacherClassSet.has(s.class_id));
+    }
+
     const logs = (logsRes.data ?? []) as LessonLog[];
-    const todayLogs = logs.filter((l) => l.lesson_date === today);
+    const scopedLogs =
+      teacherStudentSet != null
+        ? logs.filter((l) => teacherStudentSet.has(l.student_id))
+        : teacherClassSet != null
+          ? logs.filter((l) => teacherClassSet.has(l.class_id))
+          : logs;
+    const todayLogs = scopedLogs.filter((l) => l.lesson_date === today);
     const todayClassIds = new Set(todayLogs.map((l) => l.class_id));
 
     const logsByStudent = new Map<string, LessonLog[]>();
-    for (const log of logs) {
+    for (const log of scopedLogs) {
       const arr = logsByStudent.get(log.student_id) ?? [];
       arr.push(log);
       logsByStudent.set(log.student_id, arr);
@@ -135,16 +213,20 @@ export function useDashboardStats() {
 
     const attentionStudents = getAttentionStudents(students, logsByStudent);
     const missingHomeworkCount = todayLogs.filter((l) => l.homework_status === 'missing').length;
+    const absentTodayCount = todayLogs.filter((l) => l.attendance_status === 'absent').length;
+    const lateTodayCount = todayLogs.filter((l) => l.attendance_status === 'late').length;
+    const presentTodayCount = todayLogs.filter((l) => l.attendance_status === 'present').length;
+    const makeupNeededCount = absentTodayCount;
 
     let scoreDeclineCount = 0;
-    for (const sid of new Set(logs.map((l) => l.student_id))) {
+    for (const sid of new Set(scopedLogs.map((l) => l.student_id))) {
       const t = calculateScoreTrend(logsByStudent.get(sid) ?? []);
       if (t.direction === 'down') scoreDeclineCount++;
     }
 
-    const allHw = calculateHomeworkTrend(logs);
+    const allHw = calculateHomeworkTrend(scopedLogs);
     const gradeBuckets = new Map<string, number[]>();
-    for (const log of logs.filter((l) => l.test_score != null).slice(0, 200)) {
+    for (const log of scopedLogs.filter((l) => l.test_score != null).slice(0, 200)) {
       const st = students.find((s) => s.id === log.student_id);
       const g = st?.grade ?? '기타';
       const arr = gradeBuckets.get(g) ?? [];
@@ -158,7 +240,7 @@ export function useDashboardStats() {
 
     const cards = (cardsRes.data ?? []) as ConsultationCard[];
     const recentActivities = buildActionActivities({
-      logs,
+      logs: scopedLogs,
       cards,
       reports: (reportsRes.data ?? []) as ParentReport[],
       students: students.map((s) => ({ id: s.id, name: s.name })),
@@ -168,16 +250,15 @@ export function useDashboardStats() {
     const schedules = (schedulesRes.data ?? []) as ClassSchedule[];
     const exceptions = (exceptionsRes.data ?? []) as ScheduleException[];
     const followups = (followupsRes.data ?? []) as ConsultationFollowup[];
-    const classes = classesRes.data ?? [];
-    const weekEvents = expandCalendarEvents(schedules, exceptions, getWeekDates(new Date()));
-    const todayLessons = buildTodayLessons(
-      weekEvents,
-      students,
-      logs,
-      followups,
-      today
+    const classes = (classesRes.data ?? []).filter(
+      (c) => !teacherClassSet || teacherClassSet.has((c as { id: string }).id)
     );
-    const classFlows = buildClassFlows(classes, students, logs, weekEvents);
+    const weekEvents = expandCalendarEvents(schedules, exceptions, getWeekDates(new Date()));
+    let todayLessons = buildTodayLessons(weekEvents, students, scopedLogs, followups, today);
+    if (teacherClassSet) {
+      todayLessons = todayLessons.filter((tl) => teacherClassSet.has(tl.event.classId));
+    }
+    const classFlows = buildClassFlows(classes, students, scopedLogs, weekEvents);
 
     let missingLogLessons = 0;
     for (const tl of todayLessons) {
@@ -185,6 +266,82 @@ export function useDashboardStats() {
       if (st.emphasizeRecord) missingLogLessons++;
     }
     const pendingConsultationCount = (pendingCardsRes.data ?? []).length;
+    const pendingParentMessagesCount = (pendingMessagesRes.data ?? []).length;
+
+    const todayForPay = todayStr();
+    const overduePaymentsCount = ((paymentsRes.data ?? []) as { due_date: string }[]).filter(
+      (p) => p.due_date < todayForPay
+    ).length;
+
+    const retentionSignals = retentionRet.signals.filter((row) => {
+      if (!teacherStudentSet) return true;
+      return teacherStudentSet.has(row.student_id);
+    });
+    let retentionHighRiskCount = 0;
+    const retentionRiskStudents: DashboardStats['retentionRiskStudents'] = [];
+    for (const row of retentionSignals) {
+      if (row.risk_level === 'high' || row.risk_level === 'medium') {
+        if (row.risk_level === 'high') retentionHighRiskCount++;
+        retentionRiskStudents.push({
+          studentId: row.student_id,
+          name: row.students?.name ?? '학생',
+          grade: row.students?.grade ?? '',
+          reason: row.reason ?? '재등록 상담 검토',
+          riskLevel: row.risk_level,
+        });
+      }
+    }
+    retentionRiskStudents.sort((a, b) => {
+      const order = { high: 0, medium: 1, low: 2 };
+      return (order[a.riskLevel as keyof typeof order] ?? 3) - (order[b.riskLevel as keyof typeof order] ?? 3);
+    });
+
+    const counselingSessions = (counselingRes.data ?? []) as unknown as Pick<
+      CounselingSession,
+      'id' | 'student_id' | 'title' | 'status' | 'scheduled_at' | 'students'
+    >[];
+    const scopedCounseling = teacherStudentSet
+      ? counselingSessions.filter((s) => teacherStudentSet.has(s.student_id))
+      : counselingSessions;
+    const todayCounselingQueue = scopedCounseling
+      .filter((s) => {
+        if (s.status !== 'scheduled' && s.status !== 'in_progress') return false;
+        if (!s.scheduled_at) return s.status === 'in_progress';
+        return s.scheduled_at.slice(0, 10) === today;
+      })
+      .slice(0, 8)
+      .map((s) => ({
+        id: s.id,
+        studentId: s.student_id,
+        studentName: (s.students as { name?: string } | undefined)?.name ?? '학생',
+        title: s.title,
+        status: s.status,
+        scheduledAt: s.scheduled_at,
+      }));
+
+    const incompleteCounselingCount =
+      scopedCounseling.filter((s) => s.status === 'followup_needed').length +
+      (pendingConsultationCount > 0 ? pendingConsultationCount : 0);
+
+    const unclosedLessonsToday: DashboardUnclosedLesson[] = (
+      (unclosedRes.data ?? []) as {
+        id: string;
+        class_id: string;
+        lesson_date: string;
+        status: string;
+        classes?: { name?: string } | null;
+      }[]
+    ).map((row) => ({
+      lessonId: row.id,
+      classId: row.class_id,
+      className: row.classes?.name ?? '반',
+      status: row.status,
+      lessonDate: row.lesson_date,
+    }));
+
+    const worseningStudents = attentionStudents
+      .filter((s) => s.riskKind === 'consultation' || s.riskKind === 'makeup' || s.urgency === 'high')
+      .slice(0, 6);
 
     const todayPriorities = buildDashboardPriorities(
       todayLessons,
@@ -194,34 +351,106 @@ export function useDashboardStats() {
         consultationCount: attentionStudents.filter((s) => s.status === 'consultation')
           .length,
         pendingConsultationCount,
+        pendingParentMessagesCount,
+        overduePaymentsCount,
+        retentionHighRiskCount,
         missingHomeworkCount,
+        absentTodayCount,
+        lateTodayCount,
         todayLessonCount: todayLessons.length,
         recentReportCount: (reportsRes.data ?? []).length,
       }
     );
 
-    setStats({
+    const weeklyCounselingTrend = buildWeeklyCounselingTrend(scopedCounseling);
+    const dailyAttendanceTrend = buildDailyAttendanceTrend(scopedLogs);
+    const weeklyAttendanceTrend = buildWeeklyAttendanceTrend(scopedLogs);
+    const studentCountTrend = buildStudentCountTrend(scopedLogs);
+    const consultationCompletionRate = buildConsultationCompletionRate(scopedCounseling);
+
+    const partialForChecklist = {
       todayLessonCount: todayLessons.length || todayLogs.length,
       todayClassCount: todayLessons.length
         ? new Set(todayLessons.map((t) => t.event.classId)).size
         : todayClassIds.size,
       missingHomeworkCount,
       pendingConsultationCount,
+      pendingParentMessagesCount,
       consultationRecommendedCount: attentionStudents.filter(
         (s) => s.status === 'consultation'
       ).length,
       scoreDeclineCount,
+      absentTodayCount,
+      lateTodayCount,
+      presentTodayCount,
+      makeupNeededCount,
+      pendingAttendanceInputCount: 0,
+      pendingHomeworkCheckCount: 0,
+      totalStudentCount: students.length,
       homeworkTrend: allHw.weeklyRates.map((w) => ({ name: w.week, rate: w.rate })),
       classScoreTrend,
+      weeklyCounselingTrend,
+      dailyAttendanceTrend,
+      weeklyAttendanceTrend,
+      studentCountTrend,
+      consultationCompletionRate,
       attentionStudents: attentionStudents.slice(0, 5),
+      worseningStudents,
+      retentionRiskStudents: retentionRiskStudents.slice(0, 6),
+      todayCounselingQueue,
+      incompleteCounselingCount,
       recentReports: (reportsRes.data ?? []) as ParentReport[],
       recentActivities,
       todayLessons,
       classFlows,
       todayPriorities,
+      morningBriefLines: [] as string[],
+      overduePaymentsCount,
+      retentionHighRiskCount,
+      unclosedLessonsToday,
+      dashboardMode,
+      todayChecklist: [] as DashboardStats['todayChecklist'],
+      aiRecommendations: [] as DashboardStats['aiRecommendations'],
+      recentNotices: ((announcementsRes.data ?? []) as { id: string; title: string; published_at: string | null }[]).map(
+        (row) => ({
+          id: row.id,
+          title: row.title,
+          publishedAt: row.published_at,
+        })
+      ),
+    };
+
+    partialForChecklist.pendingAttendanceInputCount = missingLogLessons + unclosedLessonsToday.length;
+    partialForChecklist.pendingHomeworkCheckCount = missingHomeworkCount;
+    partialForChecklist.todayChecklist = buildTodayChecklist(partialForChecklist);
+    partialForChecklist.aiRecommendations = buildAiRecommendations(
+      attentionStudents,
+      worseningStudents,
+      retentionRiskStudents
+    );
+
+    const classNameMap = new Map(classes.map((c) => [c.id, c.name]));
+    const studentNameMap = new Map(students.map((s) => [s.id, s.name]));
+    const insightLines = [
+      findHighHomeworkClass(scopedLogs, classNameMap),
+      findCompoundStudentAlert(scopedLogs, studentNameMap),
+    ].filter((l): l is string => Boolean(l));
+
+    partialForChecklist.morningBriefLines = buildMorningBrief({
+      ...partialForChecklist,
+      insightLines,
     });
+
+    setStats(partialForChecklist);
     setLoading(false);
-  }, [profile?.academy_id]);
+  }, [
+    profile?.academy_id,
+    scope.isTeacher,
+    scope.isOwner,
+    scope.loading,
+    scope.classIds.join(','),
+    scope.studentIds.join(','),
+  ]);
 
   useEffect(() => {
     load();

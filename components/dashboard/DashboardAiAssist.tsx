@@ -32,26 +32,27 @@ export function DashboardAiAssist({
   if (!hasActivity && !loading) return null;
 
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden">
+    <section className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-slate-50/80 transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left transition-colors cursor-pointer hover:bg-[var(--app-surface-2)]"
       >
         <div>
-          <h2 className="text-base font-bold text-slate-900">자동으로 준비된 내용</h2>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <h2 className="text-base font-bold" style={{ color: 'var(--app-ink)' }}>자동으로 준비된 내용</h2>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--app-ink-3)' }}>
             수업 기록을 분석해 상담·리포트 초안을 미리 만들어 둡니다. 확인만 하시면 됩니다.
           </p>
         </div>
         <i
-          className={`ri-arrow-${open ? 'up' : 'down'}-s-line text-xl text-slate-400 shrink-0`}
+          className={`ri-arrow-${open ? 'up' : 'down'}-s-line text-xl shrink-0`}
+          style={{ color: 'var(--app-ink-4)' }}
           aria-hidden
         />
       </button>
 
       {open && (
-        <div className="px-5 pb-5 space-y-5 border-t border-slate-100 pt-4">
+        <div className="px-5 pb-5 space-y-5 pt-4" style={{ borderTop: '1px solid var(--app-border)' }}>
           <ProactiveAgentBanner
             message={notifications.message}
             consultation={notifications.consultation}
@@ -64,11 +65,11 @@ export function DashboardAiAssist({
             <AgentActionFeed feed={feed} loading={loading} />
           </div>
 
-          <p className="text-xs text-slate-500 leading-relaxed rounded-xl bg-slate-50 px-4 py-3">
-            <strong className="text-slate-700">참고:</strong> 학부모 앱의 「AI 학습 상담」은
+          <p className="text-xs leading-relaxed rounded-xl px-4 py-3" style={{ color: 'var(--app-ink-3)', background: 'var(--app-surface-2)' }}>
+            <strong style={{ color: 'var(--app-ink-2)' }}>참고:</strong> 학부모 앱의 「AI 학습 상담」은
             별도 기능입니다. 여기서는 <strong>원장님용</strong> 상담 카드·주간 리포트 초안만
             자동 생성됩니다.{' '}
-            <Link href="/consultation-cards" className="text-indigo-600 font-medium hover:underline">
+            <Link href="/consultation-cards" className="font-medium hover:underline" style={{ color: 'var(--app-accent)' }}>
               상담 카드 보기
             </Link>
           </p>

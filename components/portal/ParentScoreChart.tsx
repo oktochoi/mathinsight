@@ -30,8 +30,8 @@ export function ParentScoreChart({ trend }: { trend: ScoreTrend }) {
   return (
     <div className="parent-card-soft p-4">
       <p className="text-sm text-stone-600 mb-4">{TREND_HINT[trend.direction] ?? ''}</p>
-      <div className="h-[220px] lg:h-[300px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full min-w-0" style={{ height: 260 }}>
+        <ResponsiveContainer width="100%" height={260} minWidth={0}>
         <AreaChart data={trend.points} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" vertical={false} />
           <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#78716c' }} axisLine={false} tickLine={false} />

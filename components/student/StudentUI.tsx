@@ -20,13 +20,16 @@ export function StudentSection({
 }) {
   return (
     <section id={id} className={cn('student-card overflow-hidden', className)}>
-      <div className="px-5 sm:px-6 py-4 border-b border-sky-100 bg-gradient-to-r from-sky-50/90 to-white">
+      <div
+        className="px-5 sm:px-6 py-4 border-b border-sky-100"
+        style={{ background: 'linear-gradient(to right, rgba(240,249,255,0.9), var(--app-surface))' }}
+      >
         <div className="flex items-start gap-3">
           {step && <span className="student-section-badge shrink-0 mt-0.5">{step}</span>}
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold text-slate-900 tracking-tight">{title}</h2>
+            <h2 className="text-lg font-semibold tracking-tight" style={{ color: 'var(--app-ink)' }}>{title}</h2>
             {description && (
-              <p className="text-sm text-slate-500 mt-1 leading-relaxed">{description}</p>
+              <p className="text-sm mt-1 leading-relaxed" style={{ color: 'var(--app-ink-3)' }}>{description}</p>
             )}
           </div>
         </div>
@@ -56,7 +59,7 @@ export function StudentStat({
 
 export function StudentSubheading({ children }: { children: ReactNode }) {
   return (
-    <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--app-ink)' }}>
       <span className="w-1 h-4 rounded-full bg-sky-500" aria-hidden />
       {children}
     </h3>

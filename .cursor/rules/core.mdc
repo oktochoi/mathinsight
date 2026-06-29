@@ -1,0 +1,17 @@
+---
+description: EduFlow 전역 규칙 — scope, diff, 문서, shell 분리
+alwaysApply: true
+---
+
+# Core
+
+- UI 카피: **한국어**. 코드·타입: 영어.
+- **최소 diff** — 요청 범위 밖 파일 수정 금지.
+- git commit / README 대규모 수정 — **사용자 요청 시만**.
+- `profile.academy_id` · teacher **scope** (`useStaffScope`) — academy 전체 데이터 노출 금지.
+- Shell UI 혼용 금지: `(app)` / `(marketing)` / `parent` / `student` / `(auth)` — [ADR-005](../../docs/adr/ADR-005-separated-ui-shells.md).
+- Staff 신규 메뉴 → `lib/staffNavigation.ts` (+ 필요 시 `lib/staffPages.ts`).
+- `StaffPageIntro`, 튜토리얼 배너, PageHeader `description` — **임의 추가 금지** (온보딩 별도).
+- 기존 `docs/*` **본문 복사 금지** — [AGENTS.md](../../AGENTS.md) 링크만.
+- 새 설계 선택 → `docs/adr/ADR-NNN-slug.md` + AGENTS ADR 표 한 줄.
+- 진입: [PROJECT_GOALS.md](../../PROJECT_GOALS.md) · [AGENTS.md](../../AGENTS.md).

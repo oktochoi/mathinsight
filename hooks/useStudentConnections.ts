@@ -5,6 +5,20 @@ import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import type { StudentConnection, StudentConnectionRequest } from '@/types/database';
 
+function parseConnectionRequests(data: unknown): StudentConnectionRequest[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data as StudentConnectionRequest[];
+  return [];
+}
+
+async function fetchPendingConnectionRequests(studentId?: string) {
+  const { data, error } = await supabase.rpc('get_pending_connection_requests', {
+    p_student_id: studentId ?? null,
+  });
+  if (error) return { requests: [] as StudentConnectionRequest[], error: error.message };
+  return { requests: parseConnectionRequests(data), error: null };
+}
+
 export function useStudentConnections(studentId: string | undefined) {
   const dataVersion = useAppStore((s) => s.dataVersion);
   const [connections, setConnections] = useState<StudentConnection[]>([]);
@@ -23,19 +37,14 @@ export function useStudentConnections(studentId: string | undefined) {
         .select('*, user:users(id, email, name)')
         .eq('student_id', studentId)
         .order('created_at', { ascending: true }),
-      supabase
-        .from('student_connection_requests')
-        .select('*, user:users(id, email, name)')
-        .eq('student_id', studentId)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false }),
+      fetchPendingConnectionRequests(studentId),
     ]);
 
     if (connRes.error || reqRes.error) {
       setError('연결 정보를 불러오지 못했습니다.');
     } else {
       setConnections((connRes.data ?? []) as StudentConnection[]);
-      setPendingRequests((reqRes.data ?? []) as StudentConnectionRequest[]);
+      setPendingRequests(reqRes.requests);
     }
     setLoading(false);
   }, [studentId]);
@@ -64,16 +73,10 @@ export function useAcademyConnectionRequests() {
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: err } = await supabase
-      .from('student_connection_requests')
-      .select(
-        '*, user:users(id, email, name), student:students(id, name, grade)'
-      )
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+    const { requests, error: err } = await fetchPendingConnectionRequests();
 
     if (err) setError('연결 요청을 불러오지 못했습니다.');
-    else setRequests((data ?? []) as StudentConnectionRequest[]);
+    else setRequests(requests);
     setLoading(false);
   }, []);
 

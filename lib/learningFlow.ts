@@ -258,7 +258,12 @@ export function buildDashboardPriorities(
   summary?: {
     consultationCount: number;
     pendingConsultationCount?: number;
+    pendingParentMessagesCount?: number;
+    overduePaymentsCount?: number;
+    retentionHighRiskCount?: number;
     missingHomeworkCount: number;
+    absentTodayCount?: number;
+    lateTodayCount?: number;
     todayLessonCount: number;
     recentReportCount: number;
   }
@@ -267,20 +272,60 @@ export function buildDashboardPriorities(
   const today = new Date().toISOString().slice(0, 10);
 
   if (summary) {
+    if ((summary.absentTodayCount ?? 0) > 0) {
+      items.push({
+        id: 'attendance-absent',
+        text: `오늘 결석 ${summary.absentTodayCount}명 → 출결 관리`,
+        href: '/attendance',
+        tone: 'danger',
+      });
+    }
+    if ((summary.lateTodayCount ?? 0) > 0) {
+      items.push({
+        id: 'attendance-late',
+        text: `오늘 지각 ${summary.lateTodayCount}명 → 출결 관리`,
+        href: '/attendance',
+        tone: 'warning',
+      });
+    }
     if (summary.missingHomeworkCount > 0) {
       items.push({
         id: 'homework-missing',
-        text: `오늘 숙제 미제출 ${summary.missingHomeworkCount}명 → 수업 기록`,
-        href: '/lesson-logs',
+        text: `오늘 숙제 미제출 ${summary.missingHomeworkCount}명 → 숙제 관리`,
+        href: '/homework?filter=missing',
+        tone: 'warning',
+      });
+    }
+    if ((summary.pendingParentMessagesCount ?? 0) > 0) {
+      items.push({
+        id: 'parent-messages',
+        text: `학부모 문의 대기 ${summary.pendingParentMessagesCount}건 → 문의함`,
+        href: '/messages',
         tone: 'warning',
       });
     }
     if ((summary.pendingConsultationCount ?? 0) > 0) {
       items.push({
         id: 'consult-pending',
-        text: `상담 대기 ${summary.pendingConsultationCount}건 → 상담 카드`,
-        href: '/consultation-cards',
+        text: `상담 대기 ${summary.pendingConsultationCount}건 → 상담 관리`,
+        href: '/counseling',
         tone: 'warning',
+      });
+    }
+    if ((summary.overduePaymentsCount ?? 0) > 0) {
+      items.push({
+        id: 'payments-overdue',
+        text: `수강료 연체 ${summary.overduePaymentsCount}건 → 결제 관리`,
+        href: '/billing',
+        tone: 'danger',
+      });
+    }
+    if ((summary.retentionHighRiskCount ?? 0) > 0) {
+      items.push({
+        id: 'retention-high',
+        text: `상담 권장 ${summary.retentionHighRiskCount}명 → 학생 성장`,
+        href: '/retention',
+        tone: 'danger',
       });
     }
     if (summary.consultationCount > 0) {

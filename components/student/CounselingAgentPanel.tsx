@@ -26,7 +26,7 @@ export function CounselingAgentPanel({
       });
       const data = await res.json();
       if (!data.ok) {
-        setError(data.error ?? 'Agent 실행에 실패했습니다.');
+        setError(data.error ?? '상담 준비에 실패했습니다.');
         setResult(null);
         return;
       }
@@ -45,21 +45,21 @@ export function CounselingAgentPanel({
   };
 
   return (
-    <div className="rounded-2xl border border-indigo-100 bg-indigo-50/30 p-5 space-y-4">
+    <div className="rounded-2xl p-5 space-y-4" style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold text-slate-900">Counseling Agent</h3>
-          <p className="text-xs text-slate-500 mt-1">
-            {studentName} — 성적·숙제·상담·위험 신호를 RAG로 모아 상담 브리핑 생성
+          <h3 className="text-sm font-bold" style={{ color: 'var(--app-ink)' }}>상담 준비</h3>
+          <p className="text-xs mt-1" style={{ color: 'var(--app-ink-3)' }}>
+            {studentName} — 출결·숙제·성적·상담 기록을 모아 상담 준비 메모를 생성합니다
           </p>
         </div>
         <button
           type="button"
           onClick={run}
           disabled={loading}
-          className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold disabled:opacity-50 cursor-pointer"
+          className="app-btn app-btn-primary text-sm disabled:opacity-50 cursor-pointer"
         >
-          {loading ? '분석 중…' : 'AI 상담 준비'}
+          {loading ? '준비 중…' : '상담 준비'}
         </button>
       </div>
 
@@ -70,22 +70,20 @@ export function CounselingAgentPanel({
       )}
 
       {result && (
-        <div className="space-y-4 text-sm bg-white rounded-xl border border-indigo-100/80 p-4">
-          <p className="text-[10px] text-indigo-500 font-medium">
-            {result.source === 'gemini' ? 'Gemini + RAG' : '규칙 기반'}
-          </p>
+        <div className="space-y-4 text-sm rounded-xl p-4" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
           <div>
-            <p className="text-xs font-semibold text-slate-500 mb-1">상담 요약</p>
-            <p className="text-slate-800 leading-relaxed">{result.summary}</p>
+            <p className="text-xs font-semibold mb-1" style={{ color: 'var(--app-ink-3)' }}>상담 요약</p>
+            <p className="leading-relaxed" style={{ color: 'var(--app-ink)' }}>{result.summary}</p>
           </div>
-          <BulletBlock title="주요 문제" items={result.mainIssues} />
-          <BulletBlock title="상담 포인트" items={result.consultationPoints} />
-          <BulletBlock title="추천 액션" items={result.recommendedActions} />
+          <BulletBlock title="주요 이슈" items={result.mainIssues} />
+          <BulletBlock title="상담 준비 메모" items={result.consultationPoints} />
+          <BulletBlock title="추천 조치" items={result.recommendedActions} />
           <Link
             href={`/consultation-cards?student=${studentId}`}
-            className="inline-flex text-xs font-semibold text-indigo-600 hover:underline"
+            className="inline-flex text-xs font-semibold hover:underline"
+            style={{ color: 'var(--app-accent)' }}
           >
-            상담 카드 만들기 →
+            상담 요약 저장 →
           </Link>
         </div>
       )}
@@ -97,8 +95,8 @@ function BulletBlock({ title, items }: { title: string; items: string[] }) {
   if (!items.length) return null;
   return (
     <div>
-      <p className="text-xs font-semibold text-slate-500 mb-1">{title}</p>
-      <ul className="list-disc list-inside text-slate-700 space-y-1">
+      <p className="text-xs font-semibold mb-1" style={{ color: 'var(--app-ink-3)' }}>{title}</p>
+      <ul className="list-disc list-inside space-y-1" style={{ color: 'var(--app-ink-2)' }}>
         {items.map((item) => (
           <li key={item}>{item}</li>
         ))}

@@ -3,10 +3,10 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { hasAssignedDbRole } from '@/lib/authProfileSetup';
 import { postAuthDestination } from '@/lib/authRedirectPolicy';
+import { resolveUserRoleState } from '@/lib/resolveUserRole';
 import { ChooseRoleForm } from './ChooseRoleForm';
 import { PROFILE_SETUP_PENDING } from '@/lib/authProfileSetup';
 
-export const dynamic = 'force-dynamic';
 
 export default async function ChooseRolePage() {
   const cookieStore = await cookies();
@@ -17,19 +17,13 @@ export default async function ChooseRolePage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth');
+    redirect('/login');
   }
 
-  const { data: roleRow } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
+  const state = await resolveUserRoleState(supabase, user, { syncMetadata: false });
 
-  const rawDbRole = (roleRow?.role as string | null) ?? null;
-
-  if (hasAssignedDbRole(rawDbRole)) {
-    redirect(postAuthDestination(user, null, rawDbRole));
+  if (hasAssignedDbRole(state.rawDbRole)) {
+    redirect(postAuthDestination(user, state.profile, state.rawDbRole));
   }
 
   const initialName =
@@ -40,5 +34,10 @@ export default async function ChooseRolePage() {
 
   const showPendingInfo = user.user_metadata?.profile_setup === PROFILE_SETUP_PENDING;
 
-  return <ChooseRoleForm initialName={initialName} showPendingInfo={showPendingInfo} />;
+  return (
+    <ChooseRoleForm
+      initialName={initialName}
+      showPendingInfo={showPendingInfo}
+    />
+  );
 }

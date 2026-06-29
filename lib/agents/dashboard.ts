@@ -5,7 +5,7 @@ import { KIND_LABELS, riskNeedsStaffAction } from '@/lib/studentRisk';
 import type { AgentLogStatus, AgentType, DashboardAgentInsight, StoredRiskLevel } from '@/types/database';
 
 const AGENT_LABELS: Record<AgentType, string> = {
-  risk_detection: '학습 위험 점검',
+  risk_detection: '학습 신호 점검',
   counseling: '상담 카드 준비',
   parent_communication: '학부모 리포트',
   dashboard: '대시보드 정리',

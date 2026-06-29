@@ -36,10 +36,6 @@ export async function completeProfileSetup(params: {
     return { error: '로그인이 필요합니다.', profile: null };
   }
 
-  if (params.role === 'owner' && !params.academyName?.trim()) {
-    return { error: '학원 이름을 입력해 주세요.', profile: null };
-  }
-
   const displayName =
     params.name?.trim() ||
     (user.user_metadata?.name as string | undefined)?.trim() ||
@@ -92,7 +88,7 @@ async function syncExistingProfile(
   params: { role: SignupRole; academyName?: string }
 ): Promise<{ error: string | null; profile: UserProfile | null }> {
   if (params.role === 'owner') {
-    const academyName = params.academyName!.trim();
+    const academyName = (params.academyName?.trim()) || '내 학원';
     let academyId: string | null = null;
 
     const { data: owned } = await supabase
@@ -158,9 +154,10 @@ async function syncExistingProfile(
 }
 
 /** 이메일 가입 시 트리거가 프로필을 만들지 않도록 pending 메타만 설정 */
-export function pendingSignupMetadata(name: string) {
+export function pendingSignupMetadata(name: string, academyName?: string) {
   return {
     name: name.trim(),
+    academy_name: academyName?.trim() || null,
     profile_setup: PROFILE_SETUP_PENDING,
   };
 }

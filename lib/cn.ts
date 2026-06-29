@@ -1,4 +1,7 @@
-/** className 조합 */
-export function cn(...parts: (string | false | null | undefined)[]): string {
-  return parts.filter(Boolean).join(' ');
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+/** className 조합 (tailwind-merge) */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }

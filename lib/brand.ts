@@ -4,9 +4,9 @@ export const BRAND_NAME = 'EduFlow';
 export const BRAND_SLUG = 'eduflow';
 
 export const BRAND_TAGLINE =
-  '학생 흐름 데이터를 기반으로 교육 운영을 자동화하는 AI Workflow Platform';
+  '재등록을 지키는 AI 상담 인프라';
 
-export const BRAND_TAGLINE_SHORT = '학생 흐름 · AI Workflow';
+export const BRAND_TAGLINE_SHORT = 'AI 상담 · 재등록 방어';
 
 export const BRAND_DESCRIPTION =
   '수업·숙제·상담 기록을 하나의 흐름으로 연결해 학원 운영과 학부모 소통을 돕는 교육 AI 워크플로우 플랫폼';

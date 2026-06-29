@@ -14,7 +14,7 @@ export type AgentJobRow = {
 };
 
 const STEPS = [
-  { key: 'risk_detection', label: '① 위험 신호 점검' },
+  { key: 'risk_detection', label: '① 학습 신호 점검' },
   { key: 'counseling', label: '② 상담 카드 준비' },
   { key: 'parent_communication', label: '③ 학부모 리포트 초안' },
 ] as const;
@@ -58,7 +58,7 @@ export function AgentWorkflowPanel({
 }) {
   if (loading && jobs.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-sm text-slate-500">
+      <div className="rounded-xl p-4 text-sm" style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface-2)', color: 'var(--app-ink-3)' }}>
         진행 상황 불러오는 중…
       </div>
     );
@@ -66,9 +66,9 @@ export function AgentWorkflowPanel({
 
   if (jobs.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4">
-        <p className="text-sm font-medium text-slate-700">자동 처리 대기 중인 학생 없음</p>
-        <p className="text-xs text-slate-500 mt-1">
+      <div className="rounded-xl border-dashed p-4" style={{ border: '1px dashed var(--app-border)', background: 'var(--app-surface-2)' }}>
+        <p className="text-sm font-medium" style={{ color: 'var(--app-ink-2)' }}>자동 처리 대기 중인 학생 없음</p>
+        <p className="text-xs mt-1" style={{ color: 'var(--app-ink-3)' }}>
           상담·보강이 필요한 학생이 생기면 여기에 단계별 진행이 표시됩니다.
         </p>
       </div>
@@ -78,8 +78,8 @@ export function AgentWorkflowPanel({
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="text-sm font-bold text-slate-900">학생별 자동 처리 단계</h3>
-        <p className="text-xs text-slate-500 mt-0.5">
+        <h3 className="text-sm font-bold" style={{ color: 'var(--app-ink)' }}>학생별 자동 처리 단계</h3>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--app-ink-3)' }}>
           점검 → 상담 카드 → 학부모 리포트 순으로 진행됩니다
         </p>
       </div>
@@ -87,11 +87,13 @@ export function AgentWorkflowPanel({
         {jobs.slice(0, 5).map((job) => (
           <li
             key={job.id}
-            className="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
+            className="rounded-xl px-4 py-3 shadow-sm"
+            style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface)' }}
           >
             <Link
               href={`/students/${job.student_id}`}
-              className="text-sm font-semibold text-slate-900 hover:text-indigo-600"
+              className="text-sm font-semibold hover:text-indigo-600"
+              style={{ color: 'var(--app-ink)' }}
             >
               {studentName(job)}
             </Link>
@@ -106,8 +108,8 @@ export function AgentWorkflowPanel({
                       state === 'active' && 'text-indigo-700 font-medium',
                       state === 'done' && 'text-emerald-700',
                       state === 'failed' && 'text-rose-700',
-                      state === 'pending' && 'text-slate-400'
                     )}
+                    style={state === 'pending' ? { color: 'var(--app-ink-4)' } : undefined}
                   >
                     <span
                       className={cn(
@@ -115,8 +117,8 @@ export function AgentWorkflowPanel({
                         state === 'active' && 'bg-indigo-500 animate-pulse',
                         state === 'done' && 'bg-emerald-500',
                         state === 'failed' && 'bg-rose-500',
-                        state === 'pending' && 'bg-slate-300'
                       )}
+                      style={state === 'pending' ? { background: 'var(--app-border-md)' } : undefined}
                     />
                     {step.label} · {STATE_LABEL[state]}
                   </li>

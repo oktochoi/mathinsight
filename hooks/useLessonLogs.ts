@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
-import { deriveStudentStatusFromRisk } from '@/lib/studentRisk';
+import { upsertLessonLogs } from '@/lib/lessonLogUpsert';
+import { fetchLessonLogs } from '@/lib/lessonLogsRead';
+import { supabase } from '@/lib/supabase';
 import type { LessonLog, LessonLogInsert } from '@/types/database';
 
 export function useLessonLogs(filters?: {
@@ -30,34 +31,31 @@ export function useLessonLogs(filters?: {
     setLoading(true);
     setError(null);
 
-    let query = supabase
-      .from('lesson_logs')
-      .select('*, students(id, name, grade)')
-      .order('lesson_date', { ascending: false });
+    const academyId =
+      profile.academy_id && (profile.role === 'owner' || profile.role === 'teacher')
+        ? profile.academy_id
+        : undefined;
 
-    if (
-      profile.academy_id &&
-      (profile.role === 'owner' || profile.role === 'teacher')
-    ) {
-      query = query.eq('academy_id', profile.academy_id);
-    }
-    if (filters?.studentId) query = query.eq('student_id', filters.studentId);
-    if (filters?.classId) query = query.eq('class_id', filters.classId);
-    if (filters?.fromDate) query = query.gte('lesson_date', filters.fromDate);
-    if (filters?.toDate) query = query.lte('lesson_date', filters.toDate);
-    if (filters?.limit) query = query.limit(filters.limit);
+    const { logs: rows, error: err } = await fetchLessonLogs({
+      academyId,
+      studentId: filters?.studentId,
+      classId: filters?.classId,
+      fromDate: filters?.fromDate,
+      toDate: filters?.toDate,
+      limit: filters?.limit,
+    });
 
-    const { data, error: err } = await query;
     if (err) {
       setError('수업 기록을 불러오지 못했습니다.');
       setLogs([]);
     } else {
-      setLogs((data ?? []) as LessonLog[]);
+      setLogs(rows);
     }
     setLoading(false);
   }, [
     profile?.academy_id,
     profile?.role,
+    profile,
     filters?.studentId,
     filters?.classId,
     filters?.fromDate,
@@ -71,26 +69,14 @@ export function useLessonLogs(filters?: {
 
   const batchInsert = async (rows: LessonLogInsert[]) => {
     if (rows.length === 0) return { error: '저장할 기록이 없습니다.' };
-    const { error: err } = await supabase.from('lesson_logs').insert(rows);
-    if (err) return { error: err.message };
-
-    const studentIds = [...new Set(rows.map((r) => r.student_id))];
-    for (const sid of studentIds) {
-      const { data: recent } = await supabase
-        .from('lesson_logs')
-        .select('*')
-        .eq('student_id', sid)
-        .order('lesson_date', { ascending: false })
-        .limit(12);
-      const status = deriveStudentStatusFromRisk((recent ?? []) as LessonLog[]);
-      await supabase.from('students').update({ status }).eq('id', sid);
-    }
-
-    bumpDataVersion();
-    return { error: null };
+    const result = await upsertLessonLogs(supabase, rows);
+    if (!result.error) bumpDataVersion();
+    return result;
   };
 
-  return { logs, loading, error, refetch: fetchLogs, batchInsert };
+  const upsertLogs = batchInsert;
+
+  return { logs, loading, error, refetch: fetchLogs, batchInsert, upsertLogs };
 }
 
 export { useClasses } from '@/hooks/useClasses';

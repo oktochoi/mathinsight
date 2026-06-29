@@ -27,17 +27,17 @@ export function StudentCharts({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
       <div className="student-card-soft p-4 lg:p-5">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">점수 추이</h3>
+        <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--app-ink)' }}>점수 추이</h3>
         {scoreChart.length === 0 ? (
-          <p className="text-sm text-slate-500 py-8 text-center">점수 기록이 없어요.</p>
+          <p className="text-sm py-8 text-center" style={{ color: 'var(--app-ink-3)' }}>점수 기록이 없어요.</p>
         ) : (
           <>
-            <div className="h-[220px] lg:h-[260px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full min-w-0" style={{ height: 220 }}>
+              <ResponsiveContainer width="100%" height={220} minWidth={0}>
                 <AreaChart data={scoreChart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--app-border)" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--app-ink-4)' }} axisLine={false} tickLine={false} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--app-ink-4)' }} axisLine={false} tickLine={false} />
                   <Tooltip formatter={(v) => [`${v ?? '—'}점`, '점수']} />
                   <Area
                     type="monotone"
@@ -66,16 +66,16 @@ export function StudentCharts({
       </div>
 
       <div className="student-card-soft p-4 lg:p-5">
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">숙제 제출 (주별)</h3>
+        <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--app-ink)' }}>숙제 제출 (주별)</h3>
         {!hasHw ? (
-          <p className="text-sm text-slate-500 py-8 text-center">숙제 기록이 아직 없어요.</p>
+          <p className="text-sm py-8 text-center" style={{ color: 'var(--app-ink-3)' }}>숙제 기록이 아직 없어요.</p>
         ) : (
-          <div className="h-[220px] lg:h-[260px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-w-0" style={{ height: 220 }}>
+            <ResponsiveContainer width="100%" height={220} minWidth={0}>
               <BarChart data={hwChart}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" vertical={false} />
-                <XAxis dataKey="week" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--app-border)" vertical={false} />
+                <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'var(--app-ink-4)' }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--app-ink-4)' }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v) => [`${v ?? 0}%`, '제출률']} />
                 <Bar dataKey="rate" fill="#0369a1" radius={[6, 6, 0, 0]} />
               </BarChart>

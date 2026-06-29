@@ -28,12 +28,7 @@ export function ConnectionRequestsSection() {
 
   return (
     <div className="rounded-2xl p-6 bg-white border border-slate-200 space-y-4">
-      <div>
-        <h3 className="text-sm font-bold text-slate-900">연결 요청</h3>
-        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-          학부모·학생이 학원 코드로 요청한 항목입니다. 학생이 맞는지 확인한 뒤 승인하세요.
-        </p>
-      </div>
+      <h3 className="text-sm font-bold text-slate-900">연결 요청</h3>
 
       {error && <ErrorBanner message={error} />}
       {loading ? (

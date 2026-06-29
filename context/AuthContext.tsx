@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -22,15 +23,26 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+export function AuthProvider({
+  children,
+  initialProfile = null,
+}: {
+  children: React.ReactNode;
+  initialProfile?: UserProfile | null;
+}) {
+  const [profile, setProfile] = useState<UserProfile | null>(initialProfile);
   const [academy, setAcademy] = useState<Academy | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialProfile);
   const [error, setError] = useState<string | null>(null);
+  const profileRef = useRef(initialProfile);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   const load = useCallback(async () => {
-    setLoading(true);
     setError(null);
+    if (!profileRef.current) setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setProfile(null);
@@ -59,9 +71,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    load();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      load();
+    void load();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      // metadata 동기화·토큰 갱신마다 load() → updateUser 연쇄 → 429 방지
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') {
+        return;
+      }
+      void load();
     });
     return () => subscription.unsubscribe();
   }, [load]);

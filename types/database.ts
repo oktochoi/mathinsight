@@ -1,6 +1,7 @@
-/** 앱 표시 역할 (DB `admin` → owner) */
-export type UserRole = 'owner' | 'teacher' | 'parent' | 'student';
+/** 앱 표시 역할 (DB `admin` → owner, `desk` = 원무) */
+export type UserRole = 'owner' | 'teacher' | 'desk' | 'parent' | 'student';
 export type StudentStatus = 'stable' | 'attention' | 'consultation';
+export type EnrollmentStatus = 'prospect' | 'active' | 'on_leave' | 'withdrawn' | 'graduated';
 export type AttendanceStatus = 'present' | 'late' | 'absent';
 export type HomeworkStatus = 'complete' | 'partial' | 'missing';
 export type ReportTone = 'friendly' | 'objective' | 'exam_focused' | 'encouraging';
@@ -31,6 +32,11 @@ export interface UserProfile {
   name: string;
   role: UserRole;
   academy_id: string | null;
+  phone?: string | null;
+  gender?: 'male' | 'female' | 'other' | null;
+  birthdate?: string | null;
+  avatar_url?: string | null;
+  onboarding_complete?: boolean;
   created_at: string;
 }
 
@@ -83,10 +89,29 @@ export interface Student {
   school: string | null;
   grade: string;
   status: StudentStatus;
+  enrollment_status: EnrollmentStatus;
+  registered_at: string | null;
+  withdrawn_at: string | null;
+  withdrawal_reason: string | null;
+  acquisition_source?: string | null;
+  acquisition_source_other?: string | null;
   created_at: string;
   classes?: ClassRow | null;
   parent_user?: { id: string; email: string; name: string } | null;
   student_portal?: { id: string; email: string; name: string } | null;
+}
+
+export interface HomeworkAssignment {
+  id: string;
+  academy_id: string;
+  class_id: string;
+  title: string;
+  description: string | null;
+  due_date: string;
+  lesson_date: string | null;
+  unit: string | null;
+  created_by: string | null;
+  created_at: string;
 }
 
 export interface LessonLog {
@@ -102,6 +127,7 @@ export interface LessonLog {
   test_score: number | null;
   tags: string[];
   memo: string | null;
+  lesson_id?: string | null;
   created_at: string;
   students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
 }
@@ -125,6 +151,7 @@ export interface ConsultationCard {
 
 export interface ParentReport {
   id: string;
+  academy_id?: string;
   student_id: string;
   generated_by: string | null;
   period_start: string;
@@ -252,21 +279,93 @@ export interface ActionActivity {
   type: 'lesson' | 'homework' | 'test' | 'consult' | 'report' | 'schedule';
 }
 
+export interface DashboardCounselingItem {
+  id: string;
+  studentId: string;
+  studentName: string;
+  title: string;
+  status: string;
+  scheduledAt: string | null;
+}
+
+export interface DashboardRetentionRisk {
+  studentId: string;
+  name: string;
+  grade: string;
+  reason: string;
+  riskLevel: string;
+}
+
+export interface DashboardWeeklyPoint {
+  name: string;
+  count?: number;
+  rate?: number;
+}
+
+export interface DashboardChecklistItem {
+  id: string;
+  label: string;
+  detail?: string;
+  href: string;
+  done: boolean;
+  pendingCount: number;
+}
+
+export interface DashboardAiRecommendation {
+  id: string;
+  studentId: string;
+  studentName: string;
+  reason: string;
+  category: 'counseling' | 'learning' | 'retention';
+  href: string;
+}
+
+export interface DashboardNoticeItem {
+  id: string;
+  title: string;
+  publishedAt: string | null;
+}
+
 export interface DashboardStats {
   todayLessonCount: number;
   todayClassCount: number;
   missingHomeworkCount: number;
   pendingConsultationCount: number;
+  pendingParentMessagesCount: number;
   consultationRecommendedCount: number;
   scoreDeclineCount: number;
+  absentTodayCount: number;
+  lateTodayCount: number;
+  presentTodayCount: number;
+  makeupNeededCount: number;
+  pendingAttendanceInputCount: number;
+  pendingHomeworkCheckCount: number;
+  totalStudentCount: number;
   homeworkTrend: { name: string; rate: number }[];
   classScoreTrend: { name: string; avg: number }[];
+  weeklyCounselingTrend: DashboardWeeklyPoint[];
+  dailyAttendanceTrend: DashboardWeeklyPoint[];
+  weeklyAttendanceTrend: DashboardWeeklyPoint[];
+  studentCountTrend: DashboardWeeklyPoint[];
+  consultationCompletionRate: number;
+  todayChecklist: DashboardChecklistItem[];
+  aiRecommendations: DashboardAiRecommendation[];
+  recentNotices: DashboardNoticeItem[];
   attentionStudents: AttentionStudent[];
+  worseningStudents: AttentionStudent[];
+  retentionRiskStudents: DashboardRetentionRisk[];
+  todayCounselingQueue: DashboardCounselingItem[];
+  incompleteCounselingCount: number;
   recentReports: ParentReport[];
   recentActivities: ActionActivity[];
   todayLessons: TodayLessonItem[];
   classFlows: ClassFlowSummary[];
   todayPriorities: DashboardPriority[];
+  morningBriefLines: string[];
+  overduePaymentsCount: number;
+  retentionHighRiskCount: number;
+  unclosedLessonsToday: DashboardUnclosedLesson[];
+  dashboardMode: 'owner' | 'teacher';
 }
 
 export type StoredRiskLevel =
@@ -348,4 +447,468 @@ export interface LessonLogInsert {
   test_score: number | null;
   tags: string[];
   memo: string | null;
+}
+
+export interface Exam {
+  id: string;
+  academy_id: string;
+  class_id: string;
+  name: string;
+  subject: string;
+  unit_scope: string | null;
+  exam_date: string;
+  max_score: number;
+  created_by: string | null;
+  created_at: string;
+  classes?: Pick<ClassRow, 'id' | 'name' | 'grade'> | null;
+}
+
+export interface ExamScore {
+  id: string;
+  exam_id: string;
+  student_id: string;
+  score: number | null;
+  feedback_memo: string | null;
+  created_at: string;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+}
+
+export interface HomeworkAssignment {
+  id: string;
+  academy_id: string;
+  class_id: string;
+  title: string;
+  description: string | null;
+  due_date: string;
+  lesson_date: string | null;
+  unit: string | null;
+  created_by: string | null;
+  created_at: string;
+  classes?: Pick<ClassRow, 'id' | 'name' | 'grade'> | null;
+}
+
+export interface HomeworkSubmission {
+  id: string;
+  assignment_id: string;
+  student_id: string;
+  status: HomeworkStatus;
+  feedback_memo: string | null;
+  lesson_log_id: string | null;
+  updated_at: string;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+}
+
+export type CounselingSessionType =
+  | 'parent'
+  | 'student'
+  | 'learning'
+  | 'reregistration'
+  | 'intake';
+export type CounselingSessionStatus =
+  | 'scheduled'
+  | 'in_progress'
+  | 'completed'
+  | 'followup_needed';
+
+export interface CounselingSession {
+  id: string;
+  academy_id: string;
+  student_id: string;
+  consultation_card_id: string | null;
+  session_type: CounselingSessionType;
+  status: CounselingSessionStatus;
+  scheduled_at: string | null;
+  completed_at: string | null;
+  next_session_at: string | null;
+  title: string;
+  summary: string | null;
+  parent_message_draft: string | null;
+  followup_checklist: { id: string; label: string; done: boolean }[];
+  recording_url?: string | null;
+  transcript?: string | null;
+  transcript_source?: 'manual' | 'stt' | 'ai_summary' | null;
+  created_by: string | null;
+  counselor_id?: string | null;
+  parent_id?: string | null;
+  enrollment_id?: string | null;
+  created_at: string;
+  updated_at: string;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+}
+
+export type AcquisitionSource =
+  | 'parent_referral'
+  | 'friend_referral'
+  | 'sibling_enrolled'
+  | 'naver_search'
+  | 'blog'
+  | 'instagram'
+  | 'flyer'
+  | 'banner'
+  | 'walk_in'
+  | 'school_referral'
+  | 'reregistration'
+  | 'other';
+
+export type IntakeStatus =
+  | 'scheduled'
+  | 'completed'
+  | 'registered'
+  | 'on_hold'
+  | 'not_registered'
+  | 'no_show';
+
+export type IntakeNextAction =
+  | 'follow_up'
+  | 'level_test'
+  | 'trial_lesson'
+  | 'enrollment_guide'
+  | 'on_hold';
+
+export type NotRegisteredReason =
+  | 'cost'
+  | 'schedule_conflict'
+  | 'distance'
+  | 'competitor'
+  | 'parent_hold'
+  | 'student_declined'
+  | 'other';
+
+export type RegistrationLikelihood = 'low' | 'medium' | 'high';
+
+export interface IntakeConsultation {
+  id: string;
+  academy_id: string;
+  counseling_session_id: string | null;
+  student_id: string;
+  prospect_name: string;
+  grade: string;
+  school: string | null;
+  parent_name: string | null;
+  parent_phone: string | null;
+  interested_subjects: string | null;
+  preferred_class: string | null;
+  counselor_id: string | null;
+  acquisition_source: AcquisitionSource | string | null;
+  acquisition_source_other: string | null;
+  intake_status: IntakeStatus;
+  consultation_content: string | null;
+  parent_needs: string | null;
+  student_level: string | null;
+  recommended_class: string | null;
+  recommended_subject: string | null;
+  registration_likelihood: RegistrationLikelihood | null;
+  next_action: IntakeNextAction | null;
+  followup_date: string | null;
+  registered: boolean;
+  not_registered_reason: NotRegisteredReason | string | null;
+  not_registered_reason_other: string | null;
+  created_at: string;
+  updated_at: string;
+  counseling_sessions?: Pick<
+    CounselingSession,
+    'id' | 'scheduled_at' | 'status' | 'title'
+  > | null;
+}
+
+export interface GrowthPipelineMetrics {
+  month: string;
+  inquiries: number;
+  scheduled: number;
+  completed: number;
+  registered: number;
+  conversionRate: number;
+  bySource: { source: string; label: string; count: number; registered: number; rate: number }[];
+  byNotRegisteredReason: { reason: string; label: string; count: number }[];
+}
+
+export type AnnouncementTargetType = 'all' | 'class' | 'student';
+export type AnnouncementStatus = 'draft' | 'published';
+export type ParentMessageStatus = 'pending' | 'answered';
+
+export interface Announcement {
+  id: string;
+  academy_id: string;
+  title: string;
+  body: string;
+  target_type: AnnouncementTargetType;
+  class_id: string | null;
+  student_id: string | null;
+  status: AnnouncementStatus;
+  published_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  classes?: Pick<ClassRow, 'id' | 'name' | 'grade'> | null;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+}
+
+export interface ParentMessage {
+  id: string;
+  academy_id: string;
+  student_id: string | null;
+  parent_user_id: string;
+  subject: string;
+  body: string;
+  status: ParentMessageStatus;
+  staff_reply: string | null;
+  ai_draft_reply: string | null;
+  replied_by: string | null;
+  replied_at: string | null;
+  source_session_id: string | null;
+  created_at: string;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+  parent_user?: Pick<UserProfile, 'id' | 'name' | 'email'> | null;
+}
+
+export interface LessonSummary {
+  lesson_id: string;
+  academy_id: string;
+  class_id: string;
+  lesson_date: string;
+  unit: string;
+  teacher_id: string | null;
+  lesson_status: string;
+  total_students: number;
+  present_count: number;
+  late_count: number;
+  absent_count: number;
+  attendance_rate: number | null;
+  homework_complete_count: number;
+  homework_partial_count: number;
+  homework_missing_count: number;
+  homework_rate: number | null;
+  scored_count: number;
+  avg_score: number | null;
+  max_score: number | null;
+  min_score: number | null;
+}
+
+export interface CurriculumUnit {
+  id: string;
+  academy_id: string;
+  subject: string;
+  grade: string;
+  unit_name: string;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface ClassProgress {
+  id: string;
+  academy_id: string;
+  class_id: string;
+  curriculum_unit_id: string | null;
+  unit_name: string;
+  notes: string | null;
+  updated_at: string;
+  classes?: Pick<ClassRow, 'id' | 'name' | 'grade'> | null;
+}
+
+export type PaymentStatus = 'pending' | 'paid' | 'overdue' | 'waived';
+export type NotificationChannel = 'sms' | 'kakao' | 'in_app';
+export type NotificationStatus = 'queued' | 'sent' | 'failed' | 'demo';
+export type RetentionRiskLevel = 'low' | 'medium' | 'high';
+
+export interface StudentPayment {
+  id: string;
+  academy_id: string;
+  student_id: string;
+  title: string;
+  billing_month: string | null;
+  amount: number;
+  due_date: string;
+  status: PaymentStatus;
+  paid_at: string | null;
+  payment_method: string | null;
+  memo: string | null;
+  created_by: string | null;
+  created_at: string;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+}
+
+export interface NotificationLog {
+  id: string;
+  academy_id: string;
+  channel: NotificationChannel;
+  recipient_label: string;
+  recipient_user_id: string | null;
+  student_id: string | null;
+  message: string;
+  template_key: string | null;
+  status: NotificationStatus;
+  error_message: string | null;
+  sent_at: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface AcademyIntegrations {
+  academy_id: string;
+  google_calendar_enabled: boolean;
+  google_calendar_id: string | null;
+  ics_feed_token: string;
+  sms_enabled: boolean;
+  kakao_enabled: boolean;
+  sms_sender_name: string | null;
+  kakao_channel_name: string | null;
+  updated_at: string;
+}
+
+export interface RetentionSignal {
+  id: string;
+  academy_id: string;
+  student_id: string;
+  risk_level: RetentionRiskLevel;
+  score: number;
+  reason: string;
+  signals: { id: string; label: string }[];
+  created_at: string;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+}
+
+/** ERP 023+ */
+export type LessonOperationalStatus =
+  | 'scheduled'
+  | 'in_progress'
+  | 'closed'
+  | 'canceled';
+
+export type EnrollmentLifecycleStatus =
+  | 'prospect'
+  | 'active'
+  | 'on_leave'
+  | 'withdrawn'
+  | 'graduated';
+
+export type ReregistrationStatus =
+  | 'pending'
+  | 'contacted'
+  | 'confirmed'
+  | 'declined'
+  | 'deferred';
+
+export type RiskSnapshotType = 'learning' | 'retention';
+
+export interface StaffProfile {
+  id: string;
+  user_id: string;
+  academy_id: string;
+  employment_status: 'active' | 'on_leave' | 'resigned';
+  phone: string | null;
+  hire_date: string | null;
+  permissions: Record<string, unknown>;
+}
+
+export type LessonType = 'regular' | 'makeup';
+
+export interface LessonRow {
+  id: string;
+  academy_id: string;
+  class_id: string;
+  lesson_date: string;
+  teacher_id: string | null;
+  staff_id: string | null;
+  unit: string;
+  topic: string | null;
+  lesson_memo: string | null;
+  status: LessonOperationalStatus;
+  lesson_type: LessonType;
+  started_at: string | null;
+  started_by: string | null;
+  original_lesson_id: string | null;
+  created_at: string;
+  updated_at: string;
+  classes?: Pick<ClassRow, 'id' | 'name' | 'grade'> | null;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  lesson_id: string;
+  student_id: string;
+  status: AttendanceStatus;
+  checked_at: string;
+  memo: string | null;
+}
+
+export interface LessonScoreRow {
+  id: string;
+  lesson_id: string;
+  student_id: string;
+  score: number;
+  max_score: number;
+}
+
+export interface ParentEntity {
+  id: string;
+  academy_id: string;
+  user_id: string | null;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  preferred_channel: string;
+}
+
+export interface ParentStudentLink {
+  id: string;
+  parent_id: string;
+  student_id: string;
+  relationship: ConnectionRelationship | 'other';
+  is_primary: boolean;
+  is_emergency_contact: boolean;
+  parents?: ParentEntity | null;
+}
+
+export interface StudentEnrollment {
+  id: string;
+  academy_id: string;
+  student_id: string;
+  class_id: string;
+  status: 'active' | 'ended' | 'transferred';
+  start_date: string;
+  end_date: string | null;
+  classes?: Pick<ClassRow, 'id' | 'name' | 'grade'> | null;
+}
+
+export interface StudentRiskSnapshot {
+  id: string;
+  academy_id: string;
+  student_id: string;
+  snapshot_type: RiskSnapshotType;
+  risk_level: string;
+  score: number;
+  reason: string;
+  signals: { id: string; label: string }[];
+  created_at: string;
+}
+
+export interface ReregistrationRecord {
+  id: string;
+  academy_id: string;
+  student_id: string;
+  term_id: string | null;
+  status: ReregistrationStatus;
+  counseling_session_id: string | null;
+  parent_id: string | null;
+  decided_at: string | null;
+  decline_reason: string | null;
+  memo: string | null;
+  updated_at: string;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+}
+
+export interface DashboardUnclosedLesson {
+  lessonId: string;
+  classId: string;
+  className: string;
+  status: string;
+  lessonDate: string;
+}
+
+export interface StaffScope {
+  staffProfileId: string | null;
+  classIds: string[];
+  studentIds: string[];
+  isTeacher: boolean;
+  isOwner: boolean;
+  loading: boolean;
 }

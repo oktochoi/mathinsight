@@ -12,8 +12,8 @@ export function StudentPortalGuide() {
       <p className="text-xs font-semibold text-sky-700">이용 안내</p>
       <ul className="mt-3 space-y-2">
         {items.map((item) => (
-          <li key={item.text} className="flex items-center gap-3 text-sm text-slate-700">
-            <span className="w-8 h-8 rounded-lg bg-white border border-sky-100 flex items-center justify-center shrink-0 text-sky-600">
+          <li key={item.text} className="flex items-center gap-3 text-sm" style={{ color: 'var(--app-ink-2)' }}>
+            <span className="w-8 h-8 rounded-lg border border-sky-100 flex items-center justify-center shrink-0 text-sky-600" style={{ background: 'var(--app-surface)' }}>
               <i className={item.icon} aria-hidden />
             </span>
             {item.text}

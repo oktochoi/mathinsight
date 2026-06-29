@@ -20,6 +20,17 @@ const staffPrefixes = [
   '/dashboard',
   '/schedule',
   '/students',
+  '/attendance',
+  '/homework',
+  '/grades',
+  '/counseling',
+  '/notices',
+  '/messages',
+  '/curriculum',
+  '/billing',
+  '/notifications',
+  '/integrations',
+  '/retention',
   '/lesson-logs',
   '/consultation-cards',
   '/parent-reports',
@@ -75,6 +86,10 @@ export function postAuthDestination(
   const dbRole = resolveDbRole(user, profile, rawDbRole);
   if (!hasAssignedDbRole(dbRole)) {
     return '/auth/choose-role';
+  }
+  // 온보딩 미완료 → 온보딩으로 (=== false: undefined는 제외, 기존 유저 영향 없음)
+  if (profile?.onboarding_complete === false) {
+    return '/onboarding';
   }
   return roleHomePath(dbRole);
 }

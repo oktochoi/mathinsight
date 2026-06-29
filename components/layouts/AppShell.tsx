@@ -1,11 +1,32 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import TopNav from '@/components/TopNav';
+import { useAuth } from '@/context/AuthContext';
+import { cn } from '@/lib/cn';
+
+function SidebarWithSearchParams(props: {
+  open: boolean;
+  onClose: () => void;
+  collapsed: boolean;
+  onCollapsedChange: (v: boolean) => void;
+}) {
+  return <Sidebar {...props} />;
+}
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [navOpen, setNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { profile, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && profile?.onboarding_complete === false) {
+      router.replace('/onboarding');
+    }
+  }, [loading, profile, router]);
 
   useEffect(() => {
     const onResize = () => {
@@ -24,23 +45,31 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="min-h-screen min-h-[100dvh] w-full overflow-x-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%)',
-      }}
+      className="min-h-screen min-h-[100dvh] w-full overflow-x-hidden app-bg"
     >
-      <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
+      <Suspense fallback={null}>
+        <SidebarWithSearchParams
+          open={navOpen}
+          onClose={() => setNavOpen(false)}
+          collapsed={sidebarCollapsed}
+          onCollapsedChange={setSidebarCollapsed}
+        />
+      </Suspense>
       {navOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-[2px] lg:hidden cursor-pointer"
+          className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px] lg:hidden cursor-pointer"
           aria-label="메뉴 닫기"
           onClick={() => setNavOpen(false)}
         />
       )}
 
-      {/* ml 대신 pl — w-full + margin 조합으로 가로 스크롤이 생기지 않도록 */}
-      <div className="flex min-h-screen min-h-[100dvh] flex-col min-w-0 w-full box-border lg:pl-64">
+      <div
+        className={cn(
+          'flex min-h-screen min-h-[100dvh] flex-col min-w-0 w-full box-border transition-[padding] duration-200',
+          sidebarCollapsed ? 'lg:pl-[68px]' : 'lg:pl-60'
+        )}
+      >
         <TopNav onMenuOpen={() => setNavOpen(true)} />
         <main className="flex-1 min-w-0 w-full max-w-full overflow-x-hidden p-4 sm:p-6 lg:p-8">
           <div className="w-full min-w-0 max-w-full">{children}</div>
