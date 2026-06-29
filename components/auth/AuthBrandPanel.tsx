@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { BRAND_NAME } from '@/lib/brand';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
 import { mkt } from '@/lib/marketing/ui';

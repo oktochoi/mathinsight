@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, type HTMLMotionProps } from 'motion/react';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/cn';
 
 type Props = HTMLMotionProps<'div'> & {
