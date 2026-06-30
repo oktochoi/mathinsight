@@ -264,7 +264,7 @@ export default function BillingPage() {
       {toast && (
         <p
           className="text-sm rounded-xl px-3 py-2"
-          style={{ background: '#f0fdf4', color: '#065f46', border: '1px solid #a7f3d0' }}
+          style={{ background: 'var(--color-success-bg)', color: 'var(--color-success-text)', border: '1px solid var(--color-success-border)' }}
         >
           {toast}
         </p>
@@ -306,7 +306,7 @@ export default function BillingPage() {
                 className="text-xs px-3 py-1.5 rounded-full border font-medium transition-all cursor-pointer"
                 style={
                   activeFilter === key
-                    ? { background: 'var(--app-ink)', color: '#fff', borderColor: 'var(--app-ink)' }
+                    ? { background: 'var(--app-ink)', color: 'var(--app-on-accent)', borderColor: 'var(--app-ink)' }
                     : {
                         background: 'var(--app-surface)',
                         color: 'var(--app-ink-3)',

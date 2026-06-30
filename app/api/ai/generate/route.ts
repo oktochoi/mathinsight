@@ -1,4 +1,8 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
+import { requireStaff } from '@/lib/api/staffAuth';
+import { checkAiQuota, logAiGenerate } from '@/lib/aiUsage';
 import { runAiGenerate, type AiGenerateInput } from '@/lib/ai/generate';
 import type { AiPromptTask } from '@/lib/ai/prompts';
 import type { ReportTone } from '@/types/database';
@@ -15,6 +19,24 @@ const TONES: ReportTone[] = ['friendly', 'objective', 'exam_focused', 'encouragi
 
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const auth = await requireStaff(supabase);
+    if (!auth.ok) {
+      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
+    }
+
+    const quota = await checkAiQuota(supabase, auth.academyId);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `오늘 AI 사용 한도(${quota.quota}회)에 도달했습니다. 내일 다시 시도해 주세요.`,
+        },
+        { status: 429 }
+      );
+    }
+
     const body = (await request.json()) as Partial<AiGenerateInput>;
 
     if (!body.task || !TASKS.includes(body.task)) {
@@ -45,6 +67,8 @@ export async function POST(request: Request) {
     if (!result.ok) {
       return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
     }
+
+    await logAiGenerate(supabase, auth.academyId, body.task);
 
     return NextResponse.json({
       ok: true,

@@ -1,12 +1,13 @@
 import type {
   ConsultationCard,
   ConsultationFollowup,
+  CounselingSession,
   LessonLog,
   ParentReport,
 } from '@/types/database';
 import { consultationCardPath, parentReportPath } from '@/lib/documentRoutes';
 import { formatConsultationStatusLine } from '@/lib/consultationStatus';
-import { HOMEWORK_LABELS } from '@/lib/statusLabels';
+import { ATTENDANCE_LABELS, HOMEWORK_LABELS } from '@/lib/statusLabels';
 
 export type TimelineEntryType =
   | 'consultation_card'
@@ -14,6 +15,8 @@ export type TimelineEntryType =
   | 'lesson_memo'
   | 'score'
   | 'homework_missing'
+  | 'attendance'
+  | 'counseling_session'
   | 'followup';
 
 export interface TimelineEntry {
@@ -29,7 +32,8 @@ export function buildStudentTimeline(
   logs: LessonLog[],
   cards: ConsultationCard[],
   reports: ParentReport[],
-  followups: ConsultationFollowup[] = []
+  followups: ConsultationFollowup[] = [],
+  sessions: CounselingSession[] = []
 ): TimelineEntry[] {
   const entries: TimelineEntry[] = [];
 
@@ -66,7 +70,28 @@ export function buildStudentTimeline(
     });
   }
 
+  for (const s of sessions) {
+    const done = s.status === 'completed' || s.status === 'followup_needed';
+    entries.push({
+      id: `session-${s.id}`,
+      type: 'counseling_session',
+      date: (s.completed_at ?? s.scheduled_at ?? s.created_at).slice(0, 10),
+      title: done ? '상담 완료' : '상담 예정·진행',
+      detail: s.title || s.summary?.slice(0, 80) || '상담 기록',
+      href: `/counseling?step=${done ? 'wrapup' : 'session'}&student=${s.student_id}`,
+    });
+  }
+
   for (const l of logs) {
+    if (l.attendance_status && l.attendance_status !== 'present') {
+      entries.push({
+        id: `att-${l.id}`,
+        type: 'attendance',
+        date: l.lesson_date,
+        title: ATTENDANCE_LABELS[l.attendance_status] ?? l.attendance_status,
+        detail: `${l.unit || '수업'} · ${ATTENDANCE_LABELS[l.attendance_status]}`,
+      });
+    }
     if (l.memo?.trim()) {
       entries.push({
         id: `memo-${l.id}`,

@@ -21,8 +21,8 @@ export const MARKETING_ROUTES = {
 
 export const HEADER_NAV = [
   { href: MARKETING_ROUTES.product, label: 'Product' },
-  { href: MARKETING_ROUTES.demo, label: 'Demo' },
   { href: MARKETING_ROUTES.pricing, label: 'Pricing' },
+  { href: MARKETING_ROUTES.auth, label: '로그인' },
 ] as const;
 
 export const PRODUCT_PROBLEMS = [
@@ -118,7 +118,7 @@ export const PRICING_VALUE_PROPS = [
   },
   {
     title: '작은 학원부터 시작할 수 있습니다',
-    desc: 'Starter 플랜은 학생 50명 기준. 14일 무료 체험으로 먼저 확인하세요.',
+    desc: '스타터 플랜은 학생 50명 기준. 3일 무료 체험으로 먼저 확인하세요.',
   },
 ] as const;
 
@@ -252,7 +252,7 @@ export const HOME_EXPLORE = [
 
 export const HOME_TRUST_SIGNALS = [
   { value: 9, suffix: '단계', label: '기록 → 상담 → 재등록 운영 흐름' },
-  { value: 14, suffix: '일', label: '무료 체험' },
+  { value: 3, suffix: '일', label: '무료 체험 (카드 없음)' },
   { value: 3, suffix: '초', label: '오늘 운영 파악 목표' },
 ] as const;
 
@@ -348,34 +348,57 @@ export const AI_FEATURES = [
 
 export const PRICING_PLANS = [
   {
-    name: 'Starter',
+    name: '스타터',
+    planId: 'starter',
     students: '50명',
-    price: '49,000',
+    price: 39000,
+    priceLabel: '39,000',
     desc: '상담 준비 자동화를 시작하는 소형 학원',
-    features: ['학생 요약', '상담 요약', '오늘 상담 큐', '학부모 리포트 (기본)'],
+    features: [
+      '학생 50명',
+      'AI 상담 브리핑',
+      '학부모 리포트 (기본)',
+      '오늘 상담 큐',
+      '출결·숙제·성적 기록',
+    ],
     featured: false,
+    badge: null,
   },
   {
-    name: 'Pro',
-    students: '200명',
-    price: '129,000',
-    desc: '상담·재등록 운영을 본격적으로',
+    name: '성장',
+    planId: 'growth',
+    students: '150명',
+    price: 79000,
+    priceLabel: '79,000',
+    desc: '상담·재등록 운영을 체계화하는 학원',
     features: [
+      '학생 150명',
       'Workflow 전체',
-      '학생 현황 · 관리 큐',
-      '학부모 포털',
+      'AI 학생 현황 · 위험 관리',
+      '학부모 포털 · 채팅',
       '재등록 관리 · 강사 Dashboard',
       '우선 지원',
     ],
     featured: true,
+    badge: '추천',
   },
   {
-    name: 'Enterprise',
+    name: '프로',
+    planId: 'pro',
     students: '무제한',
-    price: '문의',
+    price: 149000,
+    priceLabel: '149,000',
     desc: '다지점 · 맞춤 AI · 전담 온보딩',
-    features: ['다학원 · API 연동', '맞춤 Workflow', '전담 CS · SLA', '보안 감사 지원'],
+    features: [
+      '학생 무제한',
+      '성장 플랜 전체',
+      '다학원 관리',
+      '전담 CS · 온보딩',
+      '맞춤 Workflow · API',
+      '보안 감사 지원',
+    ],
     featured: false,
+    badge: null,
   },
 ] as const;
 

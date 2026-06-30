@@ -83,7 +83,7 @@ export function BillingSnapshotCard({ stats }: { stats: DashboardStats }) {
           className="mt-auto w-full text-center py-3 rounded-xl text-sm font-semibold transition-colors"
           style={
             hasOverdue
-              ? { background: '#0f172a', color: '#fff' }
+              ? { background: 'var(--app-ink)', color: 'var(--app-on-accent)' }
               : { background: 'var(--app-surface-2)', color: 'var(--app-ink)', border: '1px solid var(--app-border)' }
           }
         >

@@ -7,8 +7,10 @@ import { useStudents } from '@/hooks/useStudents';
 import { useExams } from '@/hooks/useExams';
 import { calculateScoreTrend } from '@/lib/analytics';
 import { loadClassScorePoints } from '@/lib/lessonOperationalRead';
+import { useToast } from '@/hooks/useToast';
 import { ErrorBanner, PageLoader } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Toast } from '@/components/ui/Toast';
 import { STAFF_PAGES } from '@/lib/staffPages';
 import { cn } from '@/lib/cn';
 import type { ExamScore } from '@/types/database';
@@ -36,7 +38,7 @@ export default function GradesPage() {
   const [newUnit, setNewUnit] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [toast, setToast] = useState('');
+  const { message: toast, show: showToast } = useToast(2500);
 
   useEffect(() => {
     if (!classId && classes[0]) setClassId(classes[0].id);
@@ -119,6 +121,29 @@ export default function GradesPage() {
     return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   }, [scoreInputs]);
 
+  const scoreRanks = useMemo(() => {
+    const entries = classStudents
+      .map((st) => ({
+        id: st.id,
+        score: parseInt(scoreInputs[st.id] ?? '', 10),
+      }))
+      .filter((e) => !Number.isNaN(e.score));
+    if (entries.length < 2) return new Map<string, { rank: number; topPct: number; delta: number | null }>();
+
+    const sorted = [...entries].sort((a, b) => b.score - a.score);
+    const map = new Map<string, { rank: number; topPct: number; delta: number | null }>();
+    for (let i = 0; i < sorted.length; i++) {
+      const rank = i + 1;
+      const topPct = Math.max(1, Math.round((rank / sorted.length) * 100));
+      map.set(sorted[i].id, {
+        rank,
+        topPct,
+        delta: examAvg != null ? sorted[i].score - examAvg : null,
+      });
+    }
+    return map;
+  }, [classStudents, scoreInputs, examAvg]);
+
   const handleCreateExam = async () => {
     if (!classId || !newName.trim()) {
       setError('반과 시험명을 입력해 주세요.');
@@ -138,9 +163,8 @@ export default function GradesPage() {
     }
     setNewName('');
     setNewUnit('');
-    setToast('시험이 등록되었습니다.');
+    showToast('시험이 등록되었습니다.');
     if (result.examId) openExam(result.examId);
-    setTimeout(() => setToast(''), 2500);
   };
 
   const handleSaveScores = async () => {
@@ -157,8 +181,7 @@ export default function GradesPage() {
       setError(result.error);
       return;
     }
-    setToast('점수가 저장되었습니다.');
-    setTimeout(() => setToast(''), 2500);
+    showToast('점수가 저장되었습니다.');
     openExam(selectedExamId);
   };
 
@@ -169,6 +192,7 @@ export default function GradesPage() {
   return (
     <div className="space-y-6 w-full min-w-0 max-w-full">
       <PageHeader title={STAFF_PAGES.grades.title} />
+      <Toast message={toast} />
 
       <label className="text-sm block max-w-xs">
         <span className="app-label">반 선택</span>
@@ -190,11 +214,6 @@ export default function GradesPage() {
       </label>
 
       {error && <ErrorBanner message={error} />}
-      {toast && (
-        <p className="text-sm rounded-xl px-3 py-2" style={{ background: '#f0fdf4', border: '1px solid #a7f3d0', color: '#065f46' }}>
-          {toast}
-        </p>
-      )}
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="app-card p-4 space-y-3">
@@ -260,9 +279,9 @@ export default function GradesPage() {
           )}
         </div>
 
-        <div className="rounded-2xl p-4" style={{ background: '#fffbeb', border: '1px solid #fde68a' }}>
-          <h2 className="font-bold text-sm" style={{ color: '#92400e' }}>점수 하락 감지</h2>
-          <p className="text-xs mt-1" style={{ color: '#92400e', opacity: 0.8 }}>수업 기록 기준 · 학생 현황 연동</p>
+        <div className="rounded-2xl p-4 app-banner-warning">
+          <h2 className="font-bold text-sm">점수 하락 감지</h2>
+          <p className="text-xs mt-1 opacity-80">수업 기록 기준 · 학생 현황 연동</p>
           {decliningStudents.length === 0 ? (
             <p className="text-sm mt-3" style={{ color: 'var(--app-ink-2)' }}>하락 추세 학생 없음</p>
           ) : (
@@ -275,7 +294,7 @@ export default function GradesPage() {
                     style={{ color: 'var(--app-ink)' }}
                   >
                     {student.name}
-                    <span className="ml-1 text-xs" style={{ color: '#dc2626' }}>
+                    <span className="ml-1 text-xs app-text-danger">
                       {trend.delta}점
                     </span>
                   </Link>
@@ -315,11 +334,14 @@ export default function GradesPage() {
                 <tr className="text-left text-xs" style={{ borderBottom: '1px solid var(--app-border)', color: 'var(--app-ink-3)' }}>
                   <th className="px-4 py-3 font-medium">학생</th>
                   <th className="px-4 py-3 font-medium w-24">점수</th>
+                  <th className="px-4 py-3 font-medium w-28">반 내 위치</th>
                   <th className="px-4 py-3 font-medium">피드백</th>
                 </tr>
               </thead>
               <tbody>
-                {classStudents.map((st) => (
+                {classStudents.map((st) => {
+                  const rankInfo = scoreRanks.get(st.id);
+                  return (
                   <tr key={st.id} style={{ borderBottom: '1px solid var(--app-border)' }}>
                     <td className="px-4 py-3 font-medium" style={{ color: 'var(--app-ink)' }}>
                       {st.name}
@@ -337,6 +359,23 @@ export default function GradesPage() {
                         className="w-20 rounded-lg px-2 py-1 text-sm"
                         style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface)', color: 'var(--app-ink)' }}
                       />
+                      {rankInfo?.delta != null && (
+                        <p className="text-[10px] mt-0.5 tabular-nums" style={{ color: rankInfo.delta >= 0 ? 'var(--app-success)' : 'var(--app-danger)' }}>
+                          평균 {rankInfo.delta >= 0 ? '+' : ''}{rankInfo.delta}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-xs" style={{ color: 'var(--app-ink-3)' }}>
+                      {rankInfo ? (
+                        <>
+                          <span className="font-semibold" style={{ color: 'var(--app-ink)' }}>{rankInfo.rank}위</span>
+                          <span className="ml-1 rounded-full px-1.5 py-0.5 app-inline-success text-[10px]">
+                            상위 {rankInfo.topPct}%
+                          </span>
+                        </>
+                      ) : (
+                        '—'
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <input
@@ -350,7 +389,7 @@ export default function GradesPage() {
                       />
                     </td>
                   </tr>
-                ))}
+                );})}
               </tbody>
             </table>
           </div>

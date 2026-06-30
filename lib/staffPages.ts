@@ -4,6 +4,7 @@ export type StaffPageKey =
   | 'dashboard'
   | 'schedule'
   | 'students'
+  | 'classes'
   | 'attendance'
   | 'homework'
   | 'grades'
@@ -23,7 +24,14 @@ export type StaffPageKey =
 
 export const STAFF_PAGES: Record<
   StaffPageKey,
-  { title: string; description: string; tasks: string[]; href: string; icon: string }
+  {
+    title: string;
+    description: string;
+    tasks: string[];
+    href: string;
+    icon: string;
+    hidden?: boolean;
+  }
 > = {
   dashboard: {
     title: '오늘 현황',
@@ -41,10 +49,17 @@ export const STAFF_PAGES: Record<
   },
   students: {
     title: '학생 목록',
-    description: '학생 목록·반·학부모 연결을 관리합니다. 학생 상세에서 수업·출결·상담 기록을 확인합니다.',
-    tasks: ['학생 등록·수정', '반 배정', '학부모 연결'],
+    description: '학생 등록·수정·퇴원을 관리합니다. 상세 화면에서 수업·출결·상담 기록을 확인합니다.',
+    tasks: ['학생 등록·수정', '일괄 등록', '퇴원 처리'],
     href: '/students',
     icon: 'ri-group-line',
+  },
+  classes: {
+    title: '반 관리',
+    description: '반을 만들고 학생을 배정합니다. 담당 강사를 지정하면 강사 화면에 해당 반만 표시됩니다.',
+    tasks: ['반 추가·수정', '학생 배정', '담당 강사 지정'],
+    href: '/classes',
+    icon: 'ri-building-4-line',
   },
   attendance: {
     title: '출결',
@@ -69,8 +84,8 @@ export const STAFF_PAGES: Record<
   },
   counseling: {
     title: '상담',
-    description: '상담 준비·진행·기록·학부모 전달을 한곳에서 처리합니다.',
-    tasks: ['상담 시작', '상담 준비', '상담 완료·학부모 전달'],
+    description: '상담 예약 → 준비 → 진행 → 마무리까지 한 흐름으로 관리합니다. (수업 기록 AI 초안은 상담 화면 「준비」에서 생성)',
+    tasks: ['상담 예약·시작', '녹음·요약·학부모 메시지', '후속 할 일 처리'],
     href: '/counseling',
     icon: 'ri-chat-smile-3-line',
   },
@@ -104,10 +119,11 @@ export const STAFF_PAGES: Record<
   },
   notifications: {
     title: '문자·알림',
-    description: 'SMS·카카오 알림톡 발송과 발송 기록을 관리합니다. (API 연동 전 데모 모드)',
+    description: 'SMS·카카오 알림톡 발송과 발송 기록을 관리합니다. (설정 > 알림 또는 직접 URL)',
     tasks: ['템플릿 선택', '메시지 발송', '발송 로그 확인'],
     href: '/notifications',
     icon: 'ri-notification-3-line',
+    hidden: true,
   },
   integrations: {
     title: '연동 설정',
@@ -117,11 +133,11 @@ export const STAFF_PAGES: Record<
     icon: 'ri-plug-line',
   },
   retention: {
-    title: '학생 성장',
-    description: '재등록 예정·학습 신호·성장 흐름을 한곳에서 확인합니다.',
-    tasks: ['성장 요약 확인', '재등록 예정 상담', '학습 신호 갱신'],
-    href: '/retention',
-    icon: 'ri-line-chart-line',
+    title: '재등록·학습 신호',
+    description: '재등록 예정·장기 결석·학습 신호 — 경영 리포트에 통합되었습니다.',
+    tasks: ['학습 신호 갱신', '재등록 상담', '이탈 학생 연락'],
+    href: '/analytics#attention',
+    icon: 'ri-pulse-line',
   },
   'lesson-logs': {
     title: '오늘 수업',
@@ -131,8 +147,8 @@ export const STAFF_PAGES: Record<
     icon: 'ri-edit-box-line',
   },
   'consultation-cards': {
-    title: '상담 기록',
-    description: '수업 기록 기반 상담 요약·학부모 메시지 초안.',
+    title: '상담 준비 카드',
+    description: '수업 기록을 바탕으로 AI가 상담 전 요약·talking points를 만듭니다. 상담 「준비」 단계에서도 같은 기능을 씁니다.',
     tasks: [
       '학생·기간 선택 후 초안 생성',
       '저장 = 상담 대기, 상담 후 「완료 처리」',
@@ -142,18 +158,18 @@ export const STAFF_PAGES: Record<
     icon: 'ri-chat-check-line',
   },
   'parent-reports': {
-    title: '학부모 전달',
-    description: '상담 후 학부모에게 보낼 기간별 안내 문서입니다.',
+    title: '학부모 리포트',
+    description: '상담과 별도로, 기간별 학습 안내 문서를 작성해 학부모 포털에 공개합니다.',
     tasks: ['학생·기간 선택', '리포트 생성·수정', '저장 — 학부모 포털에서 열람'],
     href: '/parent-reports',
     icon: 'ri-file-chart-line',
   },
   analytics: {
-    title: '운영 분석',
-    description: '출결·숙제·상담·재원생 추이를 한곳에서 확인합니다.',
-    tasks: ['대시보드 요약 차트 확인'],
+    title: '경영 리포트',
+    description: '이번 달 학원 성장·운영 성과·수납·상담을 보고 다음 행동을 결정합니다. (오늘 운영은 오늘 현황에서 확인)',
+    tasks: ['월간 요약 확인', 'Action Center 처리', '재등록·학습 신호 점검'],
     href: '/analytics',
-    icon: 'ri-bar-chart-2-line',
+    icon: 'ri-pie-chart-2-line',
   },
   settings: {
     title: '설정',

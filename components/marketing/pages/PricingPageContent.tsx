@@ -1,12 +1,13 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/cn';
 import {
   FAQ_ITEMS,
   MARKETING_ROUTES,
-  PRICING_AUDIENCE,
   PRICING_PLANS,
-  PRICING_VALUE_PROPS,
 } from '@/lib/marketing/siteStructure';
-import { PageHeroMinimal } from '@/components/marketing/ui/PageHero';
 import { Section, SectionInner } from '@/components/marketing/ui/Section';
 import { SectionHeader } from '@/components/marketing/ui/SectionHeader';
 import { CTASection } from '@/components/marketing/ui/CTASection';
@@ -16,100 +17,224 @@ import { FadeIn } from '@/components/marketing/motion/FadeIn';
 import { Reveal, RevealItem } from '@/components/marketing/motion/Reveal';
 import { mkt } from '@/lib/marketing/ui';
 
+const VALUE_PROPS = [
+  { icon: 'ri-time-line', title: '상담 준비 시간 ↓', desc: '수업 기록이 즉시 AI 브리핑으로 변환됩니다.' },
+  { icon: 'ri-user-heart-line', title: '학생 이해도 ↑', desc: '학생 타임라인으로 맥락을 놓치지 않습니다.' },
+  { icon: 'ri-loop-right-line', title: '재등록 효율 ↑', desc: '상담 기록과 재등록 판단이 하나로 연결됩니다.' },
+];
+
+const COMPARE = [
+  { feature: '학생 수',          starter: '50명',      growth: '150명',    pro: '무제한' },
+  { feature: '수업·출결·숙제 기록', starter: '✓',        growth: '✓',        pro: '✓' },
+  { feature: 'AI 상담 브리핑',    starter: '✓',        growth: '✓',        pro: '✓' },
+  { feature: '학부모 리포트',     starter: '기본',      growth: '고급',      pro: '고급' },
+  { feature: '학부모 포털·채팅',  starter: '—',        growth: '✓',        pro: '✓' },
+  { feature: '재등록 관리',       starter: '—',        growth: '✓',        pro: '✓' },
+  { feature: '강사 Dashboard',   starter: '—',        growth: '✓',        pro: '✓' },
+  { feature: '다학원 관리',       starter: '—',        growth: '—',        pro: '✓' },
+  { feature: 'API 연동',         starter: '—',        growth: '—',        pro: '✓' },
+  { feature: '전담 CS',          starter: '이메일',    growth: '우선 지원', pro: '전담' },
+];
+
 export function PricingPageContent() {
+  const [annual, setAnnual] = useState(false);
+
   return (
     <>
-      <PageHeroMinimal
-        eyebrow="Pricing"
-        title="가격이 아니라, 운영 가치를 선택하세요"
-        description="EduFlow는 상담 준비·학생 이해·학부모 소통·재등록 관리를 하나의 Workflow로 연결합니다."
-        primary={{ href: MARKETING_ROUTES.signup, label: '무료 체험' }}
-        secondary={{ href: MARKETING_ROUTES.demo, label: 'Demo 먼저 보기', variant: 'secondary' }}
-      />
+      {/* ── HERO ─────────────────────────────────────── */}
+      <section className="border-b border-slate-100 bg-gradient-to-br from-slate-50 to-sky-50/60 py-14 md:py-20">
+        <div className={cn(mkt.container, 'text-center')}>
+          <FadeIn>
+            <p className={cn(mkt.eyebrow, 'mb-3')}>Pricing</p>
+            <h1 className={mkt.h1}>학원 규모에 맞는 플랜 선택</h1>
+            <p className={cn(mkt.lead, 'mt-4 mx-auto max-w-xl')}>
+              모든 플랜에 3일 무료 체험이 포함됩니다. 카드 등록 없이 바로 시작하세요.
+            </p>
 
+            {/* Monthly / Annual toggle */}
+            <div className="mt-7 inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setAnnual(false)}
+                className={cn(
+                  'rounded-full px-5 py-2 text-sm font-semibold transition-all',
+                  !annual ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                )}
+              >
+                월간
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnnual(true)}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold transition-all',
+                  annual ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                )}
+              >
+                연간
+                <span className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-bold transition-colors',
+                  annual ? 'bg-green-500 text-white' : 'bg-green-100 text-green-700'
+                )}>
+                  20% 할인
+                </span>
+              </button>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ── PLAN CARDS ───────────────────────────────── */}
       <Section>
         <SectionInner>
-          <SectionHeader
-            eyebrow="Value"
-            title="왜 이 가격을 지불해야 하나요?"
-            description="기능 목록이 아니라, 원장이 매일 체감하는 운영 변화에 집중합니다."
-          />
-          <Reveal className="grid gap-4 md:grid-cols-3 mt-6">
-            {PRICING_VALUE_PROPS.map((v) => (
-              <RevealItem key={v.title}>
-                <article className={cn(mkt.card, 'p-6 h-full')}>
-                  <h3 className={cn(mkt.h3)}>{v.title}</h3>
-                  <p className={cn(mkt.body, 'mt-2')}>{v.desc}</p>
-                </article>
-              </RevealItem>
-            ))}
+          <Reveal className="grid gap-6 lg:grid-cols-3">
+            {PRICING_PLANS.map((plan) => {
+              const monthlyPrice = plan.price;
+              const annualPrice = Math.round(monthlyPrice * 0.8 / 100) * 100;
+              const displayPrice = annual ? annualPrice : monthlyPrice;
+              const displayLabel = displayPrice.toLocaleString('ko-KR');
+
+              return (
+                <RevealItem key={plan.name}>
+                  <article
+                    className={cn(
+                      'relative flex h-full flex-col rounded-2xl border bg-white p-7 transition-shadow hover:shadow-lg',
+                      plan.featured
+                        ? 'border-sky-400 shadow-lg shadow-sky-500/15 ring-1 ring-sky-400/50'
+                        : 'border-slate-200 shadow-sm'
+                    )}
+                  >
+                    {plan.badge && (
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-1 text-[11px] font-bold text-white shadow-md shadow-green-600/30">
+                        {plan.badge}
+                      </span>
+                    )}
+
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">{plan.name}</h2>
+                      <p className="mt-0.5 text-sm text-slate-500">학생 {plan.students}</p>
+                      <p className={cn(mkt.muted, 'mt-2')}>{plan.desc}</p>
+                    </div>
+
+                    <div className="my-6">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-sm text-slate-400">₩</span>
+                        <span className="text-4xl font-extrabold tracking-tight text-slate-900">
+                          {displayLabel}
+                        </span>
+                        <span className="text-sm text-slate-400">/월</span>
+                      </div>
+                      {annual && (
+                        <p className="mt-1 text-xs text-slate-400 line-through">
+                          ₩{plan.priceLabel}/월
+                        </p>
+                      )}
+                      {annual && (
+                        <p className="mt-0.5 text-xs font-semibold text-green-600">
+                          연간 ₩{(annualPrice * 12).toLocaleString('ko-KR')} 결제
+                        </p>
+                      )}
+                    </div>
+
+                    <ul className="mb-8 flex-1 space-y-2.5">
+                      {plan.features.map((f) => (
+                        <li key={f} className="flex items-center gap-2.5 text-sm text-slate-600">
+                          <span className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-sky-100 text-sky-700 text-[10px]">
+                            <i className="ri-check-line" />
+                          </span>
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button
+                      href={MARKETING_ROUTES.signup}
+                      variant={plan.featured ? 'primary' : 'secondary'}
+                      className="w-full"
+                    >
+                      3일 무료 체험 시작
+                    </Button>
+                  </article>
+                </RevealItem>
+              );
+            })}
           </Reveal>
+
+          <FadeIn>
+            <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-5 text-center">
+              <p className="text-sm text-slate-600">
+                <i className="ri-information-line mr-1.5 text-slate-400" />
+                모든 플랜은 3일 무료 체험으로 시작합니다. 체험 기간 중 카드 청구 없음.
+                기간 후 원하는 플랜으로 전환하거나 자유롭게 취소하세요.
+              </p>
+            </div>
+          </FadeIn>
         </SectionInner>
       </Section>
 
+      {/* ── VALUE PROPS ──────────────────────────────── */}
       <Section muted>
         <SectionInner>
-          <SectionHeader eyebrow="Plans" title="학원 규모별 플랜" align="center" />
-          <Reveal className="grid gap-5 lg:grid-cols-3 mt-8">
-            {PRICING_PLANS.map((plan) => (
-              <RevealItem key={plan.name}>
-                <article
-                  className={cn(
-                    'relative flex h-full flex-col rounded-2xl border bg-white p-7',
-                    plan.featured ? 'border-sky-500 shadow-lg shadow-sky-500/15' : 'border-slate-200'
-                  )}
-                >
-                  {plan.featured && (
-                    <span className="absolute top-5 right-5 rounded-full bg-gradient-to-b from-lime-500 to-green-600 px-2.5 py-0.5 text-[11px] font-bold text-white">
-                      추천
-                    </span>
-                  )}
-                  <h2 className="text-lg font-semibold text-zinc-900">{plan.name}</h2>
-                  <p className="mt-1 text-sm text-zinc-500">학생 {plan.students}</p>
-                  <p className={cn(mkt.muted, 'mt-2')}>{plan.desc}</p>
-                  <div className="my-6 flex items-baseline gap-0.5">
-                    {plan.price !== '문의' && <span className="text-zinc-400">₩</span>}
-                    <span className="text-3xl font-semibold tracking-tight">{plan.price}</span>
-                    {plan.price !== '문의' && <span className="text-sm text-zinc-400">/월</span>}
-                  </div>
-                  <ul className="mb-8 flex-1 space-y-2 text-sm text-zinc-600">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex gap-2">
-                        <span className="text-zinc-400">✓</span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    href={plan.price === '문의' ? MARKETING_ROUTES.contact : MARKETING_ROUTES.signup}
-                    variant={plan.featured ? 'primary' : 'secondary'}
-                    className="w-full"
-                  >
-                    {plan.price === '문의' ? '도입 문의' : '무료 체험'}
-                  </Button>
-                </article>
+          <SectionHeader eyebrow="Value" title="왜 EduFlow를 선택하나요?" align="center" />
+          <Reveal className="mt-8 grid gap-4 md:grid-cols-3">
+            {VALUE_PROPS.map((v) => (
+              <RevealItem key={v.title}>
+                <div className={cn(mkt.card, 'p-6 text-center')}>
+                  <span className="flex h-12 w-12 mx-auto items-center justify-center rounded-2xl bg-sky-50 text-sky-600 text-xl mb-4">
+                    <i className={v.icon} />
+                  </span>
+                  <h3 className={cn(mkt.h3, 'text-sky-700')}>{v.title}</h3>
+                  <p className={cn(mkt.body, 'mt-2')}>{v.desc}</p>
+                </div>
               </RevealItem>
             ))}
           </Reveal>
         </SectionInner>
       </Section>
 
+      {/* ── FEATURE COMPARISON ───────────────────────── */}
       <Section>
         <SectionInner>
-          <SectionHeader eyebrow="For" title="이런 학원에 맞습니다" />
-          <div className="grid gap-4 sm:grid-cols-3 mt-6">
-            {PRICING_AUDIENCE.map((a) => (
-              <FadeIn key={a.label}>
-                <div className={cn(mkt.card, 'p-5')}>
-                  <p className="text-sm font-bold text-sky-700">{a.label}</p>
-                  <p className={cn(mkt.muted, 'mt-1')}>{a.desc}</p>
-                </div>
-              </FadeIn>
-            ))}
+          <SectionHeader eyebrow="Compare" title="플랜별 기능 비교" align="center" />
+          <div className="mt-8 overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50">
+                  <th className="px-5 py-4 text-left font-semibold text-slate-600">기능</th>
+                  {PRICING_PLANS.map((p) => (
+                    <th key={p.name} className={cn(
+                      'px-4 py-4 text-center font-bold',
+                      p.featured ? 'text-sky-700' : 'text-slate-700'
+                    )}>
+                      {p.name}
+                      {p.featured && (
+                        <span className="ml-1.5 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-bold text-sky-700">추천</span>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE.map((row, i) => (
+                  <tr key={row.feature} className={cn('border-b border-slate-50', i % 2 === 1 && 'bg-slate-50/50')}>
+                    <td className="px-5 py-3.5 font-medium text-slate-700">{row.feature}</td>
+                    {[row.starter, row.growth, row.pro].map((val, j) => (
+                      <td key={j} className={cn(
+                        'px-4 py-3.5 text-center',
+                        val === '✓' ? 'text-green-600 font-bold' : val === '—' ? 'text-slate-300' : 'text-slate-600'
+                      )}>
+                        {val === '✓' ? <i className="ri-check-line text-base" /> : val}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </SectionInner>
       </Section>
 
+      {/* ── FAQ ──────────────────────────────────────── */}
       <Section muted>
         <SectionInner>
           <SectionHeader eyebrow="FAQ" title="자주 묻는 질문" align="center" />
@@ -121,7 +246,7 @@ export function PricingPageContent() {
 
       <CTASection
         variant="blue"
-        title="14일 무료 체험으로 시작하세요"
+        title="3일 무료 체험으로 시작하세요"
         description="카드 등록 없이 시작 · Demo로 먼저 확인 가능"
         primary={{ href: MARKETING_ROUTES.signup, label: '무료 체험', variant: 'accent' }}
         secondary={{ href: MARKETING_ROUTES.contact, label: '도입 문의' }}

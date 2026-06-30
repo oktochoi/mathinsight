@@ -1,12 +1,8 @@
 'use client';
 
-import type { Exam, ExamScore } from '@/types/database';
+import type { PortalExamWithScore } from '@/hooks/usePortalErp';
 
-export function ParentGradesPanel({
-  exams,
-}: {
-  exams: (Exam & { score?: ExamScore })[];
-}) {
+export function ParentGradesPanel({ exams }: { exams: PortalExamWithScore[] }) {
   if (exams.length === 0) {
     return (
       <p className="text-sm text-stone-500 parent-card-soft py-6 text-center">
@@ -25,6 +21,25 @@ export function ParentGradesPanel({
               {exam.exam_date}
               {exam.unit_scope ? ` · ${exam.unit_scope}` : ''}
             </p>
+            {exam.classRank && (
+              <p className="text-xs mt-2 text-stone-600">
+                반 평균 {exam.classRank.classAvg}점
+                <span
+                  className={`ml-1 font-medium ${
+                    exam.classRank.delta >= 0 ? 'text-emerald-700' : 'text-rose-700'
+                  }`}
+                >
+                  ({exam.classRank.delta >= 0 ? '+' : ''}
+                  {exam.classRank.delta})
+                </span>
+                <span className="ml-2 inline-flex rounded-full bg-indigo-50 text-indigo-700 px-2 py-0.5 text-[10px] font-semibold">
+                  상위 {exam.classRank.topPct}% · {exam.classRank.rank}/{exam.classRank.total}위
+                </span>
+              </p>
+            )}
+            {exam.score?.feedback_memo && (
+              <p className="text-sm text-stone-600 mt-2">{exam.score.feedback_memo}</p>
+            )}
           </div>
           <p className="text-2xl font-bold text-indigo-700 tabular-nums shrink-0">
             {exam.score?.score != null ? `${exam.score.score}` : '—'}

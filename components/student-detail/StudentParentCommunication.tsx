@@ -110,10 +110,7 @@ export function StudentParentCommunication({
                 )}
               </div>
               {p.user_id ? (
-                <span
-                  className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
-                  style={{ background: '#f0fdf4', color: '#059669' }}
-                >
+                <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full app-badge-success">
                   연결됨
                 </span>
               ) : (

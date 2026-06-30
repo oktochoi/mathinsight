@@ -65,9 +65,10 @@ export function TodayLessonsPanel({ stats }: { stats: DashboardStats }) {
 
             return (
               <li key={item.event.id}>
-                <div
+                <Link
+                  href={action.href}
                   className={cn(
-                    'flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4',
+                    'flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4 transition-colors hover:bg-[var(--app-surface-2)]',
                     isActive && 'bg-[var(--app-accent-bg)]/40'
                   )}
                 >
@@ -103,17 +104,16 @@ export function TodayLessonsPanel({ stats }: { stats: DashboardStats }) {
                   </div>
 
                   <div className="sm:shrink-0 pl-[4.5rem] sm:pl-0">
-                    <Link
-                      href={action.href}
+                    <span
                       className={cn(
-                        'app-btn text-sm whitespace-nowrap',
+                        'inline-flex app-btn text-sm whitespace-nowrap pointer-events-none',
                         action.label === '수업하기' ? 'app-btn-primary' : 'app-btn-secondary'
                       )}
                     >
                       {action.label}
-                    </Link>
+                    </span>
                   </div>
-                </div>
+                </Link>
               </li>
             );
           })}

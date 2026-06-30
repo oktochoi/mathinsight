@@ -14,7 +14,14 @@ export const PARENT_RELATIONSHIPS: ConnectionRelationship[] = [
 ];
 
 export function normalizeConnectionCode(raw: string): string {
-  return raw.trim().toUpperCase().replace(/\s+/g, '');
+  const upper = raw.trim().toUpperCase().replace(/\s+/g, '');
+  const match = upper.match(/^EDU-?([A-Z0-9]{4})-?(\d{2})$/);
+  if (match) return `EDU-${match[1]}-${match[2]}`;
+  return upper;
+}
+
+export function connectionCodeLookupKey(code: string): string {
+  return normalizeConnectionCode(code).replace(/-/g, '');
 }
 
 export function isValidConnectionCodeFormat(code: string): boolean {
@@ -41,6 +48,8 @@ export function connectionRequestErrorMessage(code: string | undefined): string 
       return '해당 관계는 이미 다른 계정에 연결되어 있습니다.';
     case 'pending_exists':
       return '이미 승인 대기 중인 요청이 있습니다.';
+    case 'request_failed':
+      return '연결 요청 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.';
     case 'not_authenticated':
       return '로그인이 필요합니다.';
     default:

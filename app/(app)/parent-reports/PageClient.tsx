@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { parentReportPath } from '@/lib/documentRoutes';
 import { SavedDocumentList } from '@/components/documents/SavedDocumentList';
 import { ParentReportContent } from '@/components/documents/ParentReportContent';
@@ -9,9 +9,12 @@ import { useStudents } from '@/hooks/useStudents';
 import { useLessonLogs } from '@/hooks/useLessonLogs';
 import { useParentReports } from '@/hooks/useParentReports';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/useToast';
 import { fetchAiGenerate } from '@/lib/ai/client';
-import { PageLoader, EmptyState } from '@/components/ui/DataStates';
+import { PageLoader } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Toast } from '@/components/ui/Toast';
+import { AiRulesFallbackBanner } from '@/components/ui/AiRulesFallbackBanner';
 import { STAFF_PAGES } from '@/lib/staffPages';
 
 function defaultPeriod() {
@@ -21,8 +24,9 @@ function defaultPeriod() {
   return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
 }
 
-export default function ParentReportsPage() {
+export function ParentReportsPageContent() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const embedded = pathname?.includes('/parent-hub');
   const router = useRouter();
   const { academy } = useAuth();
@@ -37,9 +41,9 @@ export default function ParentReportsPage() {
   const [generating, setGenerating] = useState(false);
   const [aiSource, setAiSource] = useState<'gemini' | 'rules' | null>(null);
   const [aiFallbackReason, setAiFallbackReason] = useState<string | null>(null);
-  const [aiBackend, setAiBackend] = useState<string | null>(null);
-  const [toast, setToast] = useState('');
   const [editMode, setEditMode] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const { message: toast, show: showToast } = useToast(3500);
 
   const { logs, loading: logsLoading } = useLessonLogs({
     studentId: studentId || undefined,
@@ -51,13 +55,10 @@ export default function ParentReportsPage() {
   );
 
   useEffect(() => {
-    const q =
-      typeof window !== 'undefined'
-        ? new URLSearchParams(window.location.search).get('student')
-        : null;
+    const q = searchParams.get('student');
     if (q) setStudentId(q);
     else if (students[0] && !studentId) setStudentId(students[0].id);
-  }, [students, studentId]);
+  }, [students, studentId, searchParams]);
 
   const student = students.find((s) => s.id === studentId);
 
@@ -67,15 +68,13 @@ export default function ParentReportsPage() {
       (l) => l.lesson_date >= periodStart && l.lesson_date <= periodEnd
     );
     if (periodLogs.length === 0) {
-      setToast('해당 기간에 수업 기록이 없습니다. 기간을 조정하거나 수업 기록을 먼저 입력해 주세요.');
-      setTimeout(() => setToast(''), 3500);
+      showToast('해당 기간에 수업 기록이 없습니다. 기간을 조정하거나 수업 기록을 먼저 입력해 주세요.');
       return;
     }
 
     setGenerating(true);
     setAiSource(null);
     setAiFallbackReason(null);
-    setAiBackend(null);
     try {
       const result = await fetchAiGenerate({
         task: 'parentReport',
@@ -91,10 +90,8 @@ export default function ParentReportsPage() {
         setHasGenerated(true);
         setAiSource(result.source ?? null);
         setAiFallbackReason(result.fallbackReason ?? null);
-        setAiBackend(result.backend ?? null);
       } else if (result.error) {
-        setToast(result.error);
-        setTimeout(() => setToast(''), 3500);
+        showToast(result.error);
       }
     } finally {
       setGenerating(false);
@@ -114,12 +111,10 @@ export default function ParentReportsPage() {
     });
     setSaving(false);
     if (error) {
-      setToast(error);
-      setTimeout(() => setToast(''), 2500);
+      showToast(error);
       return;
     }
-    setToast('저장되었습니다.');
-    setTimeout(() => setToast(''), 2500);
+    showToast('저장되었습니다. 연결된 학부모에게 푸시 알림을 보냅니다.');
     if (reportId) router.push(parentReportPath(reportId));
   };
 
@@ -127,14 +122,13 @@ export default function ParentReportsPage() {
 
   return (
     <div className="space-y-6 w-full min-w-0 max-w-full">
-      {toast && (
-        <div className="fixed top-20 right-8 z-50 rounded-xl px-5 py-3 text-sm text-white bg-emerald-600 shadow-lg">
-          {toast}
-        </div>
-      )}
+      <Toast message={toast} />
 
       {!embedded && (
-        <PageHeader title={STAFF_PAGES['parent-reports'].title}>
+        <PageHeader
+          title={STAFF_PAGES['parent-reports'].title}
+          description={STAFF_PAGES['parent-reports'].description}
+        >
           {generating && (
             <span className="inline-flex items-center gap-1.5 text-xs font-medium animate-pulse" style={{ color: 'var(--app-accent)' }}>
               <i className="ri-sparkling-line" />작성 중…
@@ -212,6 +206,10 @@ export default function ParentReportsPage() {
         )}
       </div>
 
+      {hasGenerated && !generating && (
+        <AiRulesFallbackBanner source={aiSource} fallbackReason={aiFallbackReason} />
+      )}
+
       <div
         className="rounded-2xl overflow-hidden min-h-[420px] flex flex-col"
         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--s-sm)' }}
@@ -235,13 +233,23 @@ export default function ParentReportsPage() {
               className="px-5 py-3 flex flex-wrap gap-2 justify-between items-center"
               style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}
             >
-              <button
-                type="button"
-                onClick={() => setEditMode((v) => !v)}
-                className="app-btn app-btn-ghost text-sm"
-              >
-                {editMode ? '미리보기' : '원문 수정'}
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditMode((v) => !v)}
+                  className="app-btn app-btn-ghost text-sm"
+                >
+                  {editMode ? '미리보기' : '원문 수정'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewOpen(true)}
+                  disabled={!reportText.trim()}
+                  className="app-btn app-btn-ghost text-sm disabled:opacity-50"
+                >
+                  저장 전 미리보기
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={handleSave}
@@ -274,6 +282,66 @@ export default function ParentReportsPage() {
           </>
         )}
       </div>
+
+      {previewOpen && student && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(15, 23, 42, 0.45)' }}
+          role="dialog"
+          aria-modal
+          aria-labelledby="report-preview-title"
+        >
+          <div
+            className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl flex flex-col"
+            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--s-lg)' }}
+          >
+            <div
+              className="flex items-center justify-between gap-3 px-5 py-4 border-b"
+              style={{ borderColor: 'var(--app-border)' }}
+            >
+              <h3 id="report-preview-title" className="text-sm font-bold" style={{ color: 'var(--app-ink)' }}>
+                리포트 미리보기
+              </h3>
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(false)}
+                className="text-xl leading-none"
+                style={{ color: 'var(--app-ink-4)' }}
+                aria-label="닫기"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+              <ParentReportContent
+                text={reportText}
+                studentName={student.name}
+                periodStart={periodStart}
+                periodEnd={periodEnd}
+              />
+            </div>
+            <div
+              className="flex justify-end gap-2 px-5 py-4 border-t"
+              style={{ borderColor: 'var(--app-border)' }}
+            >
+              <button type="button" onClick={() => setPreviewOpen(false)} className="app-btn app-btn-ghost text-sm">
+                닫기
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPreviewOpen(false);
+                  void handleSave();
+                }}
+                disabled={saving}
+                className="app-btn app-btn-primary text-sm disabled:opacity-50"
+              >
+                저장하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <SavedDocumentList
         title="저장된 학부모 리포트"

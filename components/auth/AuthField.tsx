@@ -58,15 +58,22 @@ export function AuthSubmitButton({
   loading,
   children,
   className,
+  type = 'submit',
+  onClick,
+  disabled,
 }: {
   loading?: boolean;
   children: React.ReactNode;
   className?: string;
+  type?: 'submit' | 'button';
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  disabled?: boolean;
 }) {
   return (
     <motion.button
-      type="submit"
-      disabled={loading}
+      type={type}
+      onClick={onClick}
+      disabled={loading || disabled}
       whileHover={{ scale: loading ? 1 : 1.01 }}
       whileTap={{ scale: loading ? 1 : 0.98 }}
       className={cn(

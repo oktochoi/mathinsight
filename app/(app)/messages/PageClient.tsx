@@ -4,11 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useParentMessagesStaff } from '@/hooks/useParentMessages';
+import { useToast } from '@/hooks/useToast';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PageLoader, ErrorBanner, EmptyState } from '@/components/ui/DataStates';
+import { Toast } from '@/components/ui/Toast';
 import { KpiMetric } from '@/components/data-ui/KpiMetric';
 import { StatusBadge } from '@/components/data-ui/StatusBadge';
 import { STAFF_PAGES } from '@/lib/staffPages';
+import { StaffChatSection } from '@/components/chat/StaffChatSection';
 import { cn } from '@/lib/cn';
 import type { ParentMessage } from '@/types/database';
 
@@ -30,6 +33,8 @@ export default function MessagesPage() {
   const searchParams = useSearchParams();
   const embedded = pathname?.includes('/parent-hub');
   const studentFilter = searchParams.get('student');
+  const pageMode = searchParams.get('mode') === 'chat' ? 'chat' : 'inquiry';
+  const chatChannel = searchParams.get('channel');
 
   const { messages, loading, error, replyMessage, saveAiDraft } = useParentMessagesStaff();
   const [filter, setFilter] = useState<'all' | 'pending' | 'answered'>('pending');
@@ -38,7 +43,7 @@ export default function MessagesPage() {
   const [reply, setReply] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState('');
+  const { message: toast, show: showToast } = useToast(2500);
 
   const pendingCount = useMemo(
     () => messages.filter((m) => m.status === 'pending').length,
@@ -106,11 +111,10 @@ export default function MessagesPage() {
     const result = await replyMessage(selected.id, reply, selected.ai_draft_reply ?? undefined);
     setSaving(false);
     if (result.error) {
-      setToast(result.error);
+      showToast(result.error);
       return;
     }
-    setToast('답변이 저장되었습니다.');
-    setTimeout(() => setToast(''), 2500);
+    showToast('답변이 저장되었습니다.');
   };
 
   if (loading) return <PageLoader />;
@@ -124,14 +128,39 @@ export default function MessagesPage() {
       {!embedded && <PageHeader title={STAFF_PAGES.messages.title} />}
 
       {error && <ErrorBanner message={error} />}
-      {toast && (
-        <p
-          className="text-sm rounded-xl px-3 py-2"
-          style={{ background: '#f0fdf4', color: '#065f46', border: '1px solid #a7f3d0' }}
-        >
-          {toast}
-        </p>
+      <Toast message={toast} />
+
+      {!embedded && (
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              ['inquiry', '문의함', embedded ? '/parent-hub?tab=messages' : '/messages'],
+              ['chat', '채팅', embedded ? '/parent-hub?tab=messages&mode=chat' : '/messages?mode=chat'],
+            ] as const
+          ).map(([mode, label, href]) => (
+            <Link
+              key={mode}
+              href={href}
+              className={cn(
+                'text-sm px-4 py-2 rounded-full border font-semibold transition-colors',
+                pageMode === mode ? 'app-badge-info border-[var(--app-accent-border)]' : ''
+              )}
+              style={
+                pageMode === mode
+                  ? undefined
+                  : { background: 'var(--app-surface)', color: 'var(--app-ink-3)', borderColor: 'var(--app-border)' }
+              }
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
       )}
+
+      {pageMode === 'chat' ? (
+        <StaffChatSection initialChannelId={chatChannel} />
+      ) : (
+        <>
 
       {studentFilterLabel && (
         <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -204,7 +233,7 @@ export default function MessagesPage() {
                   className="text-xs px-3 py-1.5 rounded-full border font-medium transition-all cursor-pointer"
                   style={
                     filter === key
-                      ? { background: 'var(--app-ink)', color: '#fff', borderColor: 'var(--app-ink)' }
+                      ? { background: 'var(--app-ink)', color: 'var(--app-on-accent)', borderColor: 'var(--app-ink)' }
                       : { background: 'var(--app-surface)', color: 'var(--app-ink-3)', borderColor: 'var(--app-border)' }
                   }
                 >
@@ -352,10 +381,7 @@ export default function MessagesPage() {
                 {selected.staff_reply && selected.status === 'answered' && (
                   <div>
                     <p className="app-label mb-2">보낸 답변</p>
-                    <div
-                      className="rounded-xl px-4 py-3"
-                      style={{ background: '#f0fdf4', border: '1px solid #a7f3d0' }}
-                    >
+                    <div className="rounded-xl px-4 py-3 app-inline-success">
                       <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: 'var(--app-ink-2)' }}>
                         {selected.staff_reply}
                       </p>
@@ -409,6 +435,8 @@ export default function MessagesPage() {
           )}
         </section>
       </div>
+        </>
+      )}
     </div>
   );
 }

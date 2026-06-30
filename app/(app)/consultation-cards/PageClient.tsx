@@ -11,10 +11,17 @@ import { useLessonLogs } from '@/hooks/useLessonLogs';
 import { useConsultationCards } from '@/hooks/useConsultationCards';
 import { useConsultationFollowups } from '@/hooks/useConsultationFollowups';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/useToast';
+import {
+  pointsToStrings,
+  useConsultationCardAi,
+} from '@/hooks/useConsultationCardAi';
 import { fetchAiGenerate } from '@/lib/ai/client';
 import { calculateScoreTrend } from '@/lib/analytics';
 import { PageLoader, EmptyState } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Toast } from '@/components/ui/Toast';
+import { AiRulesFallbackBanner } from '@/components/ui/AiRulesFallbackBanner';
 import { STAFF_PAGES } from '@/lib/staffPages';
 import { supabase } from '@/lib/supabase';
 import type { CounselingSession } from '@/types/database';
@@ -39,18 +46,21 @@ export default function ConsultationCardPage() {
   const [studentId, setStudentId] = useState('');
   const [periodStart, setPeriodStart] = useState(period.start);
   const [periodEnd, setPeriodEnd] = useState(period.end);
-  const [learningSummary, setLearningSummary] = useState('');
-  const [evidenceSummary, setEvidenceSummary] = useState('');
-  const [consultationPoints, setConsultationPoints] = useState<string[]>([]);
-  const [parentMessage, setParentMessage] = useState('');
-  const [hasGenerated, setHasGenerated] = useState(false);
+  const { aiState, dispatch } = useConsultationCardAi();
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [aiSource, setAiSource] = useState<'gemini' | 'rules' | null>(null);
-  const [aiFallbackReason, setAiFallbackReason] = useState<string | null>(null);
-  const [aiBackend, setAiBackend] = useState<string | null>(null);
-  const [toast, setToast] = useState('');
+  const { message: toast, show: showToast } = useToast(3500);
   const [linkedSession, setLinkedSession] = useState<CounselingSession | null>(null);
+
+  const {
+    learningSummary,
+    evidenceSummary,
+    consultationPoints,
+    parentMessage,
+    hasGenerated,
+    source: aiSource,
+    fallbackReason: aiFallbackReason,
+  } = aiState;
 
   const { logs, loading: logsLoading } = useLessonLogs({
     studentId: studentId || undefined,
@@ -81,20 +91,17 @@ export default function ConsultationCardPage() {
       const session = data as CounselingSession;
       setLinkedSession(session);
       setStudentId(session.student_id);
-      if (session.summary?.trim()) {
-        setLearningSummary((prev) => prev || session.summary || '');
-        setHasGenerated(true);
-      }
-      if (session.parent_message_draft?.trim()) {
-        setParentMessage(session.parent_message_draft);
-        setHasGenerated(true);
-      }
-      if (session.transcript?.trim() && !session.summary?.trim()) {
-        setEvidenceSummary(session.transcript);
-        setHasGenerated(true);
-      }
+      dispatch({
+        type: 'PATCH_FROM_SESSION',
+        learningSummary: session.summary?.trim() || undefined,
+        parentMessage: session.parent_message_draft?.trim() || undefined,
+        evidenceSummary:
+          session.transcript?.trim() && !session.summary?.trim()
+            ? session.transcript
+            : undefined,
+      });
     })();
-  }, [sessionId]);
+  }, [sessionId, dispatch]);
 
   const student = students.find((s) => s.id === studentId);
   const scoreTrend = useMemo(() => calculateScoreTrend(logs), [logs]);
@@ -106,15 +113,11 @@ export default function ConsultationCardPage() {
       (l) => l.lesson_date >= periodStart && l.lesson_date <= periodEnd
     );
     if (periodLogs.length === 0) {
-      setToast('해당 기간에 수업 기록이 없습니다. 「오늘 수업」에서 먼저 입력해 주세요.');
-      setTimeout(() => setToast(''), 3500);
+      showToast('해당 기간에 수업 기록이 없습니다. 「오늘 수업」에서 먼저 입력해 주세요.');
       return;
     }
 
     setGenerating(true);
-    setAiSource(null);
-    setAiFallbackReason(null);
-    setAiBackend(null);
 
     const base = {
       logs: periodLogs,
@@ -133,19 +136,20 @@ export default function ConsultationCardPage() {
       ]);
 
       if (!ls.ok && !ev.ok) {
-        setToast(ls.error ?? ev.error ?? '생성 실패');
-        setTimeout(() => setToast(''), 3500);
+        showToast(ls.error ?? ev.error ?? '생성 실패');
         return;
       }
 
-      setLearningSummary(ls.text ?? '');
-      setEvidenceSummary(ev.text ?? '');
-      setConsultationPoints(cp.points ?? (cp.text ? cp.text.split('\n').filter(Boolean) : []));
-      setParentMessage(pm.text ?? '');
-      setHasGenerated(true);
-      setAiSource(ls.source ?? ev.source ?? null);
-      setAiFallbackReason(ls.fallbackReason ?? ev.fallbackReason ?? null);
-      setAiBackend(ls.backend ?? ev.backend ?? null);
+      dispatch({
+        type: 'SET_GENERATED',
+        learningSummary: ls.text ?? '',
+        evidenceSummary: ev.text ?? '',
+        consultationPoints: cp.points ?? (cp.text ? cp.text.split('\n').filter(Boolean) : []),
+        parentMessage: pm.text ?? '',
+        source: ls.source ?? ev.source ?? null,
+        fallbackReason: ls.fallbackReason ?? ev.fallbackReason ?? null,
+        backend: ls.backend ?? ev.backend ?? null,
+      });
     } finally {
       setGenerating(false);
     }
@@ -161,17 +165,15 @@ export default function ConsultationCardPage() {
       period_end: periodEnd,
       learning_summary: learningSummary,
       evidence_summary: evidenceSummary,
-      consultation_points: consultationPoints,
+      consultation_points: pointsToStrings(consultationPoints),
       parent_message: parentMessage,
     });
     setSaving(false);
     if (error) {
-      setToast(error);
-      setTimeout(() => setToast(''), 2500);
+      showToast(error);
       return;
     }
-    setToast('상담 카드가 저장되었습니다. 상담 후 완료 처리해 주세요.');
-    setTimeout(() => setToast(''), 2500);
+    showToast('상담 카드가 저장되었습니다. 상담 후 완료 처리해 주세요.');
     if (cardId) router.push(consultationCardPath(cardId));
   };
 
@@ -188,13 +190,12 @@ export default function ConsultationCardPage() {
 
   return (
     <div className="space-y-6 w-full min-w-0 max-w-full">
-      {toast && (
-        <div className="fixed top-20 right-8 z-50 rounded-xl px-5 py-3 text-sm text-white bg-emerald-600 shadow-lg">
-          {toast}
-        </div>
-      )}
+      <Toast message={toast} />
 
-      <PageHeader title={STAFF_PAGES['consultation-cards'].title}>
+      <PageHeader
+        title={STAFF_PAGES['consultation-cards'].title}
+        description={STAFF_PAGES['consultation-cards'].description}
+      >
         <Link
           href="/counseling?step=session"
           className="text-xs text-violet-600 hover:underline font-medium"
@@ -209,13 +210,10 @@ export default function ConsultationCardPage() {
       </PageHeader>
 
       {linkedSession && (
-        <div
-          className="rounded-2xl p-4 space-y-3"
-          style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}
-        >
+        <div className="rounded-2xl p-4 space-y-3 app-card-violet-inline">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
-              <p className="text-xs font-bold" style={{ color: '#6d28d9' }}>연결된 상담 기록</p>
+              <p className="text-xs font-bold app-text-violet">연결된 상담 기록</p>
               <p className="text-sm font-semibold mt-0.5" style={{ color: 'var(--app-ink)' }}>{linkedSession.title}</p>
               <p className="text-xs" style={{ color: 'var(--app-ink-3)' }}>
                 {(linkedSession.students as { name?: string })?.name ?? '학생'} ·{' '}
@@ -224,8 +222,7 @@ export default function ConsultationCardPage() {
             </div>
             <Link
               href={`/counseling?step=${linkedSession.status === 'completed' || linkedSession.status === 'followup_needed' ? 'wrapup' : 'session'}`}
-              className="text-xs font-medium hover:opacity-70"
-              style={{ color: '#7c3aed' }}
+              className="text-xs font-medium hover:opacity-70 app-text-violet-accent"
             >
               상담 화면으로 →
             </Link>
@@ -235,7 +232,7 @@ export default function ConsultationCardPage() {
               <p className="text-xs font-semibold mb-1" style={{ color: 'var(--app-ink-2)' }}>상담 대화·전사</p>
               <p
                 className="text-sm whitespace-pre-wrap rounded-lg p-3 max-h-40 overflow-y-auto"
-                style={{ background: 'var(--app-surface)', border: '1px solid #e9d5ff', color: 'var(--app-ink-2)' }}
+                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-violet-border)', color: 'var(--app-ink-2)' }}
               >
                 {linkedSession.transcript}
               </p>
@@ -264,7 +261,10 @@ export default function ConsultationCardPage() {
             <label className="app-label mb-1.5">학생</label>
             <select
               value={studentId}
-              onChange={(e) => { setStudentId(e.target.value); setHasGenerated(false); }}
+              onChange={(e) => {
+                setStudentId(e.target.value);
+                dispatch({ type: 'RESET' });
+              }}
               className="w-full px-3 py-2.5 rounded-xl text-sm"
               style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', color: 'var(--app-ink)' }}
             >
@@ -279,7 +279,10 @@ export default function ConsultationCardPage() {
               <input
                 type="date"
                 value={periodStart}
-                onChange={(e) => { setPeriodStart(e.target.value); setHasGenerated(false); }}
+                onChange={(e) => {
+                  setPeriodStart(e.target.value);
+                  dispatch({ type: 'RESET' });
+                }}
                 className="w-full px-3 py-2.5 rounded-xl text-sm"
                 style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', color: 'var(--app-ink)' }}
               />
@@ -289,7 +292,10 @@ export default function ConsultationCardPage() {
               <input
                 type="date"
                 value={periodEnd}
-                onChange={(e) => { setPeriodEnd(e.target.value); setHasGenerated(false); }}
+                onChange={(e) => {
+                  setPeriodEnd(e.target.value);
+                  dispatch({ type: 'RESET' });
+                }}
                 className="w-full px-3 py-2.5 rounded-xl text-sm"
                 style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', color: 'var(--app-ink)' }}
               />
@@ -306,11 +312,8 @@ export default function ConsultationCardPage() {
           </button>
         </div>
         {followups.filter((f) => f.status === 'pending').length > 0 && (
-          <div
-            className="mt-3 rounded-xl px-3 py-2 space-y-2"
-            style={{ background: '#fffbeb', border: '1px solid #fde68a' }}
-          >
-            <p className="text-xs font-semibold" style={{ color: '#92400e' }}>
+          <div className="mt-3 rounded-xl px-3 py-2 space-y-2 app-banner-warning">
+            <p className="text-xs font-semibold">
               후속 확인 대기 {followups.filter((f) => f.status === 'pending').length}건
             </p>
             <ul className="space-y-1.5">
@@ -331,15 +334,19 @@ export default function ConsultationCardPage() {
           <div className="w-full min-w-0" style={{ height: 160 }}>
             <ResponsiveContainer width="100%" height={160} minWidth={0}>
             <AreaChart data={scoreChart}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--app-border)" />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
               <Tooltip />
-              <Area type="monotone" dataKey="score" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.1} />
+              <Area type="monotone" dataKey="score" stroke="var(--chart-violet)" fill="var(--chart-violet)" fillOpacity={0.1} />
             </AreaChart>
           </ResponsiveContainer>
           </div>
         </div>
+      )}
+
+      {hasGenerated && !generating && (
+        <AiRulesFallbackBanner source={aiSource} fallbackReason={aiFallbackReason} />
       )}
 
       <div
@@ -359,11 +366,21 @@ export default function ConsultationCardPage() {
         ) : (
           <div>
             {[
-              { label: '학습 요약', value: learningSummary, onChange: setLearningSummary, minH: 'min-h-[80px]' },
-              { label: '근거 데이터', value: evidenceSummary, onChange: setEvidenceSummary, minH: 'min-h-[80px]' },
+              {
+                label: '학습 요약',
+                value: learningSummary,
+                onChange: (v: string) => dispatch({ type: 'SET_LEARNING_SUMMARY', value: v }),
+                minH: 'min-h-[80px]',
+              },
+              {
+                label: '근거 데이터',
+                value: evidenceSummary,
+                onChange: (v: string) => dispatch({ type: 'SET_EVIDENCE_SUMMARY', value: v }),
+                minH: 'min-h-[80px]',
+              },
             ].map(({ label, value, onChange, minH }) => (
               <section key={label} className="p-5" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                <h3 className="text-xs font-bold mb-2" style={{ color: '#7c3aed' }}>{label}</h3>
+                <h3 className="text-xs font-bold mb-2 app-text-violet-accent">{label}</h3>
                 <textarea
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
@@ -373,18 +390,16 @@ export default function ConsultationCardPage() {
               </section>
             ))}
             <section className="p-5" style={{ borderBottom: '1px solid var(--app-border)' }}>
-              <h3 className="text-xs font-bold mb-2" style={{ color: '#7c3aed' }}>상담 준비 메모</h3>
+              <h3 className="text-xs font-bold mb-2 app-text-violet-accent">상담 준비 메모</h3>
               <ul className="space-y-1.5 mb-2">
-                {consultationPoints.map((p, i) => (
-                  <li key={i} className="flex gap-2 text-sm">
-                    <span style={{ color: '#a78bfa' }}>·</span>
+                {consultationPoints.map((p) => (
+                  <li key={p.id} className="flex gap-2 text-sm">
+                    <span className="app-text-violet-muted">·</span>
                     <input
-                      value={p}
-                      onChange={(e) => {
-                        const next = [...consultationPoints];
-                        next[i] = e.target.value;
-                        setConsultationPoints(next);
-                      }}
+                      value={p.text}
+                      onChange={(e) =>
+                        dispatch({ type: 'SET_POINT', id: p.id, text: e.target.value })
+                      }
                       className="flex-1 py-0.5 bg-transparent"
                       style={{ borderBottom: '1px solid var(--app-border)', color: 'var(--app-ink-2)', outline: 'none' }}
                     />
@@ -393,10 +408,10 @@ export default function ConsultationCardPage() {
               </ul>
             </section>
             <section className="p-5" style={{ borderBottom: '1px solid var(--app-border)' }}>
-              <h3 className="text-xs font-bold mb-2" style={{ color: '#7c3aed' }}>학부모에게 전달할 내용</h3>
+              <h3 className="text-xs font-bold mb-2 app-text-violet-accent">학부모에게 전달할 내용</h3>
               <textarea
                 value={parentMessage}
-                onChange={(e) => setParentMessage(e.target.value)}
+                onChange={(e) => dispatch({ type: 'SET_PARENT_MESSAGE', value: e.target.value })}
                 className="w-full text-sm leading-relaxed rounded-xl p-3 min-h-[100px] resize-none"
                 style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', color: 'var(--app-ink-2)', outline: 'none' }}
               />
@@ -407,8 +422,7 @@ export default function ConsultationCardPage() {
             >
               <Link
                 href={`/counseling?step=session&student=${studentId}`}
-                className="text-sm font-medium hover:opacity-70"
-                style={{ color: '#7c3aed' }}
+                className="text-sm font-medium hover:opacity-70 app-text-violet-accent"
               >
                 상담 진행으로 →
               </Link>

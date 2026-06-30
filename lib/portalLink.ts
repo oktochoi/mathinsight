@@ -33,7 +33,7 @@ async function upsertStudentConnection(
   return error?.message ?? null;
 }
 
-/** 학부모·학생 계정 이메일로 연결 (가입된 계정이 있으면 즉시 연결) */
+/** 학부모·학생 계정 이메일로 연결 (가입된 계정이 있으면 즉시 student_connections 생성) */
 export async function linkStudentPortals(
   studentId: string,
   options: { parentEmail?: string; studentEmail?: string }
@@ -45,23 +45,12 @@ export async function linkStudentPortals(
   const parentEmail = options.parentEmail?.trim() ?? '';
   const studentEmail = options.studentEmail?.trim() ?? '';
 
-  const updates: {
-    parent_invite_email: string | null;
-    student_invite_email: string | null;
-    parent_user_id?: string | null;
-    student_user_id?: string | null;
-  } = {
-    parent_invite_email: parentEmail || null,
-    student_invite_email: studentEmail || null,
-  };
-
   let parentLinked = false;
   let studentLinked = false;
 
   if (parentEmail) {
     const parent = await findPortalUserByEmail(parentEmail, 'parent');
     if (parent) {
-      updates.parent_user_id = parent.id;
       parentLinked = true;
       const connErr = await upsertStudentConnection(studentId, parent.id, 'guardian');
       if (connErr) return { error: connErr, parentLinked, studentLinked };
@@ -71,13 +60,11 @@ export async function linkStudentPortals(
   if (studentEmail) {
     const portalUser = await findPortalUserByEmail(studentEmail, 'student');
     if (portalUser) {
-      updates.student_user_id = portalUser.id;
       studentLinked = true;
       const connErr = await upsertStudentConnection(studentId, portalUser.id, 'student');
       if (connErr) return { error: connErr, parentLinked, studentLinked };
     }
   }
 
-  const { error } = await supabase.from('students').update(updates).eq('id', studentId);
-  return { error: error?.message ?? null, parentLinked, studentLinked };
+  return { error: null, parentLinked, studentLinked };
 }

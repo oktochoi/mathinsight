@@ -3,6 +3,7 @@ import { runRiskDetectionAgent } from '@/lib/agents/riskDetection';
 import { runAcademyProactiveWorkflow } from '@/lib/workflows/studentCare';
 import { logAgentRun } from '@/lib/agents/log';
 import { indexStudentMemory } from '@/lib/vectorRag/indexStudent';
+import { notifyAgentFailure } from '@/lib/notifyAgentFailure';
 
 export async function runProactiveAcademyScan(
   supabase: SupabaseClient,
@@ -22,6 +23,9 @@ export async function runProactiveAcademyScan(
 
   const { processed, error } = await runRiskDetectionAgent(supabase, academyId);
   const errors: string[] = error ? [error] : [];
+  if (error) {
+    await notifyAgentFailure(`proactive scan (academy ${academyId})`, error);
+  }
 
   const { data: atRisk } = await supabase
     .from('student_risk_signals')
@@ -38,6 +42,12 @@ export async function runProactiveAcademyScan(
   }
 
   const workflow = await runAcademyProactiveWorkflow(supabase, academyId);
+  if (workflow.errors.length > 0) {
+    await notifyAgentFailure(
+      `proactive workflow (academy ${academyId})`,
+      workflow.errors.join('; ')
+    );
+  }
 
   await logAgentRun(supabase, {
     academyId,

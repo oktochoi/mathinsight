@@ -8,7 +8,7 @@ import {
   fetchUserProfile,
   oauthLoginErrorMessage,
   resolvePostLoginPath,
-  signInWithRole,
+  signInWithLoginId,
 } from '@/lib/auth';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
 import { AuthMobileLogo } from '@/components/auth/AuthBrandPanel';
@@ -25,7 +25,7 @@ import { mkt } from '@/lib/marketing/ui';
 function LoginFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
+  const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ function LoginFormInner() {
     }
     if (searchParams.get('registered') === '1') {
       const mail = searchParams.get('email');
-      if (mail) setEmail(mail);
+      if (mail) setLoginId(mail);
       const msg =
         searchParams.get('confirm') === '1'
           ? '가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요.'
@@ -56,8 +56,8 @@ function LoginFormInner() {
     setError('');
     setLoading(true);
     try {
-      const { error: err, profile, user, needsChooseRole, rawDbRole } = await signInWithRole(
-        email,
+      const { error: err, profile, user, needsChooseRole, rawDbRole } = await signInWithLoginId(
+        loginId,
         password
       );
       if (err) {
@@ -98,14 +98,13 @@ function LoginFormInner() {
         <AuthDivider />
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <AuthField label="이메일">
+          <AuthField label="아이디">
             <AuthInput
-              type="email"
               required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@academy.kr"
+              autoComplete="username"
+              value={loginId}
+              onChange={(e) => setLoginId(e.target.value)}
+              placeholder="휴대폰 번호 또는 이메일"
             />
           </AuthField>
           <AuthField label="비밀번호">
@@ -125,6 +124,10 @@ function LoginFormInner() {
           </div>
           <AuthSubmitButton loading={loading}>{loading ? '로그인 중...' : '로그인'}</AuthSubmitButton>
         </form>
+
+        <p className="mt-3 text-[11px] text-slate-500 text-center">
+          학생·학부모는 가입한 휴대폰 번호, 원장·강사는 이메일로 로그인합니다.
+        </p>
 
         <div className="mt-6 space-y-3 text-center text-sm">
           <p className="text-slate-600">

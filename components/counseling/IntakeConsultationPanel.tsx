@@ -39,11 +39,7 @@ export function IntakeConsultationPanel() {
   return (
     <div className="space-y-6">
       <div
-        className="rounded-2xl px-6 py-6"
-        style={{
-          background: 'linear-gradient(135deg, #f0f9ff 0%, var(--app-surface) 55%)',
-          border: '1px solid #bae6fd',
-        }}
+        className="rounded-2xl px-6 py-6 app-panel-accent"
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

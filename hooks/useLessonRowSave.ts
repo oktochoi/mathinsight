@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { triggerStudentRagReindex } from '@/lib/ragReindex';
 import type { LessonFormRow } from '@/lib/lessonLogRowDefaults';
 
 const DEBOUNCE_MS = 600;
@@ -42,6 +43,7 @@ export function useLessonRowSave(
           },
           { onConflict: 'academy_id,class_id,student_id,lesson_date' }
         );
+        triggerStudentRagReindex(studentId);
         setSaving((prev) => ({ ...prev, [studentId]: false }));
       }, DEBOUNCE_MS);
     },
@@ -71,6 +73,7 @@ export function useLessonRowSave(
         },
         { onConflict: 'academy_id,class_id,student_id,lesson_date' }
       );
+      triggerStudentRagReindex(studentId);
       setSaving((prev) => ({ ...prev, [studentId]: false }));
     },
     [lessonId, classId, lessonDate, unit, profile]

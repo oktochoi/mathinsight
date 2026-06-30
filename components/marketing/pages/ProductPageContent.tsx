@@ -1,4 +1,5 @@
 import {
+  DEMO_TOUR_SECTIONS,
   MARKETING_ROUTES,
   PRODUCT_AI_POINTS,
   PRODUCT_IMPACT_METRICS,
@@ -10,19 +11,21 @@ import { PageHero } from '@/components/marketing/ui/PageHero';
 import { Section, SectionInner } from '@/components/marketing/ui/Section';
 import { SectionHeader } from '@/components/marketing/ui/SectionHeader';
 import { ScreenshotPlaceholder } from '@/components/marketing/ui/ScreenshotPlaceholder';
+import { VideoPlaceholder } from '@/components/marketing/ui/VideoPlaceholder';
 import { ProblemCard } from '@/components/marketing/ui/FeatureSection';
 import { PremiumWorkflowTimeline } from '@/components/marketing/ui/PremiumWorkflowTimeline';
 import { CTASection } from '@/components/marketing/ui/CTASection';
 import { Badge } from '@/components/marketing/ui/Badge';
+import { ScreenTour } from '@/components/marketing/ui/ScreenTour';
 import { Reveal, RevealItem } from '@/components/marketing/motion/Reveal';
 import { FadeIn } from '@/components/marketing/motion/FadeIn';
 import { cn } from '@/lib/cn';
 import { mkt } from '@/lib/marketing/ui';
 
-/** Product — Workflow·AI·Resources를 하나의 스토리로 통합 */
 export function ProductPageContent() {
   return (
     <>
+      {/* ── HERO ──────────────────────────────────── */}
       <PageHero
         eyebrow="Product"
         title={
@@ -32,14 +35,15 @@ export function ProductPageContent() {
             AI Native 학원 운영 SaaS
           </>
         }
-        description="EduFlow는 수업 기록부터 상담·학부모 전달·재등록까지 하나의 흐름으로 연결합니다. 기존 ERP처럼 데이터를 쌓는 것이 아니라, 원장이 학생을 이해하고 상담하는 데 필요한 스토리를 만듭니다."
-        primary={{ href: MARKETING_ROUTES.signup, label: '무료 체험' }}
-        secondary={{ href: MARKETING_ROUTES.demo, label: 'Demo 둘러보기', variant: 'secondary' }}
+        description="EduFlow는 수업 기록부터 상담·학부모 전달·재등록까지 하나의 흐름으로 연결합니다. ERP처럼 데이터를 쌓는 것이 아니라, 원장이 학생을 이해하고 상담하는 데 필요한 스토리를 만듭니다."
+        primary={{ href: MARKETING_ROUTES.signup, label: '3일 무료 체험' }}
+        secondary={{ href: '#tour', label: '화면 둘러보기', variant: 'secondary' }}
         tone="sky"
       >
-        <ScreenshotPlaceholder label="Hero Product Screenshot Placeholder" />
+        <ScreenshotPlaceholder screenshotKey="dashboard" priority />
       </PageHero>
 
+      {/* ── PROBLEM ────────────────────────────────── */}
       <Section id="problem" muted>
         <SectionInner>
           <SectionHeader
@@ -57,6 +61,7 @@ export function ProductPageContent() {
         </SectionInner>
       </Section>
 
+      {/* ── SOLUTION ───────────────────────────────── */}
       <Section id="solution">
         <SectionInner>
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
@@ -64,7 +69,7 @@ export function ProductPageContent() {
               <SectionHeader
                 eyebrow="Solution"
                 title="기록이 곧 상담 준비가 됩니다"
-                description="EduFlow는 수업 입력만으로 상담 브리핑·학부모 리포트·재등록 판단의 기반을 만듭니다. ERP처럼 화면을 나누지 않고, 학생 중심의 하나의 흐름으로 설계했습니다."
+                description="EduFlow는 수업 입력만으로 상담 브리핑·학부모 리포트·재등록 판단의 기반을 만듭니다."
               />
               <ul className="mt-6 space-y-3">
                 {[
@@ -72,26 +77,41 @@ export function ProductPageContent() {
                   '상담 전 30초 브리핑으로 준비 시간을 줄입니다.',
                   '학부모 전달과 재등록 관리가 같은 맥락을 유지합니다.',
                 ].map((line) => (
-                  <li key={line} className="flex gap-2 text-sm text-slate-600">
-                    <span className="text-sky-600 font-bold">·</span>
+                  <li key={line} className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-sky-100 text-sky-700 text-xs">
+                      <i className="ri-check-line" />
+                    </span>
                     {line}
                   </li>
                 ))}
               </ul>
             </FadeIn>
             <FadeIn delay={0.08}>
-              <ScreenshotPlaceholder screenshotKey="dashboard" />
+              <ScreenshotPlaceholder screenshotKey="student-hub" />
             </FadeIn>
           </div>
         </SectionInner>
       </Section>
 
-      <Section id="workflow" muted className="scroll-mt-20">
+      {/* ── 소개 영상 ───────────────────────────────── */}
+      <Section muted size="sm">
+        <SectionInner narrow>
+          <VideoPlaceholder
+            title="EduFlow 전체 Workflow 소개"
+            subtitle="수업 기록부터 재등록까지 — 5분 투어"
+            duration="4:52"
+            accent="sky"
+          />
+        </SectionInner>
+      </Section>
+
+      {/* ── WORKFLOW ───────────────────────────────── */}
+      <Section id="workflow" className="scroll-mt-20">
         <SectionInner>
           <SectionHeader
             eyebrow="Workflow"
             title="기록 → 상담 → 재등록, 하나의 흐름"
-            description="Workflow 메뉴 없이 Product 안에서 전체 운영 스토리를 확인하세요."
+            description="메뉴를 옮겨 다닐 필요 없이 스크롤만으로 이해할 수 있습니다."
             align="center"
           />
           <div className="mt-10">
@@ -100,12 +120,12 @@ export function ProductPageContent() {
         </SectionInner>
       </Section>
 
-      <Section id="features" className="scroll-mt-20">
+      {/* ── KEY FEATURES ───────────────────────────── */}
+      <Section id="features" muted className="scroll-mt-20">
         <SectionInner>
           <SectionHeader
             eyebrow="Key Features"
             title="Workflow를 지원하는 핵심 기능"
-            description="Resources·AI 메뉴에 흩어져 있던 내용을 기능 카드로 정리했습니다."
           />
           <Reveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {PRODUCT_KEY_FEATURES.map((f) => (
@@ -123,7 +143,8 @@ export function ProductPageContent() {
         </SectionInner>
       </Section>
 
-      <Section id="ai" muted className="scroll-mt-20">
+      {/* ── AI ASSISTANT ───────────────────────────── */}
+      <Section id="ai" className="scroll-mt-20">
         <SectionInner>
           <SectionHeader
             eyebrow="AI Assistant"
@@ -144,6 +165,26 @@ export function ProductPageContent() {
         </SectionInner>
       </Section>
 
+      {/* ── SCREEN TOUR ────────────────────────────── */}
+      <Section id="tour" muted className="scroll-mt-20">
+        <SectionInner>
+          <SectionHeader
+            eyebrow="Product Tour"
+            title="핵심 화면 직접 확인"
+            description="「데모 수학학원」 샘플 데이터 기준 — 데모 계정으로 직접 조작해 볼 수도 있습니다."
+            align="center"
+          />
+          <div className="mt-8">
+            <ScreenTour
+              sections={DEMO_TOUR_SECTIONS as unknown as Array<{ id: string; title: string; desc: string; cta: string }>}
+              demoHref={MARKETING_ROUTES.auth}
+              signupHref={MARKETING_ROUTES.signup}
+            />
+          </div>
+        </SectionInner>
+      </Section>
+
+      {/* ── IMPACT ─────────────────────────────────── */}
       <Section id="impact" className="scroll-mt-20">
         <SectionInner>
           <SectionHeader
@@ -163,26 +204,17 @@ export function ProductPageContent() {
               </RevealItem>
             ))}
           </Reveal>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <div className="app-chart-placeholder min-h-[10rem] rounded-2xl border border-dashed border-sky-200 bg-sky-50/50 text-sm text-slate-500 flex items-center justify-center">
-              [ Chart Placeholder — Consultation Prep Time ]
-            </div>
-            <div className="app-chart-placeholder min-h-[10rem] rounded-2xl border border-dashed border-sky-200 bg-sky-50/50 text-sm text-slate-500 flex items-center justify-center">
-              [ Chart Placeholder — Retention Management Trend ]
-            </div>
-          </div>
         </SectionInner>
       </Section>
 
-      <div id="cta">
-        <CTASection
-          variant="blue"
-        title="우리 학원 Workflow를 무료로 확인해 보세요"
-        description="14일 무료 체험 · 카드 등록 없이 시작 · Demo Academy로 먼저 둘러볼 수도 있습니다."
+      {/* ── CTA ────────────────────────────────────── */}
+      <CTASection
+        variant="blue"
+        title="우리 학원 Workflow를 3일 무료로 확인해 보세요"
+        description="3일 무료 체험 · 카드 등록 없이 시작 · 데모 계정으로 먼저 둘러볼 수도 있습니다."
         primary={{ href: MARKETING_ROUTES.signup, label: '무료 체험', variant: 'accent' }}
-        secondary={{ href: MARKETING_ROUTES.demo, label: 'Demo 둘러보기' }}
-        />
-      </div>
+        secondary={{ href: MARKETING_ROUTES.auth, label: '데모 계정 로그인' }}
+      />
     </>
   );
 }

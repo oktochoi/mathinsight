@@ -9,6 +9,8 @@ const TYPE_LABELS: Record<string, string> = {
   lesson_memo: '수업 메모',
   score: '점수',
   homework_missing: '숙제',
+  attendance: '출결',
+  counseling_session: '상담',
   followup: '상담 후 확인',
 };
 
@@ -23,7 +25,7 @@ export function StudentActivityTimeline({ entries }: { entries: TimelineEntry[] 
           color: 'var(--app-ink-4)',
         }}
       >
-        [ Empty State Placeholder — Activity Timeline ]
+        아직 기록된 활동이 없습니다. 수업·상담 기록이 쌓이면 타임라인에 표시됩니다.
       </div>
     );
   }

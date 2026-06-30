@@ -143,8 +143,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-left mx-1 rounded-lg transition-colors cursor-pointer"
-                  style={{ color: '#dc2626' }}
+                  className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-left mx-1 rounded-lg transition-colors cursor-pointer app-text-danger"
                 >
                   <i className="ri-logout-box-line text-sm" />
                   로그아웃

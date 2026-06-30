@@ -111,7 +111,7 @@ export function BillingChargesTable({
         cell: ({ row }) => (
           <span
             className="text-sm tabular-nums"
-            style={{ color: row.original.isOverdue ? '#e11d48' : 'var(--app-ink-2)', fontWeight: row.original.isOverdue ? 500 : undefined }}
+            style={{ color: row.original.isOverdue ? 'var(--app-danger)' : 'var(--app-ink-2)', fontWeight: row.original.isOverdue ? 500 : undefined }}
           >
             {row.original.payment.due_date}
             {row.original.isOverdue && (
@@ -158,7 +158,7 @@ export function BillingChargesTable({
         cell: ({ row }) => (
           <span
             className="text-xs font-medium"
-            style={{ color: row.original.hasRecentCounseling ? '#059669' : 'var(--app-ink-4)' }}
+            style={{ color: row.original.hasRecentCounseling ? 'var(--app-success)' : 'var(--app-ink-4)' }}
           >
             {row.original.hasRecentCounseling ? '있음' : '—'}
           </span>
@@ -170,7 +170,7 @@ export function BillingChargesTable({
         cell: ({ row }) => (
           <span
             className="text-xs font-medium"
-            style={{ color: row.original.reregistrationPending ? '#7c3aed' : 'var(--app-ink-4)' }}
+            style={{ color: row.original.reregistrationPending ? 'var(--app-violet)' : 'var(--app-ink-4)' }}
           >
             {row.original.reregistrationPending ? '예정' : '—'}
           </span>

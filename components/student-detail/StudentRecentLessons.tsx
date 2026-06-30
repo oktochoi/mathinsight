@@ -140,12 +140,14 @@ export function StudentRecentLessons({
               onClick={() => onSelect(log)}
               className={cn(
                 'w-full text-left rounded-xl px-4 py-3.5 transition-colors hover:shadow-sm',
-                'flex flex-wrap items-center justify-between gap-3'
+                'flex flex-wrap items-center justify-between gap-3',
+                isAbsent && 'app-card-danger'
               )}
-              style={{
-                background: isAbsent ? '#fef2f2' : 'var(--app-surface-2)',
-                border: `1px solid ${isAbsent ? '#fecaca' : 'var(--app-border)'}`,
-              }}
+              style={
+                isAbsent
+                  ? undefined
+                  : { background: 'var(--app-surface-2)', border: '1px solid var(--app-border)' }
+              }
             >
               <div className="min-w-0">
                 <p className="text-sm font-semibold" style={{ color: 'var(--app-ink)' }}>
@@ -169,7 +171,7 @@ export function StudentRecentLessons({
                   </span>
                 )}
                 {hasAi && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#ede9fe', color: '#5b21b6' }}>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full app-badge-violet">
                     AI
                   </span>
                 )}

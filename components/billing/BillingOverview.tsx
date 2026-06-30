@@ -59,11 +59,11 @@ export function BillingOverview({ kpis }: { kpis: BillingKpis }) {
               style={{
                 color:
                   item.tone === 'warning'
-                    ? '#d97706'
+                    ? 'var(--app-warning)'
                     : item.tone === 'danger'
-                      ? '#dc2626'
+                      ? 'var(--app-danger)'
                       : item.tone === 'info'
-                        ? '#2563eb'
+                        ? 'var(--app-accent)'
                         : 'var(--app-ink)',
                 letterSpacing: '-0.03em',
               }}

@@ -6,13 +6,13 @@ import type { ScheduleType } from '@/types/database';
 import { cn } from '@/lib/cn';
 
 const LESSON_COLORS: Record<ScheduleType, { bg: string; border: string; text: string }> = {
-  regular: { bg: '#eef2ff', border: '#6366f1', text: '#3730a3' },
-  makeup: { bg: '#e0f2fe', border: '#0284c7', text: '#075985' },
-  special: { bg: '#f5f3ff', border: '#7c3aed', text: '#5b21b6' },
-  canceled: { bg: '#f1f5f9', border: '#94a3b8', text: '#64748b' },
+  regular: { bg: 'var(--event-regular-bg)', border: 'var(--event-regular-border)', text: 'var(--event-regular-text)' },
+  makeup: { bg: 'var(--event-makeup-bg)', border: 'var(--event-makeup-border)', text: 'var(--event-makeup-text)' },
+  special: { bg: 'var(--event-special-bg)', border: 'var(--event-special-border)', text: 'var(--event-special-text)' },
+  canceled: { bg: 'var(--event-canceled-bg)', border: 'var(--event-canceled-border)', text: 'var(--event-canceled-text)' },
 };
 
-const INTAKE_COLORS = { bg: '#ecfeff', border: '#0891b2', text: '#155e75' };
+const INTAKE_COLORS = { bg: 'var(--event-intake-bg)', border: 'var(--event-intake-border)', text: 'var(--event-intake-text)' };
 
 type Props = {
   slot: CalendarTimeSlot;
@@ -30,7 +30,7 @@ export function ScheduleCalendarSlot({ slot, top, height, selected, onSelect }: 
       ? LESSON_COLORS[primaryLesson.event.scheduleType as ScheduleType] ?? LESSON_COLORS.regular
       : INTAKE_COLORS;
   const colors = hasMixed
-    ? { bg: '#f8fafc', border: '#64748b', text: 'var(--app-ink)' }
+    ? { bg: 'var(--app-surface-2)', border: 'var(--app-slate-text)', text: 'var(--app-ink)' }
     : slot.intakeCount > 0 && slot.lessonCount === 0
       ? INTAKE_COLORS
       : lessonColors;

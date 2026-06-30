@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { signUpWithEmail } from '@/lib/auth';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
@@ -17,10 +17,12 @@ import {
 } from '@/components/auth/AuthField';
 import { AuthDivider, GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { RolePicker } from '@/components/auth/RolePicker';
+import { peekPendingAcademyCode } from '@/lib/academyCodeStorage';
 import { mkt } from '@/lib/marketing/ui';
 
-export function SignupForm() {
+function SignupFormInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [role, setRole] = useState<SignupRole>('owner');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -30,6 +32,15 @@ export function SignupForm() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const pendingAcademyCode = peekPendingAcademyCode();
+
+  useEffect(() => {
+    const r = searchParams.get('role');
+    if (r === 'teacher' || r === 'owner' || r === 'parent' || r === 'student') {
+      setRole(r);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,66 +121,87 @@ export function SignupForm() {
             <p className="mt-1.5 text-[11px] text-slate-500">
               선택: <span className="font-semibold text-slate-700">{roleLabels[role]}</span>
               {role === 'teacher' && ' · 가입 후 학원 초대 코드로 연결합니다'}
-              {role === 'parent' && ' · 가입 후 자녀 코드로 연결합니다'}
-              {role === 'student' && ' · 가입 후 학원 코드로 연결합니다'}
             </p>
+            {role === 'teacher' && pendingAcademyCode && (
+              <p className="mt-2 text-xs rounded-lg bg-indigo-50 border border-indigo-100 px-3 py-2 text-indigo-800">
+                학원 코드 <strong className="font-mono">{pendingAcademyCode}</strong>가 저장되어 있습니다.
+                온보딩에서 자동으로 입력됩니다.
+              </p>
+            )}
           </AuthField>
 
-          <AuthField label="이름">
-            <AuthInput
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="홍길동"
-              required
-            />
-          </AuthField>
-          <AuthField label="이메일">
-            <AuthInput
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </AuthField>
-          <AuthField label="비밀번호">
-            <AuthPasswordInput
-              required
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="8자 이상"
-              show={showPassword}
-              onToggle={() => setShowPassword((v) => !v)}
-            />
-          </AuthField>
-          <AuthField label="비밀번호 확인">
-            <AuthInput
-              type="password"
-              required
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </AuthField>
+          {role === 'parent' || role === 'student' ? (
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 space-y-3">
+              <p className="text-sm text-slate-700">
+                학생·학부모는 <strong>휴대폰 인증</strong>으로 가입합니다. 학원 연결은 로그인 후
+                포털에서 진행합니다.
+              </p>
+              <Link
+                href={role === 'student' ? '/signup/student' : '/signup/parent'}
+                className="inline-flex app-btn app-btn-primary text-sm"
+              >
+                {roleLabels[role]} 가입 계속하기
+              </Link>
+            </div>
+          ) : (
+            <>
+              <AuthField label="이름">
+                <AuthInput
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="홍길동"
+                  required
+                />
+              </AuthField>
+              <AuthField label="이메일">
+                <AuthInput
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </AuthField>
+              <AuthField label="비밀번호">
+                <AuthPasswordInput
+                  required
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="8자 이상"
+                  show={showPassword}
+                  onToggle={() => setShowPassword((v) => !v)}
+                />
+              </AuthField>
+              <AuthField label="비밀번호 확인">
+                <AuthInput
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </AuthField>
 
-          <label className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-600">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-            />
-            <span>
-              <Link href="/terms" className={mkt.link}>이용약관</Link>과{' '}
-              <Link href="/privacy" className={mkt.link}>개인정보처리방침</Link>에 동의합니다.
-            </span>
-          </label>
+              <label className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                />
+                <span>
+                  <Link href="/terms" className={mkt.link}>이용약관</Link>과{' '}
+                  <Link href="/privacy" className={mkt.link}>개인정보처리방침</Link>에 동의합니다.
+                </span>
+              </label>
 
-          <AuthSubmitButton loading={loading}>
-            {loading ? '가입 처리 중...' : '회원가입'}
-          </AuthSubmitButton>
+              <AuthSubmitButton loading={loading}>
+                {loading ? '가입 처리 중...' : '회원가입'}
+              </AuthSubmitButton>
+            </>
+          )}
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-600">
@@ -178,5 +210,11 @@ export function SignupForm() {
         </p>
       </AuthFormCard>
     </>
+  );
+}
+
+export function SignupForm() {
+  return (
+    <SignupFormInner />
   );
 }

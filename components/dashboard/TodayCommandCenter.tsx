@@ -30,7 +30,7 @@ function MetricCell({
   tone?: 'default' | 'warn' | 'danger';
 }) {
   const color =
-    tone === 'danger' ? '#dc2626' : tone === 'warn' ? '#d97706' : 'var(--app-ink)';
+    tone === 'danger' ? 'var(--app-danger)' : tone === 'warn' ? 'var(--app-warning)' : 'var(--app-ink)';
   return (
     <div className="min-w-0">
       <p className="text-[11px] font-medium uppercase tracking-wide" style={{ color: 'var(--app-ink-4)' }}>

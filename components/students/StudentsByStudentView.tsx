@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { Student } from '@/types/database';
+import type { ConnectionRelationship, Student } from '@/types/database';
 import { STATUS_LABELS, STATUS_STYLES } from '@/lib/statusLabels';
 import { isParentLinked, isStudentPortalLinked } from '@/lib/studentPortal';
 import StudentDetail from '@/app/(app)/students/[id]/StudentDetail';
@@ -11,13 +11,16 @@ export function StudentsByStudentView({
   students,
   selectedId,
   onSelect,
+  connectionsByStudent,
 }: {
   students: Student[];
   selectedId: string;
   onSelect: (id: string) => void;
+  connectionsByStudent?: Map<string, { relationship: ConnectionRelationship }[]>;
 }) {
   const selected = students.find((s) => s.id === selectedId) ?? students[0];
   const activeId = selectedId || selected?.id;
+  const selectedConnections = selected ? connectionsByStudent?.get(selected.id) : undefined;
 
   if (students.length === 0) {
     return <p className="text-sm text-slate-500 p-6">등록된 학생이 없습니다.</p>;
@@ -68,7 +71,7 @@ export function StudentsByStudentView({
               <div className="space-y-1 min-w-0">
                 <p>
                   학부모 연결:{' '}
-                  {isParentLinked(selected) ? (
+                  {isParentLinked(selected, selectedConnections) ? (
                     <span className="text-emerald-600">✓</span>
                   ) : (
                     <span className="text-slate-400">—</span>
@@ -76,7 +79,7 @@ export function StudentsByStudentView({
                 </p>
                 <p>
                   학생 연결:{' '}
-                  {isStudentPortalLinked(selected) ? (
+                  {isStudentPortalLinked(selected, selectedConnections) ? (
                     <span className="text-emerald-600">✓</span>
                   ) : (
                     <span className="text-slate-400">—</span>

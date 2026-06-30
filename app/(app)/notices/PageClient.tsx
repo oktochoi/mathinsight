@@ -141,14 +141,7 @@ export default function NoticesPage() {
       {!embedded && <PageHeader title={STAFF_PAGES.notices.title} />}
       {error && <ErrorBanner message={error} />}
       {toast && (
-        <p
-          className="text-sm rounded-xl px-3 py-2"
-          style={
-            toastError
-              ? { background: '#fff1f2', color: '#be123c', border: '1px solid #fecdd3' }
-              : { background: '#f0fdf4', color: '#065f46', border: '1px solid #a7f3d0' }
-          }
-        >
+        <p className={cn('text-sm rounded-xl px-3 py-2', toastError ? 'app-inline-danger' : 'app-inline-success')}>
           {toast}
         </p>
       )}
@@ -275,11 +268,16 @@ export default function NoticesPage() {
                       </p>
                     </div>
                     <span
-                      className="shrink-0 text-[10px] font-semibold px-2 py-1 rounded-full"
+                      className={cn(
+                        'shrink-0 text-[10px] font-semibold px-2 py-1 rounded-full border',
+                        a.status === 'published'
+                          ? 'app-badge-success border-[var(--app-success-border)]'
+                          : 'border-[var(--app-border)]'
+                      )}
                       style={
                         a.status === 'published'
-                          ? { background: '#f0fdf4', color: '#065f46', border: '1px solid #a7f3d0' }
-                          : { background: 'var(--app-surface-2)', color: 'var(--app-ink-3)', border: '1px solid var(--app-border)' }
+                          ? undefined
+                          : { background: 'var(--app-surface-2)', color: 'var(--app-ink-3)' }
                       }
                     >
                       {a.status === 'published' ? '발행됨' : '임시'}

@@ -47,6 +47,18 @@ export const STAFF_NAV_SECTIONS: NavSection[] = [
         requiredPermissions: ['lessons.view'],
       },
       { label: '시간표', href: '/schedule', icon: 'ri-calendar-line' },
+      {
+        label: '출결',
+        href: '/attendance',
+        icon: 'ri-calendar-check-line',
+        requiredPermissions: ['lessons.view'],
+      },
+      {
+        label: '성적',
+        href: '/grades',
+        icon: 'ri-bar-chart-box-line',
+        requiredPermissions: ['students.view'],
+      },
     ],
   },
   {
@@ -63,18 +75,56 @@ export const STAFF_NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    id: 'parents',
-    label: '상담 & 학부모',
-    icon: 'ri-chat-check-line',
+    id: 'homerooms',
+    label: '반',
+    icon: 'ri-building-4-line',
     items: [
       {
-        label: '상담 카드',
-        href: '/consultation-cards',
-        icon: 'ri-chat-check-line',
+        label: '반 관리',
+        href: '/classes',
+        icon: 'ri-building-4-line',
+        requiredPermissions: ['students.view'],
+      },
+    ],
+  },
+  {
+    id: 'parents',
+    label: '학부모',
+    icon: 'ri-parent-line',
+    items: [
+      {
+        label: '학부모 연결',
+        href: '/students?tab=parents',
+        icon: 'ri-link',
+        requiredPermissions: ['students.view'],
+      },
+      {
+        label: '공지',
+        href: '/notices',
+        icon: 'ri-megaphone-line',
+        requiredPermissions: ['parent_comms.view'],
+      },
+      {
+        label: '문의함',
+        href: '/messages',
+        icon: 'ri-mail-send-line',
+        requiredPermissions: ['parent_comms.view'],
+      },
+    ],
+  },
+  {
+    id: 'counseling',
+    label: '상담',
+    icon: 'ri-chat-smile-3-line',
+    items: [
+      {
+        label: '상담',
+        href: '/counseling',
+        icon: 'ri-chat-smile-3-line',
         requiredPermissions: ['counseling.view'],
       },
       {
-        label: '학부모 전달',
+        label: '학부모 리포트',
         href: '/parent-reports',
         icon: 'ri-file-text-line',
         requiredPermissions: ['parent_comms.view'],
@@ -92,21 +142,15 @@ export const STAFF_NAV_SECTIONS: NavSection[] = [
         icon: 'ri-wallet-3-line',
         requiredPermissions: ['billing.view'],
       },
-      {
-        label: '학생 성장',
-        href: '/retention',
-        icon: 'ri-refresh-line',
-        requiredPermissions: ['retention.view'],
-      },
     ],
   },
   {
     id: 'reports',
-    label: '운영 분석',
-    icon: 'ri-bar-chart-2-line',
+    label: '경영',
+    icon: 'ri-pie-chart-2-line',
     dividerAbove: true,
     items: [
-      { label: '운영 분석', href: '/analytics', icon: 'ri-bar-chart-2-line' },
+      { label: '경영 리포트', href: '/analytics', icon: 'ri-pie-chart-2-line' },
     ],
   },
   {
@@ -120,48 +164,40 @@ export const STAFF_NAV_SECTIONS: NavSection[] = [
         icon: 'ri-settings-3-line',
         requiredPermissions: ['settings.academy'],
       },
+      {
+        label: '문자·알림',
+        href: '/notifications',
+        icon: 'ri-notification-3-line',
+        requiredPermissions: ['settings.academy'],
+      },
     ],
   },
 ];
-
-/** @deprecated 그룹 구조 — Sidebar는 STAFF_NAV_SECTIONS 사용 */
-export const STAFF_NAV_GROUPS = STAFF_NAV_SECTIONS.map((s) => ({
-  id: s.id,
-  label: s.label,
-  items: s.items,
-}));
 
 export const QUICK_ACTIONS = [
   { label: '학생 등록', href: '/students', icon: 'ri-user-add-line' },
   { label: '오늘 수업', href: '/lesson-logs', icon: 'ri-book-open-line' },
   { label: '청구 등록', href: '/billing', icon: 'ri-wallet-3-line' },
-  { label: '상담 작성', href: '/consultation-cards', icon: 'ri-chat-check-line' },
+  { label: '상담 작성', href: '/counseling', icon: 'ri-chat-smile-3-line' },
 ] as const;
 
-const PATH_SECTION_MAP: { prefix: string; sectionId: string }[] = [
-  { prefix: '/dashboard', sectionId: 'today' },
-  { prefix: '/lesson-logs', sectionId: 'classes' },
-  { prefix: '/schedule', sectionId: 'classes' },
-  { prefix: '/curriculum', sectionId: 'classes' },
-  { prefix: '/homework', sectionId: 'classes' },
-  { prefix: '/attendance', sectionId: 'classes' },
-  { prefix: '/grades', sectionId: 'classes' },
-  { prefix: '/students', sectionId: 'students' },
-  { prefix: '/counseling', sectionId: 'parents' },
-  { prefix: '/consultation-cards', sectionId: 'parents' },
-  { prefix: '/parent-reports', sectionId: 'parents' },
-  { prefix: '/parent-hub', sectionId: 'parents' },
-  { prefix: '/messages', sectionId: 'parents' },
-  { prefix: '/notices', sectionId: 'parents' },
-  { prefix: '/billing', sectionId: 'operations' },
-  { prefix: '/retention', sectionId: 'operations' },
-  { prefix: '/notifications', sectionId: 'operations' },
-  { prefix: '/analytics', sectionId: 'reports' },
-  { prefix: '/student-growth', sectionId: 'reports' },
-  { prefix: '/settings', sectionId: 'settings' },
-  { prefix: '/onboarding', sectionId: 'settings' },
+/** 사이드바 메뉴에서 자동 생성 */
+const NAV_PATH_SECTION_MAP = STAFF_NAV_SECTIONS.flatMap((section) =>
+  section.items.map((item) => ({
+    prefix: item.href.split('?')[0],
+    sectionId: section.id,
+  }))
+);
+
+/** 하위·연관 경로만 수동 보강 (사이드바에 없는 실제 페이지) */
+const EXTRA_PATH_SECTION_MAP: { prefix: string; sectionId: string }[] = [
+  { prefix: '/consultation-cards', sectionId: 'counseling' },
+  { prefix: '/schedule/prep', sectionId: 'classes' },
+  { prefix: '/notifications', sectionId: 'settings' },
   { prefix: '/integrations', sectionId: 'settings' },
 ];
+
+const PATH_SECTION_MAP = [...NAV_PATH_SECTION_MAP, ...EXTRA_PATH_SECTION_MAP];
 
 export function getActiveSectionId(pathname: string): string | null {
   const match = PATH_SECTION_MAP.find(
@@ -178,12 +214,14 @@ export function isNavItemActive(pathname: string, search: string, href: string):
     if (path === '/schedule' && pathname.startsWith('/schedule')) {
       return href === '/schedule' ? pathname === '/schedule' : pathname.startsWith('/schedule/');
     }
-    if (path === '/retention' && pathname.startsWith('/retention')) return href === '/retention';
+    if (path === '/classes' && pathname.startsWith('/classes')) return href === '/classes';
     if (path === '/billing' && pathname.startsWith('/billing')) return href === '/billing';
     if (path === '/parent-reports' && pathname.startsWith('/parent-reports'))
       return href === '/parent-reports';
-    if (path === '/consultation-cards' && pathname.startsWith('/consultation-cards'))
-      return href === '/consultation-cards';
+    if (path === '/attendance' && pathname.startsWith('/attendance')) return href === '/attendance';
+    if (path === '/grades' && pathname.startsWith('/grades')) return href === '/grades';
+    if (path === '/notifications' && pathname.startsWith('/notifications'))
+      return href === '/notifications';
     return false;
   }
   if (!query) {

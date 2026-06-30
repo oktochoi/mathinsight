@@ -57,6 +57,17 @@ export function ConnectionRequestsSection() {
                     {req.user?.name ?? req.user?.email ?? '계정'}
                   </p>
                   <p className="text-xs text-slate-500 mt-1">{req.user?.email}</p>
+                  {(req.requester_school || req.requester_grade || req.user?.school || req.user?.grade) && (
+                    <p className="text-xs text-slate-600 mt-1">
+                      프로필:{' '}
+                      {[
+                        req.requester_school ?? req.user?.school,
+                        req.requester_grade ?? req.user?.grade,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  )}
                   {matchedStudentId && (
                     <p className="text-xs text-emerald-700 mt-1">등록명 일치 — 바로 승인 가능</p>
                   )}

@@ -96,7 +96,7 @@ export function BillingChargeModal({
                 className="flex-1 py-2 text-sm font-semibold rounded-md"
                 style={
                   mode === key
-                    ? { background: 'var(--app-ink)', color: '#fff' }
+                    ? { background: 'var(--app-ink)', color: 'var(--app-on-accent)' }
                     : { color: 'var(--app-ink-3)' }
                 }
               >

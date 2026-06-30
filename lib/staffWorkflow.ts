@@ -46,10 +46,16 @@ export const STAFF_PAGE_PLAYBOOK: Record<StaffPageKey, StaffPagePlaybook> = {
     tasks: ['주간 일정 확인', '보강·휴강은 설정·시간표에서'],
   },
   students: {
-    role: '학생 등록·연결. 학습 신호는 기록을 바탕으로 자동 표시됩니다.',
+    role: '학생 등록·수정. 학습 신호는 기록을 바탕으로 자동 표시됩니다.',
     primaryLabel: '학생 등록',
     primaryHref: '/students',
-    tasks: ['학생·반 등록', '학습 신호 「양호」면 대시보드에 안 뜸'],
+    tasks: ['학생 등록·일괄 등록', '학습 신호 「양호」면 대시보드에 안 뜸'],
+  },
+  classes: {
+    role: '반을 만들고 학생·담당 강사를 지정합니다.',
+    primaryLabel: '반 추가',
+    primaryHref: '/classes',
+    tasks: ['반 추가·수정', '학생 배정', '담당 강사 지정'],
   },
   attendance: {
     role: '출결 전용 화면. 결석 학생은 보강 검토 대상으로 표시됩니다.',
@@ -112,10 +118,10 @@ export const STAFF_PAGE_PLAYBOOK: Record<StaffPageKey, StaffPagePlaybook> = {
     tasks: ['캘린더 구독 URL', 'SMS/카카오 활성화 플래그'],
   },
   retention: {
-    role: '학원 재원·등록·이탈 흐름과 재등록 상태를 한곳에서 봅니다.',
-    primaryLabel: '학습 신호 갱신',
-    primaryHref: '/retention',
-    tasks: ['이번 달 순증 확인', '재등록 예정 상담', '상담 권장 학생 확인'],
+    role: '재등록·학습 신호 — 경영 리포트에 통합되었습니다.',
+    primaryLabel: '경영 리포트',
+    primaryHref: '/analytics#attention',
+    tasks: ['학습 신호 갱신', '재등록 예정 상담', '이탈 학생 연락'],
   },
   'lesson-logs': {
     role: '가장 자주 쓰는 화면입니다. 기록해야 대시보드·상담이 의미 있습니다.',
@@ -136,10 +142,10 @@ export const STAFF_PAGE_PLAYBOOK: Record<StaffPageKey, StaffPagePlaybook> = {
     tasks: ['필요할 때만 학생·기간 선택 후 저장'],
   },
   analytics: {
-    role: '추가 통계 (준비 중). 지금은 대시보드만 보셔도 됩니다.',
-    primaryLabel: '대시보드로',
-    primaryHref: '/dashboard',
-    tasks: ['전체 흐름은 대시보드에서 확인'],
+    role: '이번 달 학원 성장·운영·수납을 보고 다음 행동을 결정합니다. 오늘 운영은 대시보드에서.',
+    primaryLabel: 'Action Center 확인',
+    primaryHref: '/analytics',
+    tasks: ['월간 요약', '운영 Action 처리', 'AI 인사이트'],
   },
   settings: {
     role: '처음 한 번: 학원·반·시간표·연결 코드. 이후 가끔만 엽니다.',

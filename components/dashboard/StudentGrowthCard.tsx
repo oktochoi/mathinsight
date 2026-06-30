@@ -25,8 +25,8 @@ function DeltaBadge({ delta, pct }: { delta: number; pct: number }) {
   const up = delta >= 0;
   return (
     <span
-      className="text-xs font-medium tabular-nums"
-      style={{ color: up ? '#059669' : 'var(--app-ink-3)' }}
+      className={cn('text-xs font-medium tabular-nums', up && 'app-text-success')}
+      style={up ? undefined : { color: 'var(--app-ink-3)' }}
     >
       전월 대비 {up ? '+' : ''}
       {delta}명 ({up ? '+' : ''}
@@ -53,9 +53,12 @@ function ChangeRow({
         <span className="truncate">{label}</span>
       </span>
       <span
-        className="text-sm font-semibold tabular-nums shrink-0"
+        className={cn(
+          'text-sm font-semibold tabular-nums shrink-0',
+          tone === 'warn' && 'app-card-warning-body'
+        )}
         style={{
-          color: tone === 'warn' ? '#b45309' : tone === 'muted' ? 'var(--app-ink-3)' : 'var(--app-ink)',
+          color: tone === 'muted' ? 'var(--app-ink-3)' : tone === 'warn' ? undefined : 'var(--app-ink)',
         }}
       >
         {value}명
@@ -140,7 +143,7 @@ export function StudentGrowthChart({
             type="monotone"
             dataKey="newRegistrations"
             name="신규"
-            stroke="#10b981"
+            stroke="var(--app-success)"
             strokeWidth={1.5}
             dot={false}
             strokeDasharray="4 3"
@@ -150,7 +153,7 @@ export function StudentGrowthChart({
             type="monotone"
             dataKey="withdrawals"
             name="퇴원"
-            stroke="#f97316"
+            stroke="var(--app-orange)"
             strokeWidth={1.5}
             dot={false}
             strokeDasharray="2 2"
@@ -194,7 +197,7 @@ export function StudentGrowthCard({
           <h3 className="text-sm font-bold" style={{ color: 'var(--app-ink)' }}>학생 성장</h3>
         </div>
         <Link
-          href="/retention"
+          href="/analytics"
           className="text-xs font-medium flex items-center gap-0.5 transition-colors hover:opacity-70"
           style={{ color: 'var(--app-accent)' }}
         >
@@ -244,17 +247,17 @@ export function StudentGrowthCard({
               <AttentionLink
                 label="재등록 예정"
                 count={metrics.attention.reregistrationPending}
-                href="/retention?section=reregistration"
+                href="/analytics?section=reregistration"
               />
               <AttentionLink
                 label="장기 결석"
                 count={metrics.attention.longAbsence}
-                href="/retention?section=churn"
+                href="/analytics?section=churn"
               />
               <AttentionLink
                 label="상담 미완료"
                 count={metrics.attention.counselingIncomplete}
-                href="/retention?section=reregistration"
+                href="/analytics?section=reregistration"
               />
             </div>
           </div>
@@ -293,7 +296,7 @@ export function StudentGrowthCard({
                   className="px-2 py-0.5 text-[10px] font-semibold rounded-md transition-colors"
                   style={
                     range === m
-                      ? { background: 'var(--app-ink)', color: '#fff' }
+                      ? { background: 'var(--app-ink)', color: 'var(--app-on-accent)' }
                       : { color: 'var(--app-ink-3)' }
                   }
                 >

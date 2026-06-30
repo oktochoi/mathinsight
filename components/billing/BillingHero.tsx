@@ -105,13 +105,13 @@ function HeroMetric({
 }) {
   const valueColor =
     accent === 'success'
-      ? '#059669'
+      ? 'var(--app-success)'
       : accent === 'warning'
-        ? '#d97706'
+        ? 'var(--app-warning)'
         : accent === 'danger'
-          ? '#dc2626'
+          ? 'var(--app-danger)'
           : accent === 'info'
-            ? '#2563eb'
+            ? 'var(--app-accent)'
             : 'var(--app-ink)';
 
   return (

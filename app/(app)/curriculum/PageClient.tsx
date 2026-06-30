@@ -70,7 +70,7 @@ export default function CurriculumPage() {
       <PageHeader title={STAFF_PAGES.curriculum.title} />
       {error && <ErrorBanner message={error} />}
       {toast && (
-        <p className="text-sm rounded-xl px-3 py-2" style={{ background: '#f0fdf4', border: '1px solid #a7f3d0', color: '#065f46' }}>
+        <p className="text-sm rounded-xl px-3 py-2 app-inline-success">
           {toast}
         </p>
       )}

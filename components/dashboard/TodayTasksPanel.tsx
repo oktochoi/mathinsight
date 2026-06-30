@@ -66,7 +66,7 @@ function buildTodayTasks(stats: DashboardStats): TaskRow[] {
       id: 'retention',
       label: '재등록 예정 학생',
       count: retentionCount,
-      href: '/retention',
+      href: '/analytics',
       done: retentionCount === 0,
     },
   ];
@@ -99,10 +99,7 @@ export function TodayTasksPanel({ stats }: { stats: DashboardStats }) {
           </p>
         </div>
         {pending.length > 0 && (
-          <span
-            className="text-xs font-bold tabular-nums px-2.5 py-1 rounded-full"
-            style={{ background: '#fff7ed', color: '#c2410c' }}
-          >
+          <span className="text-xs font-bold tabular-nums px-2.5 py-1 rounded-full app-badge-orange">
             {pending.reduce((s, t) => s + t.count, 0)}건
           </span>
         )}
@@ -134,10 +131,7 @@ export function TodayTasksPanel({ stats }: { stats: DashboardStats }) {
                     </p>
                   )}
                 </div>
-                <span
-                  className="text-sm font-bold tabular-nums shrink-0 px-2 py-0.5 rounded-lg"
-                  style={{ background: '#fff7ed', color: '#c2410c' }}
-                >
+                <span className="text-sm font-bold tabular-nums shrink-0 px-2 py-0.5 rounded-lg app-badge-orange">
                   {task.count}건
                 </span>
                 <i

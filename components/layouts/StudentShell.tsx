@@ -1,10 +1,14 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { isStaffProfile } from '@/lib/profileIntegrity';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/cn';
+import { PushInAppBanner } from '@/components/PushInAppBanner';
+import { StudentPortalProvider } from '@/context/StudentPortalContext';
+import { StudentChatFab } from '@/components/chat/StudentChatFab';
 import { useEffect } from 'react';
 
 const NAV = [
@@ -13,7 +17,8 @@ const NAV = [
   { href: '#homework', label: '숙제', icon: 'ri-task-line' },
   { href: '#exams', label: '시험', icon: 'ri-medal-line' },
   { href: '#schedule', label: '일정', icon: 'ri-calendar-line' },
-  { href: '#feedback', label: '피드백', icon: 'ri-chat-3-line' },
+  { href: '#chat', label: '톡방', icon: 'ri-chat-3-line' },
+  { href: '#feedback', label: '피드백', icon: 'ri-chat-smile-3-line' },
 ] as const;
 
 function NavLinks({ vertical }: { vertical?: boolean }) {
@@ -40,6 +45,7 @@ function NavLinks({ vertical }: { vertical?: boolean }) {
 export default function StudentShell({ children }: { children: React.ReactNode }) {
   const { profile, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (loading) return;
@@ -58,7 +64,9 @@ export default function StudentShell({ children }: { children: React.ReactNode }
   };
 
   return (
-    <div className="student-portal min-h-dvh">
+    <StudentPortalProvider>
+      <div className="student-portal min-h-dvh">
+      <PushInAppBanner />
       <div className="lg:flex lg:min-h-dvh">
         <aside className="hidden lg:flex lg:flex-col lg:w-60 xl:w-64 shrink-0 border-r border-sky-100 bg-white/70 backdrop-blur-sm sticky top-0 h-dvh">
           <div className="p-6 border-b border-sky-50">
@@ -79,8 +87,19 @@ export default function StudentShell({ children }: { children: React.ReactNode }
               메뉴
             </p>
             <NavLinks vertical />
+            <Link
+              href="/student/settings"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mt-1 ${
+                pathname.startsWith('/student/settings')
+                  ? 'bg-sky-100 text-sky-800'
+                  : 'text-slate-600 hover:bg-sky-50 hover:text-sky-800'
+              }`}
+            >
+              <i className="ri-settings-3-line text-lg text-sky-600" aria-hidden />
+              내 정보 · 학원 연결
+            </Link>
           </nav>
-          <div className="p-4 border-t border-sky-50">
+          <div className="p-4 border-t border-sky-50 space-y-1">
             <button
               type="button"
               onClick={handleLogout}
@@ -92,7 +111,7 @@ export default function StudentShell({ children }: { children: React.ReactNode }
         </aside>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="student-portal-header sticky top-0 z-50 lg:hidden">
+          <header className="student-portal-header sticky top-0 z-50 lg:hidden mobile-top-safe">
             <div className="px-4 sm:px-5">
               <div className="h-14 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
@@ -108,6 +127,14 @@ export default function StudentShell({ children }: { children: React.ReactNode }
                 </div>
                 <button
                   type="button"
+                  onClick={() => router.push('/student/settings')}
+                  className="text-xs font-medium text-slate-600 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer"
+                  aria-label="내 정보 설정"
+                >
+                  설정
+                </button>
+                <button
+                  type="button"
                   onClick={handleLogout}
                   className="text-xs font-medium text-slate-600 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer"
                 >
@@ -120,11 +147,13 @@ export default function StudentShell({ children }: { children: React.ReactNode }
             </div>
           </header>
 
-          <main className="student-portal-main flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 lg:py-10 pb-16 lg:pb-10">
+          <main className="student-portal-main flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 lg:py-10 pb-16 lg:pb-10 mobile-bottom-safe">
             {children}
           </main>
         </div>
       </div>
+      <StudentChatFab />
     </div>
+    </StudentPortalProvider>
   );
 }

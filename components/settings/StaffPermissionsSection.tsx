@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { ErrorBanner } from '@/components/ui/DataStates';
 import { computePermissions, DEFAULT_PERMISSIONS, type PermissionKey } from '@/lib/permissions';
+import { setStaffPermissionOverride, updateStaffMemberRole } from '@/lib/staffPermissions';
+import { toDbRole } from '@/lib/roles';
 import { cn } from '@/lib/cn';
 
 type StaffMember = {
@@ -40,6 +42,36 @@ const EDITABLE_PERMISSIONS: { key: PermissionKey; label: string; roles: string[]
   { key: 'billing.view', label: '수강료 조회', roles: ['teacher'] },
 ];
 
+function PermissionSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      className={cn(
+        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-0 p-0.5 transition-colors duration-200',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600',
+        checked ? 'bg-blue-600' : 'bg-slate-300'
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          'pointer-events-none block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200',
+          checked ? 'translate-x-5' : 'translate-x-0'
+        )}
+      />
+    </button>
+  );
+}
+
 function StaffRow({
   member,
   onRoleChange,
@@ -53,6 +85,17 @@ function StaffRow({
   const [expanded, setExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
+  const [rowError, setRowError] = useState('');
+
+  useEffect(() => {
+    setRole(member.role);
+  }, [member.role]);
+
+  const showToast = (msg: string, isError = false) => {
+    setToast(msg);
+    if (isError) setRowError(msg);
+    setTimeout(() => setToast(''), isError ? 4000 : 2000);
+  };
 
   const loadOverrides = useCallback(async () => {
     if (!academy?.id) return;
@@ -72,45 +115,38 @@ function StaffRow({
 
   const handleRoleSave = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from('users')
-      .update({ role })
-      .eq('id', member.id);
+    setRowError('');
+    const dbRole = toDbRole(role);
+    const { error } = await updateStaffMemberRole(member.id, dbRole);
     setSaving(false);
-    if (!error) {
-      setToast('역할이 변경되었습니다.');
-      setTimeout(() => setToast(''), 2000);
-      onRoleChange();
+    if (error) {
+      showToast(error, true);
+      return;
     }
+    showToast('역할이 변경되었습니다.');
+    onRoleChange();
   };
 
   const togglePermission = async (key: PermissionKey) => {
     if (!academy?.id) return;
+    setRowError('');
     const base = new Set<PermissionKey>(
       DEFAULT_PERMISSIONS[role === 'owner' ? 'owner' : role] ?? []
     );
     const currentlyGranted = effective.has(key);
     const baseGranted = base.has(key);
-    // 현재 상태와 반대로 override 설정
     const newGranted = !currentlyGranted;
 
-    if (newGranted === baseGranted) {
-      // 기본값으로 돌아감 → override 삭제
-      await supabase
-        .from('staff_permission_overrides')
-        .delete()
-        .eq('user_id', member.id)
-        .eq('academy_id', academy.id)
-        .eq('permission_key', key);
-    } else {
-      // upsert override
-      await supabase
-        .from('staff_permission_overrides')
-        .upsert(
-          { user_id: member.id, academy_id: academy.id, permission_key: key, granted: newGranted },
-          { onConflict: 'user_id,academy_id,permission_key' }
-        );
+    const { error } = await setStaffPermissionOverride(
+      member.id,
+      key,
+      newGranted === baseGranted ? null : newGranted
+    );
+    if (error) {
+      showToast(error, true);
+      return;
     }
+    showToast('권한이 저장되었습니다.');
     await loadOverrides();
   };
 
@@ -163,7 +199,16 @@ function StaffRow({
       </div>
 
       {toast && (
-        <p className="text-xs text-emerald-700 bg-emerald-50 px-4 py-2">{toast}</p>
+        <p
+          className={cn(
+            'text-xs px-4 py-2',
+            rowError && toast === rowError
+              ? 'text-red-700 bg-red-50'
+              : 'text-emerald-700 bg-emerald-50'
+          )}
+        >
+          {toast}
+        </p>
       )}
 
       {/* 권한 상세 */}
@@ -174,30 +219,20 @@ function StaffRow({
           ) : (
             editableForRole.map((p) => {
               const granted = effective.has(p.key);
+              const isCustom = overrides.some((o) => o.permission_key === p.key);
               return (
-                <label key={p.key} className="flex items-center gap-3 cursor-pointer select-none">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={granted}
-                    onClick={() => void togglePermission(p.key)}
-                    className={cn(
-                      'relative w-9 h-5 rounded-full transition-colors shrink-0',
-                      granted ? 'bg-blue-600' : 'bg-slate-300'
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
-                        granted ? 'translate-x-4' : 'translate-x-0.5'
-                      )}
-                    />
-                  </button>
-                  <span className="text-sm text-slate-700">{p.label}</span>
-                  {overrides.some((o) => o.permission_key === p.key) && (
-                    <span className="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">커스텀</span>
+                <div key={p.key} className="flex items-center gap-3 py-1.5 min-h-8">
+                  <PermissionSwitch
+                    checked={granted}
+                    onChange={() => void togglePermission(p.key)}
+                  />
+                  <span className="flex-1 min-w-0 text-sm text-slate-700 leading-snug">{p.label}</span>
+                  {isCustom && (
+                    <span className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-100">
+                      커스텀
+                    </span>
                   )}
-                </label>
+                </div>
               );
             })
           )}

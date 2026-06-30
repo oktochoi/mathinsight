@@ -19,11 +19,11 @@ import {
 import type { DashboardStats } from '@/types/database';
 
 const CHART_COLORS = {
-  blue: '#2563eb',
-  blueLight: '#93c5fd',
-  green: '#059669',
-  orange: '#ea580c',
-  slate: '#94a3b8',
+  blue: 'var(--chart-blue)',
+  blueLight: 'var(--chart-blue-light)',
+  green: 'var(--chart-green)',
+  orange: 'var(--chart-orange)',
+  slate: 'var(--chart-slate)',
 };
 
 const tooltipStyle = {
@@ -185,7 +185,7 @@ export function StudentCountChart({
 
 export function RetentionStatusChart({ high, medium }: { high: number; medium: number }) {
   const data = [
-    { name: '상담 우선', value: high, color: '#ef4444' },
+    { name: '상담 우선', value: high, color: 'var(--chart-red)' },
     { name: '상담 권장', value: medium, color: CHART_COLORS.orange },
   ].filter((d) => d.value > 0);
 
@@ -203,8 +203,8 @@ export function RetentionStatusChart({ high, medium }: { high: number; medium: n
         </Pie>
       </PieChart>
       <ul className="space-y-1 text-xs min-w-0" style={{ color: 'var(--app-ink-2)' }}>
-        <li>상담 우선 <span className="font-bold" style={{ color: '#dc2626' }}>{high}명</span></li>
-        <li>상담 권장 <span className="font-bold" style={{ color: '#ea580c' }}>{medium}명</span></li>
+        <li>상담 우선 <span className="font-bold app-text-danger">{high}명</span></li>
+        <li>상담 권장 <span className="font-bold" style={{ color: 'var(--chart-orange)' }}>{medium}명</span></li>
       </ul>
     </div>
   );
@@ -301,7 +301,7 @@ export function TodayAttendanceDonut({
   const data = [
     { name: '출석', value: present, color: CHART_COLORS.green },
     { name: '지각', value: late, color: CHART_COLORS.orange },
-    { name: '결석', value: absent, color: '#ef4444' },
+    { name: '결석', value: absent, color: 'var(--chart-red)' },
   ].filter((d) => d.value > 0);
 
   return (

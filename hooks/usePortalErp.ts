@@ -109,8 +109,19 @@ export function usePortalHomework(studentId?: string, classId?: string | null) {
   return { assignments, recentHw, loading };
 }
 
+export type PortalExamWithScore = Exam & {
+  score?: ExamScore;
+  classRank?: {
+    rank: number;
+    total: number;
+    topPct: number;
+    classAvg: number;
+    delta: number;
+  };
+};
+
 export function usePortalExams(studentId?: string) {
-  const [exams, setExams] = useState<(Exam & { score?: ExamScore })[]>([]);
+  const [exams, setExams] = useState<PortalExamWithScore[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -125,10 +136,48 @@ export function usePortalExams(studentId?: string) {
         .order('created_at', { ascending: false })
         .limit(8);
 
-      const list = ((scores ?? []) as (ExamScore & { exams: Exam })[]).map((row) => ({
+      let list = ((scores ?? []) as (ExamScore & { exams: Exam })[]).map((row) => ({
         ...row.exams,
         score: row,
       }));
+
+      const examIds = [...new Set(list.map((e) => e.id))];
+      if (examIds.length > 0) {
+        const { data: allScores } = await supabase
+          .from('exam_scores')
+          .select('exam_id, score')
+          .in('exam_id', examIds)
+          .not('score', 'is', null);
+
+        const byExam = new Map<string, number[]>();
+        for (const row of allScores ?? []) {
+          const score = row.score as number;
+          const arr = byExam.get(row.exam_id as string) ?? [];
+          arr.push(score);
+          byExam.set(row.exam_id as string, arr);
+        }
+
+        list = list.map((exam) => {
+          const values = byExam.get(exam.id) ?? [];
+          const myScore = exam.score?.score;
+          if (myScore == null || values.length < 2) return exam;
+          const classAvg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+          const higher = values.filter((v) => v > myScore).length;
+          const rank = higher + 1;
+          const topPct = Math.max(1, Math.round((rank / values.length) * 100));
+          return {
+            ...exam,
+            classRank: {
+              rank,
+              total: values.length,
+              topPct,
+              classAvg,
+              delta: myScore - classAvg,
+            },
+          };
+        });
+      }
+
       setExams(list);
       setLoading(false);
     };

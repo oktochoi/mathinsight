@@ -51,6 +51,9 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+const STATS_CACHE_TTL_MS = 5 * 60 * 1000;
+let statsCache: { key: string; at: number; data: DashboardStats } | null = null;
+
 export function useDashboardStats() {
   const { profile } = useAuth();
   const scope = useStaffScope();
@@ -66,12 +69,25 @@ export function useDashboardStats() {
       return;
     }
     if (scope.loading) return;
-    setLoading(true);
+
     setError(null);
     const academyId = profile.academy_id;
     const today = todayStr();
     const dashboardMode: DashboardStats['dashboardMode'] =
       scope.isTeacher && !scope.isOwner ? 'teacher' : 'owner';
+
+    const cacheKey = `${academyId}:${dataVersion}:${dashboardMode}:${scope.classIds.join(',')}`;
+    if (
+      statsCache &&
+      statsCache.key === cacheKey &&
+      Date.now() - statsCache.at < STATS_CACHE_TTL_MS
+    ) {
+      setStats(statsCache.data);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     const teacherClassSet =
       dashboardMode === 'teacher' && scope.classIds.length > 0
         ? new Set(scope.classIds)
@@ -442,6 +458,7 @@ export function useDashboardStats() {
     });
 
     setStats(partialForChecklist);
+    statsCache = { key: cacheKey, at: Date.now(), data: partialForChecklist };
     setLoading(false);
   }, [
     profile?.academy_id,
@@ -450,6 +467,7 @@ export function useDashboardStats() {
     scope.loading,
     scope.classIds.join(','),
     scope.studentIds.join(','),
+    dataVersion,
   ]);
 
   useEffect(() => {

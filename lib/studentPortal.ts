@@ -43,22 +43,22 @@ export function studentPortalEmail(s: Student): string {
 
 export function isParentLinked(
   student: Student,
-  connections?: StudentConnection[]
+  connections?: Pick<StudentConnection, 'relationship'>[]
 ): boolean {
   if (connections?.length) {
     return connections.some((c) => c.relationship !== 'student');
   }
-  return !!student.parent_user_id;
+  return false;
 }
 
 export function isStudentPortalLinked(
   student: Student,
-  connections?: StudentConnection[]
+  connections?: Pick<StudentConnection, 'relationship'>[]
 ): boolean {
   if (connections?.length) {
     return connections.some((c) => c.relationship === 'student');
   }
-  return !!student.student_user_id;
+  return false;
 }
 
 export type ConnectionBundle = {

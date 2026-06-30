@@ -49,12 +49,7 @@ export async function fetchParentLinkedStudents(userId: string): Promise<{
   }
 
   if (studentIds.size === 0) {
-    const { data: legacy, error: legacyErr } = await supabase
-      .from('students')
-      .select('*, academies(id, name)')
-      .eq('parent_user_id', userId);
-    if (legacyErr) return { students: [], error: legacyErr.message };
-    return { students: (legacy ?? []) as Student[], error: null };
+    return { students: [], error: null };
   }
 
   const { data, error } = await supabase
@@ -86,12 +81,7 @@ export async function fetchStudentSelfProfile(userId: string): Promise<{
   const studentId = link?.student_id as string | undefined;
 
   if (!studentId) {
-    const { data: legacy, error: legacyErr } = await supabase
-      .from('students')
-      .select('*, academies(id, name)')
-      .eq('student_user_id', userId)
-      .maybeSingle();
-    return { student: (legacy as Student) ?? null, error: legacyErr?.message ?? null };
+    return { student: null, error: null };
   }
 
   const { data, error } = await supabase
@@ -131,11 +121,5 @@ export async function parentCanAccessStudent(
     .maybeSingle();
   if (data) return true;
 
-  const { data: legacy } = await supabase
-    .from('students')
-    .select('id')
-    .eq('id', studentId)
-    .eq('parent_user_id', parentUserId)
-    .maybeSingle();
-  return !!legacy;
+  return false;
 }

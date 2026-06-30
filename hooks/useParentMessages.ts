@@ -59,6 +59,28 @@ export function useParentMessagesStaff() {
     fetchMessages();
   }, [fetchMessages, dataVersion]);
 
+  useEffect(() => {
+    if (!profile?.academy_id) return;
+    const channel = supabase
+      .channel(`parent-messages-staff-${profile.academy_id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'parent_messages',
+          filter: `academy_id=eq.${profile.academy_id}`,
+        },
+        () => {
+          void fetchMessages();
+        }
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [profile?.academy_id, fetchMessages]);
+
   const replyMessage = async (id: string, staffReply: string, aiDraft?: string) => {
     if (!profile?.id) return { error: '로그인 정보가 없습니다.' };
     const { error: err } = await supabase

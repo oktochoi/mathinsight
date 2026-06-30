@@ -1,12 +1,8 @@
 'use client';
 
-import type { Exam, ExamScore } from '@/types/database';
+import type { PortalExamWithScore } from '@/hooks/usePortalErp';
 
-export function StudentExamsPanel({
-  exams,
-}: {
-  exams: (Exam & { score?: ExamScore })[];
-}) {
+export function StudentExamsPanel({ exams }: { exams: PortalExamWithScore[] }) {
   if (exams.length === 0) {
     return (
       <p className="text-sm text-center py-6 student-card-soft" style={{ color: 'var(--app-ink-3)' }}>
@@ -22,9 +18,24 @@ export function StudentExamsPanel({
           key={exam.id}
           className="student-card-soft p-4 flex items-center justify-between gap-3"
         >
-          <div>
+          <div className="min-w-0">
             <p className="font-bold" style={{ color: 'var(--app-ink)' }}>{exam.name}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--app-ink-3)' }}>{exam.exam_date}</p>
+            {exam.classRank && (
+              <p className="text-xs mt-2" style={{ color: 'var(--app-ink-2)' }}>
+                반 평균 {exam.classRank.classAvg}점
+                <span
+                  className="ml-1 font-medium"
+                  style={{ color: exam.classRank.delta >= 0 ? 'var(--app-success)' : 'var(--app-danger)' }}
+                >
+                  ({exam.classRank.delta >= 0 ? '+' : ''}
+                  {exam.classRank.delta})
+                </span>
+                <span className="ml-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold app-inline-success">
+                  상위 {exam.classRank.topPct}% · {exam.classRank.rank}/{exam.classRank.total}위
+                </span>
+              </p>
+            )}
             {exam.score?.feedback_memo && (
               <p className="text-sm text-sky-800 mt-2">{exam.score.feedback_memo}</p>
             )}

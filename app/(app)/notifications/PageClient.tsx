@@ -26,9 +26,9 @@ const STATUS_LABELS: Record<NotificationStatus, string> = {
 
 const STATUS_STYLES: Record<NotificationStatus, CSSProperties> = {
   queued: { background: 'var(--app-surface-2)', color: 'var(--app-ink-2)', border: '1px solid var(--app-border)' },
-  sent: { background: '#f0fdf4', color: '#065f46', border: '1px solid #a7f3d0' },
-  failed: { background: '#fff1f2', color: '#be123c', border: '1px solid #fecdd3' },
-  demo: { background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a' },
+  sent: { background: 'var(--color-success-bg)', color: 'var(--color-success-text)', border: '1px solid var(--color-success-border)' },
+  failed: { background: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', border: '1px solid var(--color-danger-border)' },
+  demo: { background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', border: '1px solid var(--color-warning-border)' },
 };
 
 const TEMPLATES = [
@@ -85,7 +85,7 @@ export default function NotificationsPage() {
       <PageHeader title={STAFF_PAGES.notifications.title} />
       {error && <ErrorBanner message={error} />}
       {toast && (
-        <p className="text-sm rounded-xl px-3 py-2" style={{ background: '#f0fdf4', border: '1px solid #a7f3d0', color: '#065f46' }}>
+        <p className="text-sm rounded-xl px-3 py-2 app-inline-success">
           {toast}
         </p>
       )}

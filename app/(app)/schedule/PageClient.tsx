@@ -62,10 +62,10 @@ function nowPosition(): number | null {
 
 /* ─── Type color map ─── */
 const TYPE_COLORS: Record<ScheduleType, { bg: string; border: string; text: string }> = {
-  regular:  { bg: '#eef2ff', border: '#6366f1', text: '#3730a3' },
-  makeup:   { bg: '#e0f2fe', border: '#0284c7', text: '#075985' },
-  special:  { bg: '#f5f3ff', border: '#7c3aed', text: '#5b21b6' },
-  canceled: { bg: '#f1f5f9', border: '#94a3b8', text: '#64748b' },
+  regular:  { bg: 'var(--event-regular-bg)', border: 'var(--event-regular-border)', text: 'var(--event-regular-text)' },
+  makeup:   { bg: 'var(--event-makeup-bg)', border: 'var(--event-makeup-border)', text: 'var(--event-makeup-text)' },
+  special:  { bg: 'var(--event-special-bg)', border: 'var(--event-special-border)', text: 'var(--event-special-text)' },
+  canceled: { bg: 'var(--event-canceled-bg)', border: 'var(--event-canceled-border)', text: 'var(--event-canceled-text)' },
 };
 
 /* ─── Day header format ─── */
@@ -273,11 +273,10 @@ function SchedulePageContent() {
                 <button
                   type="button"
                   onClick={() => setWeekAnchor(new Date())}
-                  className="px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer"
+                  className="px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer app-border-accent"
                   style={{
                     background: 'var(--app-accent-bg)',
                     color: 'var(--app-accent-text)',
-                    border: '1px solid #bfdbfe',
                   }}
                 >
                   이번 주
@@ -287,12 +286,7 @@ function SchedulePageContent() {
               <div className="ml-auto flex items-center gap-2">
                 <Link
                   href="/counseling?step=intake"
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                  style={{
-                    background: '#ecfeff',
-                    color: '#155e75',
-                    border: '1px solid #a5f3fc',
-                  }}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors app-inline-info"
                 >
                   신입 상담
                 </Link>
@@ -338,7 +332,7 @@ function SchedulePageContent() {
                         'text-sm font-bold mx-auto mt-0.5 w-7 h-7 rounded-full flex items-center justify-center',
                         isToday ? 'text-white' : ''
                       )}
-                      style={isToday ? { background: 'var(--app-accent)', color: '#fff' } : { color: 'var(--app-ink)' }}
+                      style={isToday ? { background: 'var(--app-accent)', color: 'var(--app-on-accent)' } : { color: 'var(--app-ink)' }}
                     >
                       {dt.getDate()}
                     </div>
@@ -377,7 +371,7 @@ function SchedulePageContent() {
                       className="relative"
                       style={{
                         borderLeft: '1px solid var(--app-border)',
-                        background: isToday ? '#fafbff' : 'transparent',
+                        background: isToday ? 'var(--app-accent-muted-bg)' : 'transparent',
                       }}
                     >
                       {/* Hour grid lines */}
@@ -442,7 +436,7 @@ function SchedulePageContent() {
                 )
               )}
               <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--app-ink-3)' }}>
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: '#0891b2' }} />
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--app-info)' }} />
                 신입 상담
               </span>
             </div>
@@ -506,11 +500,8 @@ function SchedulePageContent() {
                   </div>
 
                   {selectedIntakes.length > 0 && (
-                    <div
-                      className="rounded-xl p-3 space-y-2"
-                      style={{ background: '#ecfeff', border: '1px solid #a5f3fc' }}
-                    >
-                      <p className="text-[10px] font-semibold text-cyan-900">신입 상담</p>
+                    <div className="rounded-xl p-3 space-y-2 app-card-info">
+                      <p className="text-[10px] font-semibold app-text-info">신입 상담</p>
                       <ul className="space-y-2">
                         {selectedIntakes.map((intake) => (
                           <li key={intake.id} className="flex items-center justify-between gap-2">
@@ -575,16 +566,13 @@ function SchedulePageContent() {
                       })()}
 
                       {detailAttention.length > 0 && (
-                        <div
-                          className="rounded-xl p-3"
-                          style={{ background: '#fffbeb', border: '1px solid #fde68a' }}
-                        >
-                          <p className="text-[10px] font-semibold mb-2" style={{ color: '#92400e' }}>
+                        <div className="rounded-xl p-3 app-card-warning">
+                          <p className="text-[10px] font-semibold mb-2 app-card-warning-title">
                             이번 수업 확인
                           </p>
                           <ul className="space-y-1">
                             {detailAttention.slice(0, 4).map((a) => (
-                              <li key={a.id} className="text-xs flex gap-1.5" style={{ color: '#b45309' }}>
+                              <li key={a.id} className="text-xs flex gap-1.5 app-card-warning-body">
                                 <span className="shrink-0">·</span>
                                 <span>{a.name}: {a.reason}</span>
                               </li>
@@ -655,7 +643,7 @@ function SchedulePageContent() {
                           className="w-full text-left rounded-xl px-3 py-2.5 transition-all cursor-pointer"
                           style={{
                             background: isActive ? 'var(--app-accent-bg)' : 'var(--app-surface-2)',
-                            border: `1px solid ${isActive ? '#bfdbfe' : 'var(--app-border)'}`,
+                            border: `1px solid ${isActive ? 'var(--app-accent-border)' : 'var(--app-border)'}`,
                           }}
                         >
                           <div className="flex items-center justify-between gap-2">
@@ -664,7 +652,7 @@ function SchedulePageContent() {
                             </p>
                             {isActive && (
                               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                                style={{ background: 'var(--app-accent)', color: '#fff' }}>
+                                style={{ background: 'var(--app-accent)', color: 'var(--app-on-accent)' }}>
                                 진행 중
                               </span>
                             )}

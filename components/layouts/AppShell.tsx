@@ -4,7 +4,11 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import TopNav from '@/components/TopNav';
+import { PushInAppBanner } from '@/components/PushInAppBanner';
+import { SubscriptionBanner } from '@/components/subscription/SubscriptionBanner';
+import { ChatFloatingWidget } from '@/components/chat/ChatFloatingWidget';
 import { useAuth } from '@/context/AuthContext';
+import { isStaffProfile } from '@/lib/profileIntegrity';
 import { cn } from '@/lib/cn';
 
 function SidebarWithSearchParams(props: {
@@ -47,6 +51,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div
       className="min-h-screen min-h-[100dvh] w-full overflow-x-hidden app-bg"
     >
+      <PushInAppBanner />
+      <SubscriptionBanner />
       <Suspense fallback={null}>
         <SidebarWithSearchParams
           open={navOpen}
@@ -71,10 +77,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <TopNav onMenuOpen={() => setNavOpen(true)} />
-        <main className="flex-1 min-w-0 w-full max-w-full overflow-x-hidden p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 min-w-0 w-full max-w-full overflow-x-hidden p-4 sm:p-6 lg:p-8 mobile-bottom-safe">
           <div className="w-full min-w-0 max-w-full">{children}</div>
         </main>
       </div>
+      {profile && isStaffProfile(profile) && <ChatFloatingWidget variant="staff" />}
     </div>
   );
 }

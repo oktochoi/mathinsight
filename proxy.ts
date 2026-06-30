@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/middleware';
 import { isProtectedAppPath, portalRedirectForProtectedPath } from '@/lib/authRedirectPolicy';
 import { authGateRedirect, isAuthGatePath, readUserDbRole } from '@/lib/middlewareAuth';
+import { subscriptionRedirectPath } from '@/lib/subscription';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
 
 export async function proxy(request: NextRequest) {
@@ -69,6 +70,15 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(redirect);
     }
 
+    const subDest = await subscriptionRedirectPath(path, profile, rawDbRole);
+    if (subDest && subDest !== path) {
+      const redirect = request.nextUrl.clone();
+      const subUrl = new URL(subDest, request.url);
+      redirect.pathname = subUrl.pathname;
+      redirect.search = subUrl.search;
+      return NextResponse.redirect(redirect);
+    }
+
     return response;
   } catch {
     return NextResponse.next({ request: { headers: request.headers } });
@@ -115,6 +125,13 @@ export const config = {
     '/analytics/:path*',
     '/settings',
     '/settings/:path*',
+    '/subscribe',
+    '/classes',
+    '/classes/:path*',
+    '/billing',
+    '/billing/:path*',
+    '/notifications',
+    '/notifications/:path*',
     '/parent',
     '/parent/:path*',
     '/student',

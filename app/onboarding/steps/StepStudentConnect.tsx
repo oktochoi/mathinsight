@@ -9,8 +9,8 @@ export default function StepStudentConnect({ onNext }: Props) {
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-bold text-slate-900">학원 연결</h2>
-        <p className="text-xs text-slate-500 mt-0.5">
-          학원에서 받은 학원 코드와 내 이름(학원 등록명)을 입력하세요. 나중에 연결할 수도 있습니다.
+        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+          학원에서 받은 <strong>학원 코드</strong>를 입력하고 본인 정보를 확인하면 바로 연결됩니다.
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export default function StepStudentConnect({ onNext }: Props) {
         onClick={onNext}
         className="w-full py-3 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold cursor-pointer hover:bg-slate-50 transition-colors"
       >
-        나중에 연결하기
+        나중에 연결하고 시작하기
       </button>
     </div>
   );

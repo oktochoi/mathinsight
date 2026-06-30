@@ -21,8 +21,12 @@ export interface Academy {
   id: string;
   name: string;
   owner_id: string;
-  /** 마이그레이션 012 이후 */
+  /** 공개 학원 코드 (예: HAN823) — 마이그레이션 044 */
+  academy_code?: string;
+  /** 레거시 EDU-XXXX-XX — 호환용 */
   connection_code?: string;
+  /** 공개 코드 마지막 발급 시각 (052) */
+  academy_code_issued_at?: string;
   created_at: string;
 }
 
@@ -36,6 +40,8 @@ export interface UserProfile {
   gender?: 'male' | 'female' | 'other' | null;
   birthdate?: string | null;
   avatar_url?: string | null;
+  school?: string | null;
+  grade?: string | null;
   onboarding_complete?: boolean;
   created_at: string;
 }
@@ -68,11 +74,13 @@ export interface StudentConnectionRequest {
   user_id: string;
   relationship: ConnectionRelationship;
   requested_student_name: string | null;
+  requester_school?: string | null;
+  requester_grade?: string | null;
   status: ConnectionRequestStatus;
   created_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
-  user?: Pick<UserProfile, 'id' | 'email' | 'name'> | null;
+  user?: Pick<UserProfile, 'id' | 'email' | 'name' | 'school' | 'grade'> | null;
   student?: Pick<Student, 'id' | 'name' | 'grade'> | null;
 }
 
@@ -88,6 +96,7 @@ export interface Student {
   name: string;
   school: string | null;
   grade: string;
+  phone?: string | null;
   status: StudentStatus;
   enrollment_status: EnrollmentStatus;
   registered_at: string | null;
@@ -911,4 +920,50 @@ export interface StaffScope {
   isTeacher: boolean;
   isOwner: boolean;
   loading: boolean;
+}
+
+export type ChatChannelType = 'direct' | 'class_group';
+
+export type ChatDirectAudience = 'parent' | 'student';
+
+export interface ChatChannel {
+  id: string;
+  academy_id: string;
+  type: ChatChannelType;
+  class_id: string | null;
+  student_id: string | null;
+  direct_audience?: ChatDirectAudience | null;
+  display_name: string | null;
+  created_at: string;
+  updated_at: string;
+  students?: Pick<Student, 'id' | 'name' | 'grade'> | null;
+  classes?: Pick<ClassRow, 'id' | 'name'> | null;
+}
+
+export interface ChatMessage {
+  id: string;
+  channel_id: string;
+  sender_id: string;
+  sender_role: string;
+  body: string;
+  created_at: string;
+  sender?: Pick<UserProfile, 'id' | 'name'> | null;
+}
+
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'expired' | 'canceled';
+export type SubscriptionPlan = 'free' | 'starter' | 'growth' | 'pro';
+
+export interface AcademySubscription {
+  id: string;
+  academy_id: string;
+  status: SubscriptionStatus;
+  plan: SubscriptionPlan;
+  trial_started_at: string | null;
+  trial_ends_at: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  payment_provider: string;
+  external_subscription_id: string | null;
+  created_at: string;
+  updated_at: string;
 }

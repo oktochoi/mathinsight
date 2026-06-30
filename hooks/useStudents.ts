@@ -80,9 +80,34 @@ export function useStudents() {
     return { error: err?.message ?? null, id: data?.id as string | undefined };
   };
 
+  const bulkAddStudents = async (
+    rows: { name: string; grade: string; school: string; class_id?: string | null }[]
+  ) => {
+    if (!profile?.academy_id) return { error: '학원 정보가 없습니다.', added: 0 };
+    if (rows.length === 0) return { error: '등록할 학생이 없습니다.', added: 0 };
+
+    const payload = rows.map((row) => ({
+      academy_id: profile.academy_id,
+      name: row.name,
+      grade: row.grade,
+      class_id: row.class_id ?? null,
+      school: row.school || null,
+      status: 'stable' as const,
+      enrollment_status: 'active' as const,
+      registered_at: new Date().toISOString().slice(0, 10),
+    }));
+
+    const { data, error: err } = await supabase.from('students').insert(payload).select('id');
+    if (!err) bumpDataVersion();
+    return {
+      error: err?.message ?? null,
+      added: data?.length ?? 0,
+    };
+  };
+
   const updateStudent = async (
     id: string,
-    payload: Partial<Pick<Student, 'name' | 'grade' | 'class_id' | 'school' | 'status' | 'enrollment_status' | 'withdrawal_reason' | 'withdrawn_at'>>
+    payload: Partial<Pick<Student, 'name' | 'grade' | 'class_id' | 'school' | 'phone' | 'status' | 'enrollment_status' | 'registered_at' | 'withdrawal_reason' | 'withdrawn_at'>>
   ) => {
     const { error: err } = await supabase.from('students').update(payload).eq('id', id);
     if (!err) bumpDataVersion();
@@ -123,6 +148,7 @@ export function useStudents() {
     error,
     refetch: fetchStudents,
     addStudent,
+    bulkAddStudents,
     updateStudent,
     withdrawStudent,
     deleteStudent,

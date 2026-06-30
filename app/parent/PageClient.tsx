@@ -1,12 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { parentReportPath } from '@/lib/documentRoutes';
-import { sanitizeParentReportText } from '@/lib/parentReportFormat';
+import { useMemo, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { usePortalChild } from '@/context/PortalChildContext';
 import { useLessonLogs } from '@/hooks/useLessonLogs';
-import { useParentReports } from '@/hooks/useParentReports';
 import { generateLearningSummary } from '@/lib/reportGenerator';
 import { calculateHomeworkTrend, calculateScoreTrend } from '@/lib/analytics';
 import { PageLoader, EmptyState, ErrorBanner } from '@/components/ui/DataStates';
@@ -16,23 +13,15 @@ import { ConnectStudentPanel } from '@/components/portal/ConnectStudentPanel';
 import { ParentAgentChat } from '@/components/portal/ParentAgentChat';
 import { ParentRecentLessons } from '@/components/portal/ParentRecentLessons';
 import { ParentScoreChart } from '@/components/portal/ParentScoreChart';
-import { ParentAttendancePanel } from '@/components/portal/ParentAttendancePanel';
 import { ParentHomeworkPanel } from '@/components/portal/ParentHomeworkPanel';
 import { ParentGradesPanel } from '@/components/portal/ParentGradesPanel';
-import { ParentCounselingPanel } from '@/components/portal/ParentCounselingPanel';
-import { PortalSchedule } from '@/components/portal/PortalSchedule';
 import { PortalSection, PortalStat, PortalSubheading } from '@/components/portal/ParentUI';
-import { fetchParentLinkedStudents } from '@/lib/portalStudents';
+import { ParentPortalSecondaryPanels } from '@/components/portal/ParentPortalSecondaryPanels';
 import { buildParentRecentChanges } from '@/lib/learningFlow';
-import { usePortalAttendance, usePortalHomework, usePortalExams } from '@/hooks/usePortalErp';
-import { usePortalPayments } from '@/hooks/useBilling';
-import { usePortalCounselingSessions } from '@/hooks/useCounselingSessions';
-import { usePortalAnnouncements } from '@/hooks/useAnnouncements';
-import { useParentMessagesPortal } from '@/hooks/useParentMessages';
-import { ParentPaymentsPanel } from '@/components/portal/ParentPaymentsPanel';
-import { ParentNoticesPanel } from '@/components/portal/ParentNoticesPanel';
-import { ParentMessagesPanel } from '@/components/portal/ParentMessagesPanel';
+import { usePortalHomework, usePortalExams } from '@/hooks/usePortalErp';
+import { useParentReports } from '@/hooks/useParentReports';
 import { usePortalClassProgress } from '@/hooks/useCurriculum';
+import { formatPhoneDisplay } from '@/lib/phone';
 import { cn } from '@/lib/cn';
 
 function homeworkHint(rate: number, hasLogs: boolean): { text: string; warn: boolean } {
@@ -42,48 +31,29 @@ function homeworkHint(rate: number, hasLogs: boolean): { text: string; warn: boo
   return { text: '챙겨 주세요', warn: true };
 }
 
-function pickDefaultChild(students: Student[]): string {
-  const sorted = [...students].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-  return sorted[0]?.id ?? '';
-}
-
 export default function ParentPage() {
   const { profile } = useAuth();
-  const [children, setChildren] = useState<Student[]>([]);
-  const [selectedId, setSelectedId] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { children, child, selectedId, setSelectedId, loading, error, reload } = usePortalChild();
   const [showAddChild, setShowAddChild] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    if (!profile?.id) return;
-    setLoading(true);
-    const { students, error: err } = await fetchParentLinkedStudents(profile.id);
-
-    if (err) setError('자녀 정보를 불러오지 못했습니다.');
-    else {
-      const sorted = [...students].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-      setChildren(sorted);
-      setSelectedId(pickDefaultChild(sorted));
-    }
-    setLoading(false);
-  }, [profile?.id]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  const child = children.find((c) => c.id === selectedId);
-  const { logs } = useLessonLogs({ studentId: selectedId, limit: 30 });
-  const { reports, loading: reportsLoading } = useParentReports(selectedId);
-  const { summary: attendanceSummary } = usePortalAttendance(selectedId);
+  const { logs } = useLessonLogs({ studentId: selectedId || undefined, limit: 30 });
   const { assignments, recentHw } = usePortalHomework(selectedId, child?.class_id);
   const { exams: portalExams } = usePortalExams(selectedId);
-  const { sessions: counselingSessions } = usePortalCounselingSessions(selectedId);
-  const { payments: portalPayments, loading: paymentsLoading } = usePortalPayments(selectedId);
-  const { items: notices } = usePortalAnnouncements(selectedId, child?.class_id);
-  const { messages: parentMessages, sendMessage } = useParentMessagesPortal(selectedId);
+  const { reports: parentReports } = useParentReports(selectedId || undefined);
   const { progress: classProgress } = usePortalClassProgress(child?.class_id);
+
+  const recentReportCount = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 14);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    return parentReports.filter((r) => r.created_at.slice(0, 10) >= cutoffStr).length;
+  }, [parentReports]);
+
+  const summary = useMemo(
+    () => (child ? generateLearningSummary(logs, child.name) : ''),
+    [logs, child]
+  );
 
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} />;
@@ -97,16 +67,29 @@ export default function ParentPage() {
           </div>
           <h2 className="text-lg font-bold text-stone-900">자녀를 연결해 주세요</h2>
           <p className="text-sm text-stone-500 mt-1">
-            학원 코드와 자녀 이름을 입력하면 수업 기록을 볼 수 있습니다.
+            학원 코드를 입력하고 보호자 정보를 확인하면 바로 이용할 수 있습니다.
           </p>
         </div>
 
         <div className="parent-card p-5 space-y-4">
-          <ConnectStudentPanel mode="parent" onSubmitted={load} />
+          <ConnectStudentPanel
+            mode="parent"
+            onSubmitted={async () => {
+              const list = await reload();
+              if (!list?.length) {
+                // 연결 직후 목록 갱신 실패 시 안내는 context error로 처리
+              }
+            }}
+          />
         </div>
 
         <div className="parent-card p-4 text-xs text-stone-500 space-y-1">
-          <p>로그인 계정: <strong className="text-stone-700">{profile?.email}</strong></p>
+          <p>
+            로그인 아이디:{' '}
+            <strong className="text-stone-700">
+              {profile?.phone ? formatPhoneDisplay(profile.phone) : profile?.email}
+            </strong>
+          </p>
           <p>코드를 모르시면 자녀가 다니는 학원에 문의해 주세요.</p>
         </div>
       </div>
@@ -115,7 +98,6 @@ export default function ParentPage() {
 
   if (!child) return null;
 
-  const summary = generateLearningSummary(logs, child.name);
   const scoreTrend = calculateScoreTrend(logs);
   const hw = calculateHomeworkTrend(logs);
   const hwHint = homeworkHint(hw.recentRate, logs.length > 0);
@@ -166,7 +148,7 @@ export default function ParentPage() {
               <p className="text-xs font-semibold text-indigo-800 mb-3">자녀 연결 요청</p>
               <ConnectStudentPanel
                 mode="parent"
-                onSubmitted={() => { setShowAddChild(false); void load(); }}
+                onSubmitted={() => { setShowAddChild(false); void reload(); }}
               />
             </div>
           )}
@@ -229,7 +211,7 @@ export default function ParentPage() {
         <div className="lg:col-span-9">{heroCard}</div>
       </div>
 
-      {/* 본문: PC 2열 — 왼쪽 정보 / 오른쪽 AI 채팅 고정 */}
+      {/* 본문: PC 2열 — 왼쪽 핵심 정보 / 오른쪽 AI 채팅 */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         <div className="lg:col-span-7 xl:col-span-8 space-y-6 lg:space-y-8 min-w-0">
           <PortalSection
@@ -276,13 +258,9 @@ export default function ParentPage() {
             <ParentHomeworkPanel assignments={assignments} recentHw={recentHw} />
           </PortalSection>
 
-          <PortalSection id="attendance" step="3" title="출결" description="출석·지각·결석 기록입니다.">
-            <ParentAttendancePanel summary={attendanceSummary} />
-          </PortalSection>
-
           <PortalSection
             id="grades"
-            step="4"
+            step="3"
             title="최근 성적 변화"
             description="시험 점수와 추세입니다."
           >
@@ -292,99 +270,62 @@ export default function ParentPage() {
             </div>
           </PortalSection>
 
-          <PortalSection
-            id="reports"
-            step="5"
-            title="상담 리포트"
-            description="상담 후 선생님이 전달한 안내문입니다."
-          >
-            {reportsLoading ? (
-              <p className="text-sm text-stone-500">불러오는 중…</p>
-            ) : reports.length === 0 ? (
-              <p className="text-sm text-stone-500 parent-card-soft py-10 text-center">
-                아직 상담 리포트가 없습니다.
-              </p>
-            ) : (
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {reports.slice(0, 8).map((r) => (
-                  <li key={r.id}>
-                    <Link
-                      href={parentReportPath(r.id, 'parent')}
-                      className="group block parent-card-soft p-4 lg:p-5 h-full hover:border-indigo-200 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-indigo-700">
-                          {r.period_start} ~ {r.period_end}
-                        </p>
-                        <i
-                          className="ri-arrow-right-s-line text-stone-400 group-hover:text-indigo-600"
-                          aria-hidden
-                        />
-                      </div>
-                      <p className="text-sm text-stone-600 mt-2 line-clamp-3 leading-relaxed">
-                        {sanitizeParentReportText(r.report_text)}
-                      </p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+          {/* 모바일: AI 채팅을 핵심 정보 바로 아래 */}
+          <div id="ask" className="lg:hidden scroll-mt-24">
+            <PortalSection
+              step="4"
+              title="AI 학습 상담"
+              description="궁금한 점을 바로 질문해 보세요."
+            >
+              <ParentAgentChat
+                studentId={child.id}
+                studentName={child.name}
+                academyName={academyName}
+              />
+            </PortalSection>
+          </div>
+
+          <section id="reports" className="parent-card overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setMoreOpen((v) => !v)}
+              className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-stone-50 transition-colors"
+            >
+              <div>
+                <p className="text-sm font-semibold text-stone-800 flex items-center gap-2">
+                  더 많은 정보
+                  {recentReportCount > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white">
+                      새 리포트 {recentReportCount}건
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  출결 · 상담 · 공지 · 문의 · 수납 · 일정
+                </p>
+              </div>
+              <i
+                className={cn(
+                  'ri-arrow-down-s-line text-xl text-stone-400 transition-transform',
+                  moreOpen && 'rotate-180'
+                )}
+                aria-hidden
+              />
+            </button>
+            {moreOpen && (
+              <div className="px-5 pb-6 pt-2 border-t border-stone-100">
+                <ParentPortalSecondaryPanels child={child} academyName={academyName} />
+              </div>
             )}
-            <div className="mt-4">
-              <PortalSubheading>상담 예정</PortalSubheading>
-              <ParentCounselingPanel sessions={counselingSessions} />
-            </div>
-          </PortalSection>
-
-          <PortalSection
-            id="notices"
-            step="6"
-            title="학원 공지"
-            description="원장님이 보낸 안내입니다."
-          >
-            <ParentNoticesPanel items={notices} />
-          </PortalSection>
-
-          <PortalSection
-            id="payments"
-            step="7"
-            title="수강료 상태"
-            description="청구·납부 현황입니다."
-          >
-            <ParentPaymentsPanel payments={portalPayments} loading={paymentsLoading} />
-          </PortalSection>
-
-          <PortalSection id="schedule" step="8" title="이번 주 일정" description="수업 일정입니다.">
-            <PortalSchedule classIds={child.class_id ? [child.class_id] : []} />
-          </PortalSection>
-
-          <PortalSection
-            id="inquiry"
-            step="9"
-            title="학부모 문의"
-            description="궁금한 점을 학원에 남겨 주세요."
-          >
-            <ParentMessagesPanel
-              messages={parentMessages}
-              child={child}
-              onSend={async ({ subject, body }) => {
-                if (!child.academy_id) return { error: '학원 정보가 없습니다.' };
-                return sendMessage({
-                  academy_id: child.academy_id,
-                  student_id: child.id,
-                  subject,
-                  body,
-                });
-              }}
-            />
-          </PortalSection>
+          </section>
         </div>
 
         <div
-          id="ask"
-          className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 scroll-mt-24 min-w-0"
+          id="ask-desktop"
+          className="hidden lg:block lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 scroll-mt-24 min-w-0"
         >
-          <p className="text-xs font-semibold text-stone-500 mb-3 hidden lg:flex items-center gap-2">
-            <span className="parent-section-badge">2</span>
+          <p className="text-xs font-semibold text-stone-500 mb-3 flex items-center gap-2">
+            <span className="parent-section-badge">4</span>
             궁금하면 오른쪽에서 바로 질문하세요
           </p>
           <ParentAgentChat

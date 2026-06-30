@@ -233,6 +233,7 @@ export async function signUpWithEmail(params: {
   password: string;
   name: string;
   role: SignupRole;
+  phone?: string;
 }): Promise<SignUpResult> {
   const origin = getClientSiteOrigin();
   const emailRedirectTo = `${origin}/auth/callback`;
@@ -247,6 +248,7 @@ export async function signUpWithEmail(params: {
         name: params.name.trim(),
         role: dbRole,
         profile_setup: PROFILE_SETUP_COMPLETE,
+        ...(params.phone ? { phone: params.phone } : {}),
       },
       emailRedirectTo,
     },
@@ -255,6 +257,10 @@ export async function signUpWithEmail(params: {
   if (authError) return { error: formatAuthError(authError) };
 
   if (!authData.user?.id) return { error: '회원가입에 실패했습니다.' };
+
+  if (params.phone && authData.session) {
+    await supabase.from('users').update({ phone: params.phone }).eq('id', authData.user.id);
+  }
 
   const hasSession = !!authData.session;
   const needsEmailConfirmation = !hasSession && !!authData.user;
@@ -295,6 +301,35 @@ export async function signUpAcademyOwner(params: {
     name: params.name,
     role: 'owner',
   });
+}
+
+export async function signInWithLoginId(
+  loginId: string,
+  password: string
+): Promise<{
+  error: string | null;
+  profile: UserProfile | null;
+  user: User | null;
+  needsChooseRole?: boolean;
+  rawDbRole?: string | null;
+}> {
+  const { resolveLoginEmail } = await import('@/lib/phone');
+  return signInWithRole(resolveLoginEmail(loginId), password);
+}
+
+/** @deprecated signInWithLoginId 사용 */
+export async function signInWithPhone(
+  phone: string,
+  password: string
+): Promise<{
+  error: string | null;
+  profile: UserProfile | null;
+  user: User | null;
+  needsChooseRole?: boolean;
+  rawDbRole?: string | null;
+}> {
+  const { phoneToAuthEmail } = await import('@/lib/phone');
+  return signInWithRole(phoneToAuthEmail(phone), password);
 }
 
 export async function signInWithRole(

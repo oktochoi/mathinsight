@@ -90,7 +90,7 @@ export function BillingBulkActions({
             )}
             style={
               mode === a.id
-                ? { background: 'var(--app-ink)', color: '#fff', border: '1px solid var(--app-ink)' }
+                ? { background: 'var(--app-ink)', color: 'var(--app-on-accent)', border: '1px solid var(--app-ink)' }
                 : { background: 'var(--app-surface)', color: 'var(--app-ink-2)', border: '1px solid var(--app-border)' }
             }
           >

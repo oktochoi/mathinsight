@@ -50,13 +50,13 @@ export function useClasses() {
     fetchClasses();
   }, [fetchClasses, dataVersion]);
 
-  const addClass = async (name: string, grade: string) => {
+  const addClass = async (name: string, grade: string, teacherId?: string | null) => {
     if (!profile?.academy_id) return { error: '학원 정보가 없습니다.' };
     if (!name.trim()) return { error: '반 이름을 입력해 주세요.' };
 
     const { error: err } = await supabase.from('classes').insert({
       academy_id: profile.academy_id,
-      teacher_id: profile.id,
+      teacher_id: teacherId ?? profile.id,
       name: name.trim(),
       grade: grade.trim() || '미지정',
     });
@@ -69,6 +69,16 @@ export function useClasses() {
     const { error: err } = await supabase
       .from('classes')
       .update({ name: name.trim(), grade: grade.trim() })
+      .eq('id', id);
+
+    if (!err) bumpDataVersion();
+    return { error: err?.message ?? null };
+  };
+
+  const updateClassTeacher = async (id: string, teacherId: string | null) => {
+    const { error: err } = await supabase
+      .from('classes')
+      .update({ teacher_id: teacherId })
       .eq('id', id);
 
     if (!err) bumpDataVersion();
@@ -110,6 +120,7 @@ export function useClasses() {
     refetch: fetchClasses,
     addClass,
     updateClass,
+    updateClassTeacher,
     deleteClass,
   };
 }

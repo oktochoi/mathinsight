@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { ErrorBanner } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { IntegrationsSettingsSection } from '@/components/settings/IntegrationsSettingsSection';
+import { AcademyConnectionCodeSection } from '@/components/settings/AcademyConnectionCodeSection';
 import { StaffPermissionsSection } from '@/components/settings/StaffPermissionsSection';
 import { ConnectAcademyPanel } from '@/components/portal/ConnectAcademyPanel';
 import { cn } from '@/lib/cn';
@@ -176,7 +177,7 @@ function SettingsContent() {
                   className="w-10 h-10 rounded-full text-sm font-semibold border transition-all cursor-pointer"
                   style={
                     activeDays.includes(i)
-                      ? { background: 'var(--app-accent)', color: '#fff', borderColor: 'var(--app-accent)' }
+                      ? { background: 'var(--app-accent)', color: 'var(--app-on-accent)', borderColor: 'var(--app-accent)' }
                       : { background: 'var(--app-surface-2)', color: 'var(--app-ink-2)', borderColor: 'var(--app-border)' }
                   }
                 >
@@ -235,8 +236,8 @@ function SettingsContent() {
           {/* 학원 미연결 강사/원무 — 참여 안내 */}
           {!academy && (profile?.role === 'teacher' || profile?.role === 'desk') && (
             <div
-              className="rounded-2xl p-6 space-y-4"
-              style={{ background: 'var(--app-surface)', border: '1px solid #bfdbfe' }}
+              className="rounded-2xl p-6 space-y-4 app-border-accent"
+              style={{ background: 'var(--app-surface)', border: '1px solid var(--app-accent-border)' }}
             >
               <div className="flex items-start gap-3">
                 <div
@@ -257,6 +258,10 @@ function SettingsContent() {
           )}
 
           {/* 학원 정보 수정 — 원장만 */}
+          {isOwner && academy && (
+            <AcademyConnectionCodeSection />
+          )}
+
           {isOwner && (
             <div className="app-card p-6 space-y-4">
               <h3 className="text-sm font-bold" style={{ color: 'var(--app-ink)' }}>학원 정보</h3>

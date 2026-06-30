@@ -50,7 +50,7 @@ export function BillingActionCenter({
                   )}
                   style={{
                     background: active ? 'var(--app-accent-bg)' : 'var(--app-surface)',
-                    border: `1px solid ${active ? '#bfdbfe' : 'var(--app-border)'}`,
+                    border: `1px solid ${active ? 'var(--app-accent-border)' : 'var(--app-border)'}`,
                   }}
                 >
                   <span

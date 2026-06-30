@@ -51,7 +51,7 @@ export function BillingTimeline({ data }: { data: PaymentTimelinePoint[] }) {
               type="monotone"
               dataKey="billed"
               name="청구 금액"
-              stroke="#6366f1"
+              stroke="var(--chart-indigo)"
               strokeWidth={2}
               dot={false}
             />
@@ -59,7 +59,7 @@ export function BillingTimeline({ data }: { data: PaymentTimelinePoint[] }) {
               type="monotone"
               dataKey="collected"
               name="실제 수납"
-              stroke="#10b981"
+              stroke="var(--app-success)"
               strokeWidth={2}
               dot={false}
             />
@@ -67,7 +67,7 @@ export function BillingTimeline({ data }: { data: PaymentTimelinePoint[] }) {
               type="monotone"
               dataKey="outstanding"
               name="미수금"
-              stroke="#f59e0b"
+              stroke="var(--app-warning)"
               strokeWidth={2}
               dot={false}
               strokeDasharray="4 4"

@@ -61,11 +61,11 @@ export default function StudentDetail({
     if (!student || logs.length === 0) return null;
     const scoreTrend = calculateScoreTrend(logs);
     const hwTrend = calculateHomeworkTrend(logs);
-    const timeline = buildStudentTimeline(logs, cards, reports, followups);
+    const timeline = buildStudentTimeline(logs, cards, reports, followups, sessions);
     const briefing = buildConsultationBriefing(student, logs, cards, followups);
     const pendingCardCount = countPendingConsultations(cards);
     return { scoreTrend, hwTrend, timeline, briefing, pendingCardCount };
-  }, [student, logs, cards, reports, followups]);
+  }, [student, logs, cards, reports, followups, sessions]);
 
   const attendanceRate = useMemo(() => {
     const recent = logs.slice(0, 12);
@@ -134,7 +134,7 @@ export default function StudentDetail({
       {!embed && (
         <StaffBreadcrumb
           items={[
-            { label: 'Students', href: '/students' },
+            { label: '학생', href: '/students' },
             { label: student.name },
           ]}
         />
@@ -176,8 +176,8 @@ export default function StudentDetail({
       />
 
       <StudentDetailSection
-        title="Activity Timeline"
-        description="출결, 숙제, 상담, 학부모 전달이 하나의 흐름으로 연결됩니다."
+        title="활동 타임라인"
+        description="수업·출결·상담·학부모 전달이 시간순으로 연결됩니다."
       >
         {analytics ? (
           <StudentActivityTimeline entries={analytics.timeline} />
@@ -188,7 +188,7 @@ export default function StudentDetail({
 
       <StudentDetailSection
         id="recent-lessons"
-        title="Recent Lessons"
+        title="최근 수업"
         description="카드를 눌러 수업 상세를 확인하세요."
       >
         {logsLoading ? (
@@ -220,18 +220,15 @@ export default function StudentDetail({
       />
 
       {retentionSignal && (
-        <div
-          className="rounded-xl px-4 py-3 text-sm"
-          style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' }}
-        >
+        <div className="rounded-xl px-4 py-3 text-sm app-banner-danger">
           <span className="font-semibold">재등록 신호: </span>
           {retentionSignal.reason}
           <Link
-            href="/retention"
+            href="/students?filter=at-risk"
             className="ml-2 text-xs font-medium underline"
-            style={{ color: '#b91c1c' }}
+            style={{ color: 'var(--app-danger)' }}
           >
-            학생 성장 →
+            위험 학생 목록 →
           </Link>
         </div>
       )}

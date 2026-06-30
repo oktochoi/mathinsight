@@ -324,7 +324,7 @@ export function buildDashboardPriorities(
       items.push({
         id: 'retention-high',
         text: `상담 권장 ${summary.retentionHighRiskCount}명 → 학생 성장`,
-        href: '/retention',
+        href: '/analytics',
         tone: 'danger',
       });
     }

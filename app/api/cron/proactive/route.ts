@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { runProactiveAllAcademies } from '@/lib/agents/proactive';
+import { notifyAgentFailure } from '@/lib/notifyAgentFailure';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -29,6 +30,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'cron_failed';
+    await notifyAgentFailure('proactive cron', message);
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

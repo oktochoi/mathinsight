@@ -66,7 +66,7 @@ export function StudentConsultationCenter({
   ) ?? [];
 
   return (
-    <section className="space-y-5">
+    <section id="consultation" className="space-y-5 scroll-mt-24">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold" style={{ color: 'var(--app-ink)' }}>
@@ -103,10 +103,7 @@ export function StudentConsultationCenter({
       )}
 
       {pendingCardCount > 0 && (
-        <div
-          className="rounded-xl px-4 py-3 text-sm flex items-center gap-2"
-          style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e' }}
-        >
+        <div className="rounded-xl px-4 py-3 text-sm flex items-center gap-2 app-card-warning app-card-warning-title">
           <i className="ri-alert-line" />
           상담 요약 대기 {pendingCardCount}건 — 상담 후 완료 처리가 필요합니다.
         </div>
@@ -121,8 +118,8 @@ export function StudentConsultationCenter({
             {upcomingSessions.slice(0, 3).map((s) => (
               <li
                 key={s.id}
-                className="rounded-xl px-4 py-3 text-sm"
-                style={{ background: 'var(--app-accent-bg)', border: '1px solid #bfdbfe' }}
+                className="rounded-xl px-4 py-3 text-sm app-border-accent"
+                style={{ background: 'var(--app-accent-bg)', border: '1px solid var(--app-accent-border)' }}
               >
                 <span className="font-semibold" style={{ color: 'var(--app-ink)' }}>
                   {s.title}
@@ -156,7 +153,7 @@ export function StudentConsultationCenter({
             </p>
             <ul className="space-y-1.5">
               {cautions.slice(0, 3).map((c, i) => (
-                <li key={i} className="text-sm leading-relaxed" style={{ color: '#b45309' }}>
+                <li key={i} className="text-sm leading-relaxed app-card-warning-body">
                   · {c}
                 </li>
               ))}

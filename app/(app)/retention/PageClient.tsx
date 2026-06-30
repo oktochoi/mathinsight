@@ -73,10 +73,7 @@ function RetentionPageContent() {
         <ErrorBanner message={retentionError} onRetry={refetchRetention} />
       )}
       {toast && (
-        <p
-          className="text-sm rounded-xl px-3 py-2"
-          style={{ background: '#f0fdf4', color: '#065f46', border: '1px solid #a7f3d0' }}
-        >
+        <p className="text-sm rounded-xl px-3 py-2 app-inline-success">
           {toast}
         </p>
       )}

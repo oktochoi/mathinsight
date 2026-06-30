@@ -41,6 +41,8 @@ const staffPrefixes = [
 export function isProtectedAppPath(path: string): boolean {
   return (
     staffPrefixes.some((p) => path === p || path.startsWith(`${p}/`)) ||
+    path === '/subscribe' ||
+    path.startsWith('/subscribe/') ||
     path === '/parent' ||
     path.startsWith('/parent/') ||
     path === '/student' ||

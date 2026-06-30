@@ -95,7 +95,15 @@ export function useParentReports(studentId?: string) {
       .select('id')
       .single();
     if (!err) bumpDataVersion();
-    return { error: err?.message ?? null, reportId: data?.id as string | undefined };
+    const reportId = data?.id as string | undefined;
+    if (!err && reportId && payload.student_id) {
+      void fetch('/api/parent-reports/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportId, studentId: payload.student_id }),
+      }).catch(() => {});
+    }
+    return { error: err?.message ?? null, reportId };
   };
 
   return { reports, loading, error, refetch: fetchReports, saveReport };

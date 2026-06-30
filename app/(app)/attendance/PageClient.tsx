@@ -10,8 +10,10 @@ import { useStudents } from '@/hooks/useStudents';
 import { useAppStore } from '@/store/useAppStore';
 import { loadClassDayData } from '@/lib/lessonOperationalRead';
 import { ATTENDANCE_LABELS } from '@/lib/statusLabels';
+import { useToast } from '@/hooks/useToast';
 import { ErrorBanner, PageLoader } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Toast } from '@/components/ui/Toast';
 import { STAFF_PAGES } from '@/lib/staffPages';
 import { cn } from '@/lib/cn';
 import type { AttendanceStatus, LessonLog, LessonLogInsert } from '@/types/database';
@@ -40,9 +42,9 @@ function AttendancePageContent() {
   const [existingLogs, setExistingLogs] = useState<Map<string, LessonLog>>(new Map());
   const [absentOnly, setAbsentOnly] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState('');
   const [error, setError] = useState('');
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const { message: toast, show: showToast } = useToast(2500);
   const isDirtyRef = useRef(false);
 
   useEffect(() => {
@@ -134,8 +136,7 @@ function AttendancePageContent() {
     }
     isDirtyRef.current = false;
     bumpDataVersion();
-    setToast('출결이 저장되었습니다.');
-    setTimeout(() => setToast(''), 2500);
+    showToast('출결이 저장되었습니다.');
     void loadDayLogs(true);
   };
 
@@ -144,6 +145,7 @@ function AttendancePageContent() {
   return (
     <div className="space-y-6 w-full min-w-0 max-w-full">
       <PageHeader title={STAFF_PAGES.attendance.title} />
+      <Toast message={toast} />
 
       <div className="grid lg:grid-cols-[1fr_280px] gap-4">
         <div className="app-card overflow-hidden">
@@ -194,14 +196,6 @@ function AttendancePageContent() {
           </div>
 
           {error && <ErrorBanner message={error} />}
-          {toast && (
-            <p
-              className="mx-4 mt-3 text-sm rounded-xl px-3 py-2"
-              style={{ color: '#065f46', background: '#f0fdf4', border: '1px solid #a7f3d0' }}
-            >
-              {toast}
-            </p>
-          )}
 
           {loadingLogs ? (
             <p className="p-8 text-center text-sm text-[var(--app-ink-3)]">불러오는 중…</p>

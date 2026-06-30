@@ -26,12 +26,15 @@ import { usePortalHomework, usePortalExams } from '@/hooks/usePortalErp';
 import { usePortalAnnouncements } from '@/hooks/useAnnouncements';
 import { usePortalClassProgress } from '@/hooks/useCurriculum';
 import { ParentNoticesPanel } from '@/components/portal/ParentNoticesPanel';
+import { ParentAgentChat } from '@/components/portal/ParentAgentChat';
 import {
   buildStudentProgressLines,
   buildStudentStudyTips,
 } from '@/lib/studentPortalInsights';
 import type { Student } from '@/types/database';
 import { ConnectStudentPanel } from '@/components/portal/ConnectStudentPanel';
+import { StudentChatSection } from '@/components/chat/StudentChatSection';
+import { formatPhoneDisplay } from '@/lib/phone';
 
 export default function StudentPortalPage() {
   const { profile } = useAuth();
@@ -42,10 +45,12 @@ export default function StudentPortalPage() {
   const load = useCallback(async () => {
     if (!profile?.id) return;
     setLoading(true);
+    setError(null);
     const { student: row, error: err } = await fetchStudentSelfProfile(profile.id);
     if (err) setError('학생 정보를 불러오지 못했습니다.');
     else setStudent(row);
     setLoading(false);
+    return row;
   }, [profile?.id]);
 
   useEffect(() => {
@@ -94,16 +99,27 @@ export default function StudentPortalPage() {
           </div>
           <h2 className="text-lg font-bold text-slate-900">학원을 연결해 주세요</h2>
           <p className="text-sm text-slate-500 mt-1">
-            학원 코드와 내 이름(학원 등록명)을 입력하면 수업 기록을 볼 수 있습니다.
+            학원 코드를 입력하고 본인 정보를 확인하면 바로 이용할 수 있습니다.
           </p>
         </div>
 
         <div className="student-card p-5 space-y-4">
-          <ConnectStudentPanel mode="student" onSubmitted={load} />
+          <ConnectStudentPanel
+            mode="student"
+            onSubmitted={async () => {
+              const row = await load();
+              if (!row) setError('연결은 완료되었지만 정보를 불러오지 못했습니다. 새로고침해 주세요.');
+            }}
+          />
         </div>
 
         <div className="student-card p-4 text-xs text-slate-500 space-y-1">
-          <p>로그인 계정: <strong className="text-slate-700">{profile?.email}</strong></p>
+          <p>
+            로그인 아이디:{' '}
+            <strong className="text-slate-700">
+              {profile?.phone ? formatPhoneDisplay(profile.phone) : profile?.email}
+            </strong>
+          </p>
           <p>코드를 모르시면 학원 선생님께 문의해 주세요.</p>
         </div>
       </div>
@@ -166,6 +182,19 @@ export default function StudentPortalPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         <div className="lg:col-span-8 xl:col-span-8 space-y-6 lg:space-y-8 min-w-0">
+          <StudentSection
+            id="ai-chat"
+            step="0"
+            title="AI 학습 상담"
+            description="오늘 배운 내용이 궁금하면 바로 질문해 보세요."
+          >
+            <ParentAgentChat
+              studentId={student.id}
+              studentName={student.name}
+              academyName={academyName}
+            />
+          </StudentSection>
+
           <StudentSection
             id="learn"
             step="1"
@@ -259,8 +288,17 @@ export default function StudentPortalPage() {
           )}
 
           <StudentSection
-            id="feedback"
+            id="chat"
             step="6"
+            title="선생님 · 반 톡방"
+            description="담당 선생님과 1:1, 반 단톡으로 메시지를 보낼 수 있습니다."
+          >
+            <StudentChatSection student={student} />
+          </StudentSection>
+
+          <StudentSection
+            id="feedback"
+            step="7"
             title="선생님 피드백"
             description="수업 메모·태그가 있을 때 표시됩니다."
           >
@@ -285,7 +323,7 @@ export default function StudentPortalPage() {
 
           <StudentSection
             id="history"
-            step="7"
+            step="8"
             title="수업 기록 전체"
             description={`최근 ${logs.length}건`}
           >

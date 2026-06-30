@@ -33,13 +33,13 @@ export function ParentScoreChart({ trend }: { trend: ScoreTrend }) {
       <div className="w-full min-w-0" style={{ height: 260 }}>
         <ResponsiveContainer width="100%" height={260} minWidth={0}>
         <AreaChart data={trend.points} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" vertical={false} />
-          <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#78716c' }} axisLine={false} tickLine={false} />
-          <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#78716c' }} axisLine={false} tickLine={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--portal-border)" vertical={false} />
+          <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--portal-muted)' }} axisLine={false} tickLine={false} />
+          <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--portal-muted)' }} axisLine={false} tickLine={false} />
           <Tooltip
             contentStyle={{
               borderRadius: 12,
-              border: '1px solid #e7e5e4',
+              border: '1px solid var(--portal-border)',
               boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
             }}
             formatter={(v) => [`${v ?? '—'}점`, '점수']}
@@ -47,14 +47,14 @@ export function ParentScoreChart({ trend }: { trend: ScoreTrend }) {
           <Area
             type="monotone"
             dataKey="score"
-            stroke="#4f46e5"
+            stroke="var(--portal-accent)"
             strokeWidth={2}
             fill="url(#scoreGradient)"
           />
           <defs>
             <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6366f1" stopOpacity={0.25} />
-              <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+              <stop offset="0%" stopColor="var(--portal-accent)" stopOpacity={0.25} />
+              <stop offset="100%" stopColor="var(--portal-accent)" stopOpacity={0} />
             </linearGradient>
           </defs>
         </AreaChart>

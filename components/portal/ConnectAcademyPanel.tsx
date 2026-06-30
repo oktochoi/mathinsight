@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { normalizeConnectionCode } from '@/lib/studentConnection';
+import { peekPendingAcademyCode } from '@/lib/academyCodeStorage';
 
 type Props = {
   onJoined?: () => void;
@@ -16,6 +18,11 @@ export function ConnectAcademyPanel({ onJoined, compact }: Props) {
   const [error, setError] = useState('');
   const [joined, setJoined] = useState<string | null>(null);
 
+  useEffect(() => {
+    const pending = peekPendingAcademyCode();
+    if (pending) setCode(normalizeConnectionCode(pending));
+  }, []);
+
   const handleJoin = async () => {
     if (!code.trim()) { setError('초대 코드를 입력해 주세요.'); return; }
     if (!profile?.id) return;
@@ -23,7 +30,7 @@ export function ConnectAcademyPanel({ onJoined, compact }: Props) {
     setError('');
 
     const { data, error: rpcErr } = await supabase.rpc('join_academy_by_code', {
-      p_code: code.trim().toUpperCase(),
+      p_code: normalizeConnectionCode(code),
     });
 
     if (rpcErr) { setError(rpcErr.message); setSaving(false); return; }
@@ -73,7 +80,7 @@ export function ConnectAcademyPanel({ onJoined, compact }: Props) {
         )}
         <input
           value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          onChange={(e) => setCode(normalizeConnectionCode(e.target.value))}
           placeholder="EDU-XXXX-XX"
           className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-mono uppercase bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
         />

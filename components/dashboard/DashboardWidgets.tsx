@@ -93,10 +93,7 @@ export function DashboardChecklistWidget({ stats }: { stats: DashboardStats }) {
                 )}
               </div>
               {!item.done && item.pendingCount > 0 && (
-                <span
-                  className="text-xs font-bold tabular-nums shrink-0 px-1.5 py-0.5 rounded-md"
-                  style={{ background: '#fff7ed', color: '#ea580c' }}
-                >
+                <span className="text-xs font-bold tabular-nums shrink-0 px-1.5 py-0.5 rounded-md app-badge-orange">
                   {item.pendingCount}
                 </span>
               )}
@@ -137,7 +134,7 @@ export function DashboardScheduleWidget({ stats }: { stats: DashboardStats }) {
                   background: isActive
                     ? 'var(--app-accent-bg)'
                     : 'var(--app-surface-2)',
-                  border: `1px solid ${isActive ? '#bfdbfe' : 'var(--app-border)'}`,
+                  border: `1px solid ${isActive ? 'var(--app-accent-border)' : 'var(--app-border)'}`,
                   opacity: isEnded ? 0.55 : 1,
                 }}
               >
@@ -195,7 +192,7 @@ export function DashboardOpsKpiRow({ stats }: { stats: DashboardStats }) {
       <KpiCard label="오늘 결석"  value={stats.absentTodayCount}           unit="명" icon="ri-user-unfollow-line"   accent="red"    href="/lesson-logs" />
       <KpiCard label="숙제 미제출" value={stats.missingHomeworkCount}       unit="명" icon="ri-file-close-line"      accent="orange" href="/lesson-logs" />
       <KpiCard label="학부모 문의" value={stats.pendingParentMessagesCount}  unit="건" icon="ri-mail-unread-line"     accent="orange" href="/parent-hub" />
-      <KpiCard label="학생 성장"  value={stats.totalStudentCount}          unit="명" icon="ri-line-chart-line"      accent="green"  href="/retention" />
+      <KpiCard label="학생 성장"  value={stats.totalStudentCount}          unit="명" icon="ri-line-chart-line"      accent="green"  href="/analytics" />
     </div>
   );
 }
@@ -208,10 +205,7 @@ const AI_CATEGORY_LABEL = {
 
 export function DashboardAiWidget({ stats }: { stats: DashboardStats }) {
   return (
-    <div
-      className="app-card p-5 border-dashed"
-      style={{ borderColor: '#c4b5fd', background: 'linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%)' }}
-    >
+    <div className="app-card p-5 border-dashed app-card-violet">
       <WidgetHeader
         title="운영 메모"
         description="상담·재등록 검토가 필요한 학생"
@@ -356,24 +350,16 @@ export function DashboardParentMessagesWidget({ stats }: { stats: DashboardStats
       ) : (
         <Link
           href="/messages"
-          className="flex flex-col items-center justify-center py-8 rounded-xl transition-all hover:opacity-90"
-          style={{
-            background: 'var(--app-warning-bg)',
-            border: '1px solid #fde68a',
-          }}
+          className="flex flex-col items-center justify-center py-8 rounded-xl transition-all hover:opacity-90 app-card-warning"
         >
           <p
-            className="text-3xl font-bold tabular-nums"
-            style={{ color: 'var(--app-warning)', letterSpacing: '-0.04em' }}
+            className="text-3xl font-bold tabular-nums app-text-warning"
+            style={{ letterSpacing: '-0.04em' }}
           >
             {stats.pendingParentMessagesCount}
           </p>
-          <p className="text-sm font-semibold mt-1" style={{ color: '#92400e' }}>
-            답변 대기
-          </p>
-          <p className="text-xs mt-0.5" style={{ color: '#b45309' }}>
-            문의함에서 확인하세요
-          </p>
+          <p className="text-sm font-semibold mt-1 app-card-warning-title">답변 대기</p>
+          <p className="text-xs mt-0.5 app-card-warning-body">문의함에서 확인하세요</p>
         </Link>
       )}
     </DashboardCard>

@@ -42,14 +42,14 @@ export function StudentCharts({
                   <Area
                     type="monotone"
                     dataKey="score"
-                    stroke="#0284c7"
+                    stroke="var(--student-accent, var(--app-info))"
                     strokeWidth={2}
                     fill="url(#studentScoreGrad)"
                   />
                   <defs>
                     <linearGradient id="studentScoreGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0} />
+                      <stop offset="0%" stopColor="var(--student-accent, var(--app-info))" stopOpacity={0.25} />
+                      <stop offset="100%" stopColor="var(--student-accent, var(--app-info))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                 </AreaChart>
@@ -77,7 +77,7 @@ export function StudentCharts({
                 <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'var(--app-ink-4)' }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--app-ink-4)' }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v) => [`${v ?? 0}%`, '제출률']} />
-                <Bar dataKey="rate" fill="#0369a1" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="rate" fill="var(--student-accent, var(--app-info))" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -84,7 +84,7 @@ export function StatusBadge({
     danger:  'app-badge-red',
     warning: 'app-badge-amber',
     info:    'app-badge-blue',
-    violet:  'bg-violet-50 text-violet-700',
+    violet:  'app-badge-violet',
     neutral: 'app-badge-slate',
   };
   return (
@@ -97,10 +97,10 @@ export function StatusBadge({
 export function StudentAvatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
   const initial = name.trim().charAt(0) || '?';
   const palettes = [
-    { bg: '#dbeafe', text: '#1d4ed8' },
-    { bg: '#d1fae5', text: '#065f46' },
-    { bg: '#ede9fe', text: '#5b21b6' },
-    { bg: '#ffedd5', text: '#c2410c' },
+    { bg: 'var(--avatar-1-bg)', text: 'var(--avatar-1-text)' },
+    { bg: 'var(--avatar-2-bg)', text: 'var(--avatar-2-text)' },
+    { bg: 'var(--avatar-3-bg)', text: 'var(--avatar-3-text)' },
+    { bg: 'var(--avatar-4-bg)', text: 'var(--avatar-4-text)' },
   ];
   const p = palettes[name.charCodeAt(0) % palettes.length];
   return (
@@ -213,11 +213,11 @@ export function KpiCard({
   unit?: string;
 }) {
   const accentMap: Record<string, { bg: string; text: string }> = {
-    blue:   { bg: '#eff6ff', text: '#2563eb' },
-    green:  { bg: '#f0fdf4', text: '#059669' },
-    orange: { bg: '#fff7ed', text: '#ea580c' },
-    red:    { bg: '#fef2f2', text: '#dc2626' },
-    violet: { bg: '#f5f3ff', text: '#7c3aed' },
+    blue:   { bg: 'var(--app-accent-bg)', text: 'var(--app-accent)' },
+    green:  { bg: 'var(--app-success-bg)', text: 'var(--app-success)' },
+    orange: { bg: 'var(--app-orange-bg)', text: 'var(--app-orange)' },
+    red:    { bg: 'var(--app-danger-bg)', text: 'var(--app-danger)' },
+    violet: { bg: 'var(--app-violet-bg)', text: 'var(--app-violet)' },
   };
   const a = accentMap[accent];
 
@@ -265,12 +265,12 @@ export function KpiCard({
 
 export function ActivityIcon({ type }: { type: string }) {
   const map: Record<string, { icon: string; bg: string; text: string }> = {
-    lesson:   { icon: 'ri-book-open-line',     bg: '#eff6ff', text: '#2563eb' },
-    homework: { icon: 'ri-file-list-3-line',   bg: '#fff7ed', text: '#ea580c' },
-    test:     { icon: 'ri-bar-chart-line',     bg: '#f5f3ff', text: '#7c3aed' },
-    consult:  { icon: 'ri-chat-smile-3-line',  bg: '#f0fdf4', text: '#059669' },
-    report:   { icon: 'ri-mail-send-line',     bg: '#eff6ff', text: '#2563eb' },
-    schedule: { icon: 'ri-calendar-line',      bg: '#f1f5f9', text: '#64748b' },
+    lesson:   { icon: 'ri-book-open-line',     bg: 'var(--app-accent-bg)', text: 'var(--app-accent)' },
+    homework: { icon: 'ri-file-list-3-line',   bg: 'var(--app-orange-bg)', text: 'var(--app-orange)' },
+    test:     { icon: 'ri-bar-chart-line',     bg: 'var(--app-violet-bg)', text: 'var(--app-violet)' },
+    consult:  { icon: 'ri-chat-smile-3-line',  bg: 'var(--app-success-bg)', text: 'var(--app-success)' },
+    report:   { icon: 'ri-mail-send-line',     bg: 'var(--app-accent-bg)', text: 'var(--app-accent)' },
+    schedule: { icon: 'ri-calendar-line',      bg: 'var(--app-slate-bg)', text: 'var(--app-slate-text)' },
   };
   const item = map[type] ?? map.schedule;
   return (

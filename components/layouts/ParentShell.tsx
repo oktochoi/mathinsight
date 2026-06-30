@@ -5,37 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { isStaffProfile } from '@/lib/profileIntegrity';
 import { supabase } from '@/lib/supabase';
-import { cn } from '@/lib/cn';
-
-const NAV = [
-  { href: '#overview', label: '학습 요약', icon: 'ri-file-list-3-line' },
-  { href: '#erp', label: '출결·숙제', icon: 'ri-task-line' },
-  { href: '#notices', label: '공지', icon: 'ri-megaphone-line' },
-  { href: '#inquiry', label: '문의', icon: 'ri-mail-send-line' },
-  { href: '#ask', label: 'AI 질문', icon: 'ri-chat-3-line' },
-  { href: '#details', label: '점수·일정', icon: 'ri-line-chart-line' },
-  { href: '#reports', label: '안내문', icon: 'ri-mail-line' },
-] as const;
+import { PushInAppBanner } from '@/components/PushInAppBanner';
+import { PortalChildProvider } from '@/context/PortalChildContext';
+import { ParentNavLinks } from '@/components/portal/ParentNavLinks';
+import { ParentChatFab } from '@/components/chat/ParentChatFab';
 
 function NavLinks({ vertical }: { vertical?: boolean }) {
-  return (
-    <>
-      {NAV.map((item) => (
-        <a
-          key={item.href}
-          href={item.href}
-          className={cn(
-            vertical
-              ? 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors'
-              : 'parent-nav-pill shrink-0 gap-1.5'
-          )}
-        >
-          <i className={cn(item.icon, vertical && 'text-lg text-indigo-500')} aria-hidden />
-          {item.label}
-        </a>
-      ))}
-    </>
-  );
+  return <ParentNavLinks vertical={vertical} />;
 }
 
 export default function ParentShell({ children }: { children: React.ReactNode }) {
@@ -59,7 +35,9 @@ export default function ParentShell({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="parent-portal min-h-dvh">
+    <PortalChildProvider>
+      <div className="parent-portal min-h-dvh">
+      <PushInAppBanner />
       <div className="lg:flex lg:min-h-dvh">
         {/* PC: 왼쪽 사이드바 */}
         <aside className="hidden lg:flex lg:flex-col lg:w-60 xl:w-64 shrink-0 border-r border-stone-200/80 bg-white/70 backdrop-blur-sm sticky top-0 h-dvh">
@@ -95,7 +73,7 @@ export default function ParentShell({ children }: { children: React.ReactNode })
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* 모바일: 상단 헤더 */}
-          <header className="parent-portal-header sticky top-0 z-50 lg:hidden">
+          <header className="parent-portal-header sticky top-0 z-50 lg:hidden mobile-top-safe">
             <div className="px-4 sm:px-5">
               <div className="h-14 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -123,11 +101,13 @@ export default function ParentShell({ children }: { children: React.ReactNode })
             </div>
           </header>
 
-          <main className="parent-portal-main flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 lg:py-10 pb-16 lg:pb-10">
+          <main className="parent-portal-main flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 lg:py-10 pb-16 lg:pb-10 mobile-bottom-safe">
             {children}
           </main>
         </div>
       </div>
-    </div>
+      </div>
+      <ParentChatFab />
+    </PortalChildProvider>
   );
 }

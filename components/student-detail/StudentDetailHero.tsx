@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { STATUS_LABELS } from '@/lib/statusLabels';
-import { REREGISTRATION_STATUS_LABELS } from '@/hooks/useRetention';
 import type { Student } from '@/types/database';
 import type { StudentRiskAssessment } from '@/lib/studentRisk';
 import { cn } from '@/lib/cn';
@@ -71,7 +70,7 @@ export function StudentDetailHero({
               color: 'var(--app-ink-4)',
             }}
           >
-            Student Avatar Placeholder
+            {student.name.slice(0, 2)}
           </div>
 
           <div className="flex-1 min-w-0 space-y-4">
@@ -89,16 +88,27 @@ export function StudentDetailHero({
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <span
-                  className={cn(
-                    'text-xs font-semibold px-3 py-1.5 rounded-full border',
-                    signal.tone === 'ok' && 'bg-emerald-50 text-emerald-800 border-emerald-200',
-                    signal.tone === 'watch' && 'bg-amber-50 text-amber-900 border-amber-200',
-                    signal.tone === 'risk' && 'bg-rose-50 text-rose-800 border-rose-200'
-                  )}
-                >
-                  {signal.label}
-                </span>
+                {signal.tone !== 'ok' ? (
+                  <a
+                    href="#consultation"
+                    className={cn(
+                      'text-xs font-semibold px-3 py-1.5 rounded-full border hover:opacity-90 transition-opacity',
+                      signal.tone === 'watch' && 'bg-amber-50 text-amber-900 border-amber-200',
+                      signal.tone === 'risk' && 'bg-rose-50 text-rose-800 border-rose-200'
+                    )}
+                  >
+                    {signal.label} →
+                  </a>
+                ) : (
+                  <span
+                    className={cn(
+                      'text-xs font-semibold px-3 py-1.5 rounded-full border',
+                      'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    )}
+                  >
+                    {signal.label}
+                  </span>
+                )}
                 <span
                   className="text-xs font-medium px-3 py-1.5 rounded-full"
                   style={{ background: 'var(--app-surface-2)', color: 'var(--app-ink-2)' }}

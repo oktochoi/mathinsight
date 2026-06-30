@@ -89,6 +89,32 @@ export function useTodayLesson(classId: string, lessonDate: string) {
     return { error: null };
   };
 
+  const createAndStartLesson = async (input: {
+    classId: string;
+    lessonDate: string;
+    unit: string;
+  }) => {
+    if (!profile?.academy_id || !profile.id) {
+      return { error: '로그인 정보가 없습니다.' };
+    }
+    const now = new Date().toISOString();
+    const { error: err } = await supabase.from('lessons').insert({
+      academy_id: profile.academy_id,
+      class_id: input.classId,
+      lesson_date: input.lessonDate,
+      teacher_id: profile.id,
+      unit: input.unit.trim() || '미입력',
+      status: 'in_progress',
+      started_at: now,
+      started_by: profile.id,
+      lesson_type: 'regular',
+    });
+    if (err) return { error: err.message };
+    bumpDataVersion();
+    await load();
+    return { error: null };
+  };
+
   const reopenLesson = async () => {
     if (!lesson?.id) return { error: '수업이 없습니다.' };
     const { error: err } = await supabase
@@ -101,7 +127,16 @@ export function useTodayLesson(classId: string, lessonDate: string) {
     return { error: null };
   };
 
-  return { lesson, loading, error, refetch: load, closeLesson, startLesson, reopenLesson };
+  return {
+    lesson,
+    loading,
+    error,
+    refetch: load,
+    closeLesson,
+    startLesson,
+    createAndStartLesson,
+    reopenLesson,
+  };
 }
 
 /** lesson + attendance + scores + lesson_logs 병합 행 */

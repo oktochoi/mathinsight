@@ -11,8 +11,10 @@ import { useHomeworkAssignments } from '@/hooks/useHomeworkAssignments';
 import { useAppStore } from '@/store/useAppStore';
 import { loadClassDayData } from '@/lib/lessonOperationalRead';
 import { HOMEWORK_LABELS } from '@/lib/statusLabels';
+import { useToast } from '@/hooks/useToast';
 import { ErrorBanner, PageLoader } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Toast } from '@/components/ui/Toast';
 import { STAFF_PAGES } from '@/lib/staffPages';
 import { cn } from '@/lib/cn';
 import type { HomeworkStatus, LessonLog, LessonLogInsert } from '@/types/database';
@@ -47,8 +49,8 @@ function HomeworkPageContent() {
   const [existingLogs, setExistingLogs] = useState<Map<string, LessonLog>>(new Map());
   const [missingOnly, setMissingOnly] = useState(searchParams.get('filter') === 'missing');
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState('');
   const [error, setError] = useState('');
+  const { message: toast, show: showToast } = useToast(2500);
   const isDirtyRef = useRef(false);
 
   const [newTitle, setNewTitle] = useState('');
@@ -127,8 +129,7 @@ function HomeworkPageContent() {
     }
     isDirtyRef.current = false;
     bumpDataVersion();
-    setToast('숙제 제출 상태가 저장되었습니다.');
-    setTimeout(() => setToast(''), 2500);
+    showToast('숙제 제출 상태가 저장되었습니다.');
     void loadDayLogs(true);
   };
 
@@ -152,8 +153,7 @@ function HomeworkPageContent() {
     }
     setNewTitle('');
     setNewDesc('');
-    setToast('숙제 과제가 등록되었습니다.');
-    setTimeout(() => setToast(''), 2500);
+    showToast('숙제 과제가 등록되었습니다.');
   };
 
   const openAssignment = async (id: string) => {
@@ -191,8 +191,7 @@ function HomeworkPageContent() {
       setError(result.error);
       return;
     }
-    setToast('제출 상태가 저장되었습니다 (수업 기록과 연동됨).');
-    setTimeout(() => setToast(''), 2500);
+    showToast('제출 상태가 저장되었습니다 (수업 기록과 연동됨).');
   };
 
   if (classesLoading || studentsLoading || hwLoading) return <PageLoader />;
@@ -202,6 +201,7 @@ function HomeworkPageContent() {
   return (
     <div className="space-y-6 w-full min-w-0 max-w-full">
       <PageHeader title={STAFF_PAGES.homework.title} />
+      <Toast message={toast} />
 
       <div className="flex gap-2 border-b border-[var(--app-border)]">
         {(
@@ -255,11 +255,6 @@ function HomeworkPageContent() {
       </div>
 
       {error && <ErrorBanner message={error} />}
-      {toast && (
-        <p className="text-sm rounded-xl px-3 py-2" style={{ color: '#065f46', background: '#f0fdf4', border: '1px solid #a7f3d0' }}>
-          {toast}
-        </p>
-      )}
 
       {tab === 'daily' ? (
         <div className="app-card overflow-hidden">

@@ -73,7 +73,7 @@ export function buildTodayChecklist(stats: DashboardStats): DashboardChecklistIt
       id: 'retention',
       label: '재등록 안내',
       detail: retentionPending > 0 ? `${retentionPending}명 확인 권장` : '확인 완료',
-      href: '/retention',
+      href: '/analytics',
       done: retentionPending === 0,
       pendingCount: retentionPending,
     },
@@ -173,7 +173,7 @@ export function buildAiRecommendations(
       studentName: r.name,
       reason: r.reason || '재등록 상담을 검토해 주세요.',
       category: 'retention',
-      href: `/retention?student=${r.studentId}`,
+      href: `/analytics#attention`,
     });
   }
 

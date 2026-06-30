@@ -25,7 +25,7 @@ export async function requireStaff(
     return { ok: false, status: 403, error: '학원이 연결되지 않았습니다.' };
   }
 
-  if (!['admin', 'teacher', 'desk'].includes(profile.role)) {
+  if (!['owner', 'admin', 'teacher', 'desk'].includes(profile.role)) {
     return { ok: false, status: 403, error: '스탭 계정만 이용할 수 있습니다.' };
   }
 

@@ -8,6 +8,7 @@ import { useCounselingSessions } from '@/hooks/useCounselingSessions';
 import { useCounselingTargets } from '@/hooks/useCounselingTargets';
 import { useConsultationCards } from '@/hooks/useConsultationCards';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { STAFF_PAGES } from '@/lib/staffPages';
 import { PageLoader, ErrorBanner, EmptyState } from '@/components/ui/DataStates';
 import {
   COUNSELING_STATUS_LABELS,
@@ -70,7 +71,26 @@ function SessionDetailPanel({
   const [transcript, setTranscript] = useState(session.transcript ?? '');
   const [sttBusy, setSttBusy] = useState(false);
   const [sttToast, setSttToast] = useState('');
+  const [micDenied, setMicDenied] = useState(false);
   const st = session.students;
+
+  const checkMicPermission = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMicDenied(true);
+      setSttToast('이 브라우저는 마이크 녹음을 지원하지 않습니다.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+      setMicDenied(false);
+      setSttToast('마이크 권한이 허용되었습니다. (STT 연동 전까지는 전사를 직접 입력해 주세요.)');
+      setTimeout(() => setSttToast(''), 4000);
+    } catch {
+      setMicDenied(true);
+      setSttToast('마이크 권한이 거부되었습니다. 브라우저 설정에서 허용해 주세요.');
+    }
+  };
 
   const saveTranscriptManual = async () => {
     setSttBusy(true);
@@ -189,7 +209,27 @@ function SessionDetailPanel({
           <p className="text-xs font-bold" style={{ color: 'var(--app-ink-3)' }}>
             녹음 · STT · AI 요약
           </p>
-          {sttToast && <p className="text-xs text-emerald-700">{sttToast}</p>}
+          {micDenied ? (
+            <p className="text-xs rounded-lg px-3 py-2 app-inline-danger">
+              마이크 권한이 필요합니다. 브라우저 주소창 옆 자물쇠에서 마이크를 허용한 뒤 다시 시도해 주세요.
+            </p>
+          ) : (
+            <p className="text-xs rounded-lg px-3 py-2 app-banner-warning">
+              STT 자동 전사 연동 전입니다. 아래에서 전사 텍스트를 직접 입력하거나, 마이크 권한을 먼저 확인해 주세요.
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => void checkMicPermission()}
+            className="app-btn app-btn-ghost text-xs"
+          >
+            마이크 권한 확인
+          </button>
+          {sttToast && (
+            <p className={cn('text-xs rounded-lg px-3 py-2', micDenied ? 'app-inline-danger' : 'app-inline-success')}>
+              {sttToast}
+            </p>
+          )}
           <input
             value={recordingUrl}
             onChange={(e) => setRecordingUrl(e.target.value)}
@@ -310,13 +350,10 @@ function SessionDetailPanel({
 
         {/* 상담 완료 후 다음 단계 — 학부모 전달 */}
         {(session.status === 'completed' || session.parent_message_draft) && (
-          <div
-            className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-            style={{ background: '#f0fdf4', border: '1px solid #a7f3d0' }}
-          >
+          <div className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 app-banner-success">
             <div>
-              <p className="text-sm font-semibold" style={{ color: '#064e3b' }}>다음 단계: 학부모에게 전달</p>
-              <p className="text-xs mt-0.5" style={{ color: '#065f46' }}>
+              <p className="text-sm font-semibold">다음 단계: 학부모에게 전달</p>
+              <p className="text-xs mt-0.5 opacity-90">
                 {session.parent_message_draft
                   ? '학부모 전달 초안이 준비되어 있습니다.'
                   : '상담 카드에서 학부모 전달 문구를 작성하세요.'}
@@ -493,7 +530,10 @@ function CounselingPageContent() {
 
   return (
     <div className="space-y-6 w-full min-w-0 max-w-full">
-      <PageHeader title={meta.title} />
+      <PageHeader
+        title={meta.title}
+        description={step === 'session' ? STAFF_PAGES.counseling.description : meta.desc}
+      />
 
       <nav className="flex flex-wrap gap-1 border-b pb-px border-[var(--app-border)]">
         {(
@@ -530,7 +570,7 @@ function CounselingPageContent() {
           </div>
 
           {actionablePendingCards.length === 0 && prepTargets.length === 0 ? (
-            <p className="text-sm rounded-xl px-4 py-3" style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e' }}>
+            <p className="text-sm rounded-xl px-4 py-3 app-banner-warning">
               지금 준비할 상담이 없습니다. 필요할 때 학생을 선택해 요약을 만들거나, ② 진행에서 바로
               상담을 예약하세요.
             </p>
@@ -619,7 +659,7 @@ function CounselingPageContent() {
 
       {step !== 'intake' && error && <ErrorBanner message={error} />}
       {step !== 'intake' && toast && (
-        <p className="text-sm rounded-xl px-3 py-2" style={{ background: '#f0fdf4', border: '1px solid #a7f3d0', color: '#065f46' }}>
+        <p className="text-sm rounded-xl px-3 py-2 app-inline-success">
           {toast}
         </p>
       )}

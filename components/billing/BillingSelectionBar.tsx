@@ -22,10 +22,10 @@ export function BillingSelectionBar({
   return (
     <div
       className={cn(
-        'sticky bottom-4 z-30 mx-auto max-w-3xl',
+        'sticky bottom-4 z-30 mx-auto max-w-3xl mobile-bottom-safe',
         'flex flex-wrap items-center gap-2 px-4 py-3 rounded-2xl shadow-xl'
       )}
-      style={{ background: 'var(--app-ink)', color: '#fff', border: '1px solid var(--app-ink-2)' }}
+      style={{ background: 'var(--app-ink)', color: 'var(--app-on-accent)', border: '1px solid var(--app-ink-2)' }}
     >
       <span className="text-sm font-semibold tabular-nums mr-1">{count}건 선택</span>
       <button
