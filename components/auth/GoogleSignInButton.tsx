@@ -23,13 +23,15 @@ export function GoogleSignInButton({ disabled, label = 'Google로 계속하기' 
   return (
     <div className="space-y-2">
       {localError && (
-        <p className="text-xs text-rose-600 text-center">{localError}</p>
+        <p className="text-xs text-center" style={{ color: 'var(--auth-danger-text)' }}>
+          {localError}
+        </p>
       )}
       <button
         type="button"
         disabled={disabled || loading}
         onClick={handleClick}
-        className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border border-slate-200/90 bg-white/90 text-sm font-semibold text-slate-700 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all cursor-pointer disabled:opacity-50"
+        className="auth-oauth-btn"
       >
         <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden>
           <path
@@ -57,12 +59,10 @@ export function GoogleSignInButton({ disabled, label = 'Google로 계속하기' 
 
 export function AuthDivider() {
   return (
-    <div className="flex items-center gap-3 my-5">
-      <div className="flex-1 h-px bg-indigo-100/80" />
-      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">
-        또는
-      </span>
-      <div className="flex-1 h-px bg-indigo-100/80" />
+    <div className="auth-divider">
+      <div className="auth-divider-line" />
+      <span className="auth-divider-label">또는</span>
+      <div className="auth-divider-line" />
     </div>
   );
 }

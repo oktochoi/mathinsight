@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import AuthProviders from '@/components/providers/AuthProviders';
 import { getServerAuthProfile } from '@/lib/server/auth';
+import { OnboardingChatFab } from '@/components/onboarding/OnboardingChatFab';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,7 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
         {children}
       </div>
+      <OnboardingChatFab />
     </AuthProviders>
   );
 }

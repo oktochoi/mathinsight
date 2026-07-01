@@ -17,7 +17,7 @@ export function toDbRole(role: UserRole | SignupRole | string): DbUserRole {
 
 export function fromDbRole(role: string | null | undefined): UserRole | null {
   if (!role) return null;
-  if (role === 'admin') return 'owner';
+  if (role === 'admin' || role === 'owner') return 'owner';
   if (role === 'teacher' || role === 'desk' || role === 'parent' || role === 'student') return role;
   return null;
 }

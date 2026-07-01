@@ -16,6 +16,7 @@ import {
   type CalendarTimeSlot,
 } from '@/lib/growthPipeline';
 import { ScheduleCalendarSlot } from '@/components/schedules/ScheduleCalendarSlot';
+import { SlotItemPicker } from '@/components/schedules/SlotItemPicker';
 import { buildTodayLessons, getClassPrepData } from '@/lib/classInsights';
 import { getLessonFlowState } from '@/lib/learningFlow';
 import { FlowBadgeRow } from '@/components/flow/FlowBadgeRow';
@@ -85,7 +86,25 @@ function SchedulePageContent() {
   const [weekAnchor, setWeekAnchor] = useState(new Date());
   const [classFilter, setClassFilter] = useState('all');
   const [selectedSlot, setSelectedSlot] = useState<CalendarTimeSlot | null>(null);
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
   const [nowY, setNowY] = useState<number | null>(null);
+
+  const selectSlot = (slot: CalendarTimeSlot) => {
+    if (selectedSlot?.id === slot.id) {
+      setSelectedSlot(null);
+      setSelectedItemIndex(null);
+      return;
+    }
+    setSelectedSlot(slot);
+    setSelectedItemIndex(slot.items.length === 1 ? 0 : null);
+  };
+
+  const selectedItem =
+    selectedSlot && selectedItemIndex != null ? selectedSlot.items[selectedItemIndex] : null;
+  const selectedLesson =
+    selectedItem?.kind === 'lesson' ? selectedItem.event : null;
+  const selectedIntakes =
+    selectedItem?.kind === 'intake' ? [selectedItem.event] : [];
 
   const { schedules, exceptions, loading } = useClassSchedules();
   const { classes } = useClasses();
@@ -114,11 +133,6 @@ function SchedulePageContent() {
     () => buildCalendarTimeSlots(filtered, intakeEvents),
     [filtered, intakeEvents]
   );
-
-  const selectedLesson =
-    selectedSlot?.items.find((i) => i.kind === 'lesson')?.event ?? null;
-  const selectedIntakes =
-    selectedSlot?.items.filter((i) => i.kind === 'intake').map((i) => i.event) ?? [];
 
   const today = new Date().toISOString().slice(0, 10);
   const todayLessons = useMemo(
@@ -409,7 +423,7 @@ function SchedulePageContent() {
                             top={top}
                             height={height}
                             selected={isSel}
-                            onSelect={() => setSelectedSlot(isSel ? null : slot)}
+                            onSelect={() => selectSlot(slot)}
                           />
                         );
                       })}
@@ -462,6 +476,15 @@ function SchedulePageContent() {
                     캘린더에서 수업·상담을 선택하세요
                   </p>
                 </div>
+              ) : selectedItemIndex == null && selectedSlot.items.length > 1 ? (
+                <SlotItemPicker
+                  slot={selectedSlot}
+                  onSelect={(index) => setSelectedItemIndex(index)}
+                  onCancel={() => {
+                    setSelectedSlot(null);
+                    setSelectedItemIndex(null);
+                  }}
+                />
               ) : (
                 <div className="space-y-4 app-fade-in">
                   <div>
@@ -470,12 +493,14 @@ function SchedulePageContent() {
                         className="text-base font-bold"
                         style={{ color: 'var(--app-ink)', letterSpacing: '-0.02em' }}
                       >
-                        {selectedLesson?.className ?? '신입 상담'}
-                        {selectedLesson && selectedIntakes.length > 0 ? ` 외 ${selectedIntakes.length}건` : ''}
+                        {selectedLesson?.className ?? selectedIntakes[0]?.prospectName ?? '일정'}
                       </h3>
                       <button
                         type="button"
-                        onClick={() => setSelectedSlot(null)}
+                        onClick={() => {
+                          setSelectedSlot(null);
+                          setSelectedItemIndex(null);
+                        }}
                         className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 cursor-pointer"
                         style={{ color: 'var(--app-ink-3)' }}
                       >
@@ -638,7 +663,11 @@ function SchedulePageContent() {
                                   (i) => i.kind === 'lesson' && i.event.id === item.event.id
                                 )
                             );
-                            setSelectedSlot(slot ?? null);
+                            if (slot) selectSlot(slot);
+                            else {
+                              setSelectedSlot(null);
+                              setSelectedItemIndex(null);
+                            }
                           }}
                           className="w-full text-left rounded-xl px-3 py-2.5 transition-all cursor-pointer"
                           style={{

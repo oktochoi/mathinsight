@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { updatePassword } from '@/lib/auth';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
-import { AuthMobileLogo } from '@/components/auth/AuthBrandPanel';
+import { AuthPageScaffold } from '@/components/auth/AuthPageScaffold';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
 import {
   AuthField,
@@ -15,7 +15,6 @@ import {
   AuthPasswordInput,
   AuthSubmitButton,
 } from '@/components/auth/AuthField';
-import { mkt } from '@/lib/marketing/ui';
 
 export function ResetPasswordForm() {
   const router = useRouter();
@@ -77,31 +76,25 @@ export function ResetPasswordForm() {
 
   if (!ready) {
     return (
-      <>
-        <AuthMobileLogo />
+      <AuthPageScaffold>
         <AuthFormCard title="비밀번호 재설정" subtitle="링크를 확인하는 중...">
-          <p className="py-6 text-center text-sm text-slate-600">
+          <p className="py-6 text-center text-sm" style={{ color: 'var(--auth-muted)' }}>
             재설정 링크가 유효한지 확인하고 있습니다.
           </p>
           <p className="text-center text-sm">
-            <Link href={AUTH_ROUTES.forgotPassword} className={mkt.link}>
+            <Link href={AUTH_ROUTES.forgotPassword} className="auth-link">
               재설정 메일 다시 받기
             </Link>
           </p>
         </AuthFormCard>
-      </>
+      </AuthPageScaffold>
     );
   }
 
   return (
-    <>
-      <AuthMobileLogo />
+    <AuthPageScaffold>
       <AuthFormCard title="새 비밀번호 설정" subtitle="8자 이상의 새 비밀번호를 입력해 주세요.">
-        {error && (
-          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {error}
-          </div>
-        )}
+        {error && <div className="auth-error-banner">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <AuthField label="새 비밀번호">
             <AuthPasswordInput
@@ -128,11 +121,11 @@ export function ResetPasswordForm() {
           </AuthSubmitButton>
         </form>
         <p className="mt-6 text-center text-sm">
-          <Link href={AUTH_ROUTES.login} className={mkt.link}>
+          <Link href={AUTH_ROUTES.login} className="auth-link">
             ← 로그인으로 돌아가기
           </Link>
         </p>
       </AuthFormCard>
-    </>
+    </AuthPageScaffold>
   );
 }

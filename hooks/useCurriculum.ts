@@ -53,13 +53,16 @@ export function useCurriculum(gradeFilter?: string) {
     fetchAll();
   }, [fetchAll, dataVersion]);
 
-  const importDefaultUnits = async (grade: string) => {
+  const importDefaultUnits = async (grade: string, subject = '수학') => {
     if (!profile?.academy_id) return { error: '학원 정보가 없습니다.' };
+    if (subject !== '수학') {
+      return { error: '기본 단원 세트는 수학만 제공됩니다. 직접 단원을 등록해 주세요.' };
+    }
     const names = DEFAULT_MATH_UNITS[grade];
     if (!names?.length) return { error: '해당 학년 기본 단원이 없습니다.' };
     const rows = names.map((unit_name, i) => ({
       academy_id: profile.academy_id!,
-      subject: '수학',
+      subject,
       grade,
       unit_name,
       sort_order: i,
@@ -67,6 +70,31 @@ export function useCurriculum(gradeFilter?: string) {
     const { error: err } = await supabase
       .from('curriculum_units')
       .upsert(rows, { onConflict: 'academy_id,subject,grade,unit_name', ignoreDuplicates: true });
+    if (err) return { error: err.message };
+    bumpDataVersion();
+    return { error: null };
+  };
+
+  const addCustomUnit = async (input: { subject: string; grade: string; unit_name: string }) => {
+    if (!profile?.academy_id) return { error: '학원 정보가 없습니다.' };
+    const unit_name = input.unit_name.trim();
+    if (!unit_name) return { error: '단원명을 입력해 주세요.' };
+    const { data: existing } = await supabase
+      .from('curriculum_units')
+      .select('sort_order')
+      .eq('academy_id', profile.academy_id)
+      .eq('subject', input.subject)
+      .eq('grade', input.grade)
+      .order('sort_order', { ascending: false })
+      .limit(1);
+    const nextOrder = ((existing?.[0] as { sort_order: number } | undefined)?.sort_order ?? -1) + 1;
+    const { error: err } = await supabase.from('curriculum_units').insert({
+      academy_id: profile.academy_id,
+      subject: input.subject,
+      grade: input.grade,
+      unit_name,
+      sort_order: nextOrder,
+    });
     if (err) return { error: err.message };
     bumpDataVersion();
     return { error: null };
@@ -102,6 +130,7 @@ export function useCurriculum(gradeFilter?: string) {
     error,
     refetch: fetchAll,
     importDefaultUnits,
+    addCustomUnit,
     setClassProgress,
   };
 }

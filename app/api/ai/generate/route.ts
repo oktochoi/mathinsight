@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           ok: false,
-          error: `오늘 AI 사용 한도(${quota.quota}회)에 도달했습니다. 내일 다시 시도해 주세요.`,
+          error: `이번 달 AI 사용 한도(${quota.quota}회)에 도달했습니다. 플랜을 업그레이드하거나 다음 달에 다시 시도해 주세요.`,
         },
         { status: 429 }
       );

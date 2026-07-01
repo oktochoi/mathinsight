@@ -1,0 +1,37 @@
+name: mathinsight_app
+description: MathInsight 학원 관리 앱 — WebView + FCM 푸시 알림
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # WebView — JS 브릿지 지원이 webview_flutter보다 우수
+  flutter_inappwebview: ^6.1.5
+
+  # Firebase
+  firebase_core: ^3.3.0
+  firebase_messaging: ^15.1.0
+
+  # 포그라운드 알림 표시 (FCM은 백그라운드만 자동 처리)
+  flutter_local_notifications: ^17.2.1
+
+  # 안전한 토큰 저장
+  flutter_secure_storage: ^9.2.2
+
+  # URL 처리 (알림 탭 → 딥링크)
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/

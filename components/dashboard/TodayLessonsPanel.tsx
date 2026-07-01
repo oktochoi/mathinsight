@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { getLessonFlowState } from '@/lib/learningFlow';
-import { formatTimeRange } from '@/lib/scheduleLabels';
 import type { DashboardStats, TodayLessonItem } from '@/types/database';
 import { cn } from '@/lib/cn';
 
@@ -19,6 +18,24 @@ function lessonAction(
   if (state.timing === 'canceled') return { label: '휴강', href };
   if (item.hasLogToday && state.timing !== 'in_progress') return { label: '기록 보기', href };
   return { label: '수업하기', href };
+}
+
+function statusBadge(item: TodayLessonItem, today: string) {
+  const state = getLessonFlowState(item, today);
+  const isActive = state.timing === 'in_progress';
+  const isDone = item.hasLogToday && !isActive;
+  const isCanceled = state.timing === 'canceled';
+
+  if (isCanceled) {
+    return { icon: 'ri-close-circle-line', label: '휴강', tone: 'muted' as const };
+  }
+  if (isActive) {
+    return { icon: 'ri-play-circle-fill', label: '진행 중', tone: 'active' as const };
+  }
+  if (isDone) {
+    return { icon: 'ri-checkbox-circle-fill', label: '완료', tone: 'done' as const };
+  }
+  return { icon: 'ri-time-line', label: '예정', tone: 'scheduled' as const };
 }
 
 export function TodayLessonsPanel({ stats }: { stats: DashboardStats }) {
@@ -59,9 +76,8 @@ export function TodayLessonsPanel({ stats }: { stats: DashboardStats }) {
         <ul className="divide-y" style={{ borderColor: 'var(--app-border)' }}>
           {lessons.map((item) => {
             const action = lessonAction(item, today);
-            const state = getLessonFlowState(item, today);
-            const isActive = state.timing === 'in_progress';
-            const isDone = item.hasLogToday && !isActive;
+            const badge = statusBadge(item, today);
+            const isActive = badge.tone === 'active';
 
             return (
               <li key={item.event.id}>
@@ -82,23 +98,32 @@ export function TodayLessonsPanel({ stats }: { stats: DashboardStats }) {
                       </p>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-base font-semibold truncate" style={{ color: 'var(--app-ink)' }}>
-                        {item.event.className}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-base font-semibold truncate" style={{ color: 'var(--app-ink)' }}>
+                          {item.event.className}
+                        </p>
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                            badge.tone === 'active' && 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                            badge.tone === 'done' && 'bg-slate-100 text-slate-700 border-slate-200',
+                            badge.tone === 'scheduled' && 'bg-amber-50 text-amber-900 border-amber-200',
+                            badge.tone === 'muted' && 'bg-slate-50 text-slate-500 border-slate-200'
+                          )}
+                        >
+                          {isActive && (
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            </span>
+                          )}
+                          <i className={badge.icon} aria-hidden />
+                          {badge.label}
+                        </span>
+                      </div>
                       <p className="text-xs mt-0.5" style={{ color: 'var(--app-ink-3)' }}>
-                        {formatTimeRange(item.event.startTime, item.event.endTime)}
-                        {item.event.teacherName && ` · ${item.event.teacherName}`}
-                        {item.studentCount > 0 && ` · ${item.studentCount}명`}
-                        {isActive && (
-                          <span className="ml-1.5 font-medium" style={{ color: 'var(--app-accent)' }}>
-                            · 진행 중
-                          </span>
-                        )}
-                        {isDone && (
-                          <span className="ml-1.5" style={{ color: 'var(--app-ink-4)' }}>
-                            · 기록 완료
-                          </span>
-                        )}
+                        {item.event.teacherName && `${item.event.teacherName}`}
+                        {item.studentCount > 0 && `${item.event.teacherName ? ' · ' : ''}${item.studentCount}명`}
                       </p>
                     </div>
                   </div>

@@ -51,6 +51,12 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function offsetDateStr(base: string, days: number) {
+  const d = new Date(`${base}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 const STATS_CACHE_TTL_MS = 5 * 60 * 1000;
 let statsCache: { key: string; at: number; data: DashboardStats } | null = null;
 
@@ -97,7 +103,7 @@ export function useDashboardStats() {
         ? new Set(scope.studentIds)
         : null;
 
-    const [studentsRes, logsRes, reportsRes, classesRes, schedulesRes, exceptionsRes, followupsRes, cardsRes, pendingCardsRes, pendingMessagesRes, paymentsRes, counselingRes, unclosedRes, retentionRet, announcementsRes] =
+    const [studentsRes, logsRes, reportsRes, classesRes, schedulesRes, exceptionsRes, followupsRes, cardsRes, pendingCardsRes, pendingMessagesRes, paymentsRes, counselingRes, unclosedRes, unclosedYesterdayRes, retentionRet, announcementsRes] =
       await Promise.all([
       supabase
         .from('students')
@@ -163,7 +169,7 @@ export function useDashboardStats() {
       })(),
       supabase
         .from('parent_messages')
-        .select('id')
+        .select('id, created_at')
         .eq('academy_id', academyId)
         .eq('status', 'pending'),
       supabase
@@ -183,6 +189,17 @@ export function useDashboardStats() {
           .select('id, class_id, lesson_date, status, classes(name)')
           .eq('academy_id', academyId)
           .eq('lesson_date', today)
+          .neq('status', 'closed');
+        if (teacherClassSet) q = q.in('class_id', [...teacherClassSet]);
+        return q;
+      })(),
+      (async () => {
+        const yesterday = offsetDateStr(today, -1);
+        let q = supabase
+          .from('lessons')
+          .select('id, class_id, lesson_date, status, classes(name)')
+          .eq('academy_id', academyId)
+          .eq('lesson_date', yesterday)
           .neq('status', 'closed');
         if (teacherClassSet) q = q.in('class_id', [...teacherClassSet]);
         return q;
@@ -282,11 +299,20 @@ export function useDashboardStats() {
       if (st.emphasizeRecord) missingLogLessons++;
     }
     const pendingConsultationCount = (pendingCardsRes.data ?? []).length;
-    const pendingParentMessagesCount = (pendingMessagesRes.data ?? []).length;
 
     const todayForPay = todayStr();
-    const overduePaymentsCount = ((paymentsRes.data ?? []) as { due_date: string }[]).filter(
-      (p) => p.due_date < todayForPay
+    const yesterdayForPay = offsetDateStr(today, -1);
+    const pendingPayments = (paymentsRes.data ?? []) as { due_date: string; status: string }[];
+    const overduePaymentsCount = pendingPayments.filter(
+      (p) => p.status === 'pending' && p.due_date < todayForPay
+    ).length;
+    const overduePaymentsYesterday = pendingPayments.filter(
+      (p) => p.status === 'pending' && p.due_date < yesterdayForPay
+    ).length;
+    const pendingMsgs = (pendingMessagesRes.data ?? []) as { created_at: string }[];
+    const pendingParentMessagesCount = pendingMsgs.length;
+    const pendingMsgsNewToday = pendingMsgs.filter(
+      (m) => m.created_at.slice(0, 10) === today
     ).length;
 
     const retentionSignals = retentionRet.signals.filter((row) => {
@@ -354,6 +380,40 @@ export function useDashboardStats() {
       status: row.status,
       lessonDate: row.lesson_date,
     }));
+
+    const yesterday = offsetDateStr(today, -1);
+    const yesterdayWeekEvents = expandCalendarEvents(
+      schedules,
+      exceptions,
+      getWeekDates(new Date(`${yesterday}T12:00:00`))
+    );
+    let yesterdayLessons = buildTodayLessons(
+      yesterdayWeekEvents,
+      students,
+      scopedLogs,
+      followups,
+      yesterday
+    );
+    if (teacherClassSet) {
+      yesterdayLessons = yesterdayLessons.filter((tl) => teacherClassSet.has(tl.event.classId));
+    }
+    const unclosedYesterday = (unclosedYesterdayRes.data ?? []) as { status: string }[];
+    const yesterdayInProgress = unclosedYesterday.filter((l) => l.status === 'in_progress').length;
+    const yesterdayCounseling = scopedCounseling.filter((s) => {
+      if (s.status !== 'scheduled' && s.status !== 'in_progress') return false;
+      if (!s.scheduled_at) return s.status === 'in_progress';
+      return s.scheduled_at.slice(0, 10) === yesterday;
+    }).length;
+
+    const kpiDayDeltas: DashboardStats['kpiDayDeltas'] = {
+      todayLessonCount: todayLessons.length - yesterdayLessons.length,
+      inProgress:
+        unclosedLessonsToday.filter((l) => l.status === 'in_progress').length - yesterdayInProgress,
+      unclosed: unclosedLessonsToday.length - unclosedYesterday.length,
+      counselingToday: todayCounselingQueue.length - yesterdayCounseling,
+      overduePayments: overduePaymentsCount - overduePaymentsYesterday,
+      pendingParentMessages: pendingMsgsNewToday,
+    };
 
     const worseningStudents = attentionStudents
       .filter((s) => s.riskKind === 'consultation' || s.riskKind === 'makeup' || s.urgency === 'high')
@@ -425,6 +485,7 @@ export function useDashboardStats() {
       retentionHighRiskCount,
       unclosedLessonsToday,
       dashboardMode,
+      kpiDayDeltas,
       todayChecklist: [] as DashboardStats['todayChecklist'],
       aiRecommendations: [] as DashboardStats['aiRecommendations'],
       recentNotices: ((announcementsRes.data ?? []) as { id: string; title: string; published_at: string | null }[]).map(

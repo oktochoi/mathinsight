@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
 import { paymentOverdue } from '@/lib/retentionPrediction';
 import { suggestNextMonthBilling } from '@/lib/billingOperations';
+import { notifyPaymentPush } from '@/lib/push/notifyPaymentClient';
 import type { PaymentStatus, StudentPayment } from '@/types/database';
 
 export function useBilling(studentId?: string) {
@@ -54,20 +55,25 @@ export function useBilling(studentId?: string) {
     memo?: string;
   }) => {
     if (!profile?.academy_id || !profile.id) return { error: '로그인 정보가 없습니다.' };
-    const { error: err } = await supabase.from('student_payments').insert({
-      academy_id: profile.academy_id,
-      student_id: input.student_id,
-      title: input.title.trim(),
-      amount: input.amount,
-      due_date: input.due_date,
-      billing_month: input.billing_month ?? null,
-      memo: input.memo?.trim() || null,
-      status: 'pending',
-      created_by: profile.id,
-    });
+    const { data, error: err } = await supabase
+      .from('student_payments')
+      .insert({
+        academy_id: profile.academy_id,
+        student_id: input.student_id,
+        title: input.title.trim(),
+        amount: input.amount,
+        due_date: input.due_date,
+        billing_month: input.billing_month ?? null,
+        memo: input.memo?.trim() || null,
+        status: 'pending',
+        created_by: profile.id,
+      })
+      .select('id')
+      .single();
     if (err) return { error: err.message };
     bumpDataVersion();
-    return { error: null };
+    if (data?.id) notifyPaymentPush(data.id as string, 'created');
+    return { error: null, paymentId: data?.id as string | undefined };
   };
 
   const updatePaymentStatus = async (
@@ -82,6 +88,7 @@ export function useBilling(studentId?: string) {
     }
     const { error: err } = await supabase.from('student_payments').update(patch).eq('id', id);
     if (err) return { error: err.message };
+    if (status === 'paid') notifyPaymentPush(id, 'paid');
     bumpDataVersion();
     return { error: null };
   };
@@ -107,8 +114,11 @@ export function useBilling(studentId?: string) {
       status: 'pending' as const,
       created_by: profile.id,
     }));
-    const { error: err } = await supabase.from('student_payments').insert(payload);
+    const { data, error: err } = await supabase.from('student_payments').insert(payload).select('id');
     if (err) return { error: err.message, count: 0 };
+    for (const row of data ?? []) {
+      notifyPaymentPush(row.id as string, 'created');
+    }
     bumpDataVersion();
     return { error: null, count: rows.length };
   };

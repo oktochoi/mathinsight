@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { sendPasswordResetEmail } from '@/lib/auth';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
-import { AuthMobileLogo } from '@/components/auth/AuthBrandPanel';
+import { AuthPageScaffold } from '@/components/auth/AuthPageScaffold';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
 import { AuthField, AuthInput, AuthSubmitButton } from '@/components/auth/AuthField';
-import { mkt } from '@/lib/marketing/ui';
+import { AuthSignupFooter } from '@/components/auth/AuthFooter';
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
@@ -39,28 +39,30 @@ export function ForgotPasswordForm() {
   };
 
   return (
-    <>
-      <AuthMobileLogo />
+    <AuthPageScaffold>
       <AuthFormCard
         title="비밀번호 찾기"
         subtitle="가입한 이메일로 재설정 링크를 보내드립니다."
       >
         {sent ? (
           <div className="space-y-4">
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <div
+              className="rounded-xl px-4 py-3 text-sm"
+              style={{
+                border: '1px solid var(--auth-success-border)',
+                background: 'var(--auth-success-bg)',
+                color: 'var(--auth-success-text)',
+              }}
+            >
               <strong>{email}</strong>로 재설정 메일을 보냈습니다. 받은편함과 스팸함을 확인해 주세요.
             </div>
-            <Link href={AUTH_ROUTES.login} className={`${mkt.btnGreen} inline-flex w-full justify-center`}>
+            <Link href={AUTH_ROUTES.login} className="auth-btn-primary text-center">
               로그인으로 돌아가기
             </Link>
           </div>
         ) : (
           <>
-            {error && (
-              <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {error}
-              </div>
-            )}
+            {error && <div className="auth-error-banner">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <AuthField label="이메일">
                 <AuthInput
@@ -77,13 +79,13 @@ export function ForgotPasswordForm() {
               </AuthSubmitButton>
             </form>
             <p className="mt-6 text-center text-sm">
-              <Link href={AUTH_ROUTES.login} className={mkt.link}>
+              <Link href={AUTH_ROUTES.login} className="auth-link">
                 ← 로그인으로 돌아가기
               </Link>
             </p>
           </>
         )}
       </AuthFormCard>
-    </>
+    </AuthPageScaffold>
   );
 }

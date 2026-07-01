@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { completeProfileSetup } from '@/lib/auth';
 import type { SignupRole } from '@/lib/roles';
-import { AuthMobileLogo } from '@/components/auth/AuthBrandPanel';
+import { AuthPageScaffold } from '@/components/auth/AuthPageScaffold';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
 import {
   AuthField,
@@ -54,20 +54,15 @@ export function ChooseRoleForm({ initialName, showPendingInfo }: Props) {
   };
 
   return (
-    <>
-      <AuthMobileLogo />
+    <AuthPageScaffold>
       <AuthFormCard title="역할 선택" subtitle="EduFlow에서 어떻게 이용하실지 알려 주세요">
         {showPendingInfo && (
-          <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+          <div className="auth-info-banner mb-4 text-sm">
             가입이 거의 끝났습니다. 역할을 선택하고 시작하기를 눌러 주세요.
           </div>
         )}
 
-        {error && (
-          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {error}
-          </div>
-        )}
+        {error && <div className="auth-error-banner">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <AuthField label="이름">
@@ -83,6 +78,6 @@ export function ChooseRoleForm({ initialName, showPendingInfo }: Props) {
           </AuthSubmitButton>
         </form>
       </AuthFormCard>
-    </>
+    </AuthPageScaffold>
   );
 }

@@ -10,6 +10,8 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { IntegrationsSettingsSection } from '@/components/settings/IntegrationsSettingsSection';
 import { AcademyConnectionCodeSection } from '@/components/settings/AcademyConnectionCodeSection';
 import { StaffPermissionsSection } from '@/components/settings/StaffPermissionsSection';
+import { AcademyInfoSection } from '@/components/settings/AcademyInfoSection';
+import { NotificationPreferencesSection } from '@/components/settings/NotificationPreferencesSection';
 import { ConnectAcademyPanel } from '@/components/portal/ConnectAcademyPanel';
 import { cn } from '@/lib/cn';
 
@@ -21,6 +23,7 @@ const ALL_TABS = [
   { id: 'operations', label: '운영', ownerOnly: false },
   { id: 'notifications', label: '알림', ownerOnly: false },
   { id: 'integrations', label: '연동', ownerOnly: false },
+  { id: 'chatbot-info', label: '챗봇 정보', ownerOnly: true },
   { id: 'permissions', label: '직원 권한', ownerOnly: true },
 ] as const;
 
@@ -155,14 +158,11 @@ function SettingsContent() {
 
       {tab === 'integrations' && <IntegrationsSettingsSection />}
 
+      {tab === 'chatbot-info' && isOwner && <AcademyInfoSection />}
+
       {tab === 'permissions' && isOwner && <StaffPermissionsSection />}
 
-      {tab === 'notifications' && (
-        <div className="app-card p-6">
-          <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--app-ink)' }}>알림 설정</h3>
-          <p className="text-sm" style={{ color: 'var(--app-ink-3)' }}>알림 설정은 준비 중입니다.</p>
-        </div>
-      )}
+      {tab === 'notifications' && <NotificationPreferencesSection />}
 
       {tab === 'operations' && (
         <div className="space-y-5">

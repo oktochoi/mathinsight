@@ -1,9 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { UserProfileForm } from '@/components/profile/UserProfileForm';
 import { ConnectStudentPanel } from '@/components/portal/ConnectStudentPanel';
-import Link from 'next/link';
+import { WebPushBanner } from '@/components/portal/WebPushBanner';
+import { NotificationPreferencesSection } from '@/components/settings/NotificationPreferencesSection';
 
 export default function StudentSettingsPageClient() {
   const router = useRouter();
@@ -14,9 +16,14 @@ export default function StudentSettingsPageClient() {
         <Link href="/student" className="text-xs text-slate-500 hover:text-slate-700">
           ← 학생 포털
         </Link>
-        <h1 className="text-xl font-bold text-slate-900 mt-2">내 정보</h1>
-        <p className="text-sm text-slate-500 mt-1">학교·학년 등은 언제든 수정할 수 있습니다.</p>
+        <h1 className="text-xl font-bold text-slate-900 mt-2">설정</h1>
+        <p className="text-sm text-slate-500 mt-1">알림·프로필·학원 연결을 관리합니다.</p>
       </div>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <WebPushBanner />
+        <NotificationPreferencesSection title="알림 수신 설정" />
+      </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <UserProfileForm submitLabel="저장" showStudentFields />

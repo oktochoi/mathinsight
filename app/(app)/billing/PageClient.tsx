@@ -3,16 +3,16 @@
 import { useMemo, useRef, useState } from 'react';
 import { useBillingCenter } from '@/hooks/useBillingCenter';
 import { useNotifications } from '@/hooks/useNotifications';
+import { notifyPaymentOverdueBulk } from '@/lib/push/notifyPaymentClient';
 import { BillingHero } from '@/components/billing/BillingHero';
 import { BillingOverview } from '@/components/billing/BillingOverview';
-import { BillingTimelinePlaceholder } from '@/components/billing/BillingTimelinePlaceholder';
 import { BillingActionCenter } from '@/components/billing/BillingActionCenter';
 import { BillingChargesTable } from '@/components/billing/BillingChargesTable';
 import { BillingClassRates } from '@/components/billing/BillingClassRates';
 import { BillingAiInsight } from '@/components/billing/BillingAiInsight';
 import { BillingForecast } from '@/components/billing/BillingForecast';
 import { StudentPaymentDrawer } from '@/components/billing/StudentPaymentDrawer';
-import { PaidCompletionModal } from '@/components/billing/PaidCompletionModal';
+import { PaidFollowUpBanner } from '@/components/billing/PaidFollowUpBanner';
 import { BillingSelectionBar } from '@/components/billing/BillingSelectionBar';
 import { BillingChargeModal } from '@/components/billing/BillingChargeModal';
 import { ErrorBanner, PageLoader } from '@/components/ui/DataStates';
@@ -44,7 +44,7 @@ export default function BillingPage() {
   const [listFilter, setListFilter] = useState<BillingListFilter | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [drawerRow, setDrawerRow] = useState<EnrichedPaymentRow | null>(null);
-  const [paidPromptRow, setPaidPromptRow] = useState<EnrichedPaymentRow | null>(null);
+  const [paidFollowUpRow, setPaidFollowUpRow] = useState<EnrichedPaymentRow | null>(null);
   const [chargeModalOpen, setChargeModalOpen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [dueDateModal, setDueDateModal] = useState(false);
@@ -107,7 +107,8 @@ export default function BillingPage() {
       return;
     }
     const updated = { ...row, payment: { ...row.payment, status: 'paid' as const } };
-    setPaidPromptRow(updated);
+    showToast(`${row.studentName} — 완납 처리되었습니다.`);
+    setPaidFollowUpRow(updated);
     if (drawerRow?.payment.id === row.payment.id) {
       setDrawerRow(updated);
     }
@@ -132,15 +133,36 @@ export default function BillingPage() {
   };
 
   const handleContact = async (row: EnrichedPaymentRow) => {
-    const result = await sendDemo({
-      channel: 'sms',
-      recipient_label: `${row.studentName} 학부모`,
-      message: `[수강료 안내] ${row.payment.title} ${row.payment.amount.toLocaleString()}원 — 납부기한 ${row.payment.due_date}`,
-      student_id: row.payment.student_id,
-      template_key: 'billing_reminder',
-    });
-    if (result.error) showToast(result.error);
-    else showToast('문자 발송이 기록되었습니다.');
+    const result = await notifyPaymentOverdueBulk([row.payment.id]);
+    if (!result.ok) {
+      showToast(result.error ?? '푸시 발송에 실패했습니다.');
+      return;
+    }
+    showToast(
+      result.pushed && result.pushed > 0
+        ? `${row.studentName} 학부모에게 미납 안내 푸시를 보냈습니다.`
+        : '연결된 학부모 앱·푸시 토큰이 없습니다.'
+    );
+  };
+
+  const handleBulkPushOverdue = async () => {
+    const targets = selectedRows.filter((r) => r.isOverdue || r.payment.status === 'pending');
+    if (targets.length === 0) {
+      showToast('미납·연체 청구를 선택하세요.');
+      return;
+    }
+    setActionBusy(true);
+    const result = await notifyPaymentOverdueBulk(targets.map((r) => r.payment.id));
+    setActionBusy(false);
+    if (!result.ok) {
+      showToast(result.error ?? '푸시 발송에 실패했습니다.');
+      return;
+    }
+    showToast(
+      result.pushed && result.pushed > 0
+        ? `미납 안내 푸시 ${result.pushed}건 발송`
+        : '연결된 학부모 앱·푸시 토큰이 없습니다.'
+    );
   };
 
   const handleBulkClass = async (
@@ -203,13 +225,28 @@ export default function BillingPage() {
     }
   };
 
+  const bulkSmsTargets = selectedRows.length > 0 ? selectedRows : filteredRows.filter((r) => r.isOverdue);
+
   const sendBulk = async (channel: 'sms' | 'kakao') => {
-    const targets = selectedRows.length > 0 ? selectedRows : filteredRows.filter((r) => r.isOverdue);
+    if (selectedRows.length === 0) {
+      const overdueCount = filteredRows.filter((r) => r.isOverdue).length;
+      if (overdueCount === 0) {
+        showToast('발송할 청구를 선택하세요.');
+        return;
+      }
+      const ok = window.confirm(
+        `선택된 대상이 없습니다. 전체 연체자 ${overdueCount}명에게 ${channel === 'sms' ? '문자' : '카카오'} 발송을 기록할까요?`
+      );
+      if (!ok) return;
+    }
+
+    const targets = bulkSmsTargets;
     if (targets.length === 0) {
-      showToast('발송할 청구를 선택하거나 연체 목록을 확인하세요.');
+      showToast('발송할 청구가 없습니다.');
       return;
     }
-    let ok = 0;
+
+    let sent = 0;
     for (const row of targets.slice(0, 15)) {
       const res = await sendDemo({
         channel,
@@ -221,9 +258,9 @@ export default function BillingPage() {
         student_id: row.payment.student_id,
         template_key: channel === 'sms' ? 'billing_bulk' : 'billing_kakao',
       });
-      if (!res.error) ok++;
+      if (!res.error) sent++;
     }
-    showToast(`${ok}건 ${channel === 'sms' ? '문자' : '카카오'} 발송이 기록되었습니다.`);
+    showToast(`${sent}건 ${channel === 'sms' ? '문자' : '카카오'} 발송이 기록되었습니다.`);
   };
 
   const handleBulkNextMonth = async () => {
@@ -279,7 +316,22 @@ export default function BillingPage() {
 
       <BillingOverview kpis={center.kpis} />
 
-      <BillingTimelinePlaceholder />
+      {paidFollowUpRow && (
+        <PaidFollowUpBanner
+          row={paidFollowUpRow}
+          busy={actionBusy}
+          onCreateNextMonth={() => {
+            void handleRegisterNextMonth(paidFollowUpRow).then(() => setPaidFollowUpRow(null));
+          }}
+          onRegisterRereg={() => {
+            void handleRegisterRereg(
+              paidFollowUpRow.payment.student_id,
+              paidFollowUpRow.studentName
+            ).then(() => setPaidFollowUpRow(null));
+          }}
+          onDismiss={() => setPaidFollowUpRow(null)}
+        />
+      )}
 
       <BillingActionCenter
         tasks={center.todayTasks}
@@ -335,7 +387,23 @@ export default function BillingPage() {
 
       <BillingSelectionBar
         count={selectedIds.size}
+        smsLabel={
+          selectedRows.length > 0
+            ? `문자 (선택 ${selectedRows.length}명)`
+            : `문자 (연체 ${filteredRows.filter((r) => r.isOverdue).length}명)`
+        }
+        kakaoLabel={
+          selectedRows.length > 0
+            ? `카카오 (선택 ${selectedRows.length}명)`
+            : `카카오 (연체 ${filteredRows.filter((r) => r.isOverdue).length}명)`
+        }
+        pushLabel={
+          selectedRows.length > 0
+            ? `미납 푸시 (선택 ${selectedRows.length}명)`
+            : `미납 푸시 (연체 ${filteredRows.filter((r) => r.isOverdue).length}명)`
+        }
         onChangeDueDate={() => setDueDateModal(true)}
+        onPushOverdue={() => void handleBulkPushOverdue()}
         onSendSms={() => void sendBulk('sms')}
         onSendKakao={() => void sendBulk('kakao')}
         onBulkNextMonth={() => void handleBulkNextMonth()}
@@ -390,22 +458,6 @@ export default function BillingPage() {
         onClose={() => setChargeModalOpen(false)}
         onBulkClass={handleBulkClass}
         onBulkStudents={handleBulkStudents}
-      />
-
-      <PaidCompletionModal
-        row={paidPromptRow}
-        busy={actionBusy}
-        onCreateNextMonth={() => {
-          if (!paidPromptRow) return;
-          void handleRegisterNextMonth(paidPromptRow).then(() => setPaidPromptRow(null));
-        }}
-        onRegisterRereg={() => {
-          if (!paidPromptRow) return;
-          void handleRegisterRereg(paidPromptRow.payment.student_id, paidPromptRow.studentName).then(
-            () => setPaidPromptRow(null)
-          );
-        }}
-        onClose={() => setPaidPromptRow(null)}
       />
 
       {dueDateModal && (

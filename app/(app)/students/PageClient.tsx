@@ -7,7 +7,12 @@ import { StudentsDataTable } from '@/components/students/StudentsDataTable';
 import type { LessonLog, ConsultationFollowup } from '@/types/database';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { matchesHangulSearch } from '@/lib/hangulMatch';
 import { cn } from '@/lib/cn';
+import {
+  readStudentsPageScroll,
+  saveStudentsPageScroll,
+} from '@/lib/studentsListScroll';
 import { useStudents } from '@/hooks/useStudents';
 import { useClasses } from '@/hooks/useClasses';
 import {
@@ -139,6 +144,28 @@ function StudentsPageContent() {
   const [connectionsByStudent, setConnectionsByStudent] = useState<
     Map<string, { relationship: ConnectionRelationship }[]>
   >(new Map());
+  const [parentSearch, setParentSearch] = useState('');
+  const [parentLinkFilter, setParentLinkFilter] = useState<'all' | 'linked' | 'unlinked'>('all');
+  const [lastContactByStudent, setLastContactByStudent] = useState<
+    Map<string, { date: string; pending: boolean }>
+  >(new Map());
+
+  const filteredParents = useMemo(() => {
+    return students.filter((s) => {
+      const phones = guardianPhonesByStudent.get(s.id) ?? [];
+      const q = parentSearch.trim();
+      const matchesQ =
+        !q ||
+        matchesHangulSearch(s.name, q) ||
+        phones.some((p) => p.includes(q.replace(/-/g, '')));
+      const linked = isParentLinked(s, connectionsByStudent.get(s.id));
+      const matchesLink =
+        parentLinkFilter === 'all' ||
+        (parentLinkFilter === 'linked' && linked) ||
+        (parentLinkFilter === 'unlinked' && !linked);
+      return matchesQ && matchesLink;
+    });
+  }, [students, parentSearch, parentLinkFilter, guardianPhonesByStudent, connectionsByStudent]);
 
   useEffect(() => {
     if (!profile?.academy_id || students.length === 0) return;
@@ -157,6 +184,37 @@ function StudentsPageContent() {
       setConnectionsByStudent(map);
     })();
   }, [profile?.academy_id, students]);
+
+  useEffect(() => {
+    if (tab !== 'parents' || !profile?.academy_id) return;
+    void supabase
+      .from('parent_messages')
+      .select('student_id, created_at, replied_at, status')
+      .eq('academy_id', profile.academy_id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        const byStudent = new Map<string, { dates: string[]; pending: boolean }>();
+        for (const row of (data ?? []) as {
+          student_id: string | null;
+          created_at: string;
+          replied_at: string | null;
+          status: string;
+        }[]) {
+          if (!row.student_id) continue;
+          const entry = byStudent.get(row.student_id) ?? { dates: [], pending: false };
+          entry.dates.push(row.created_at.slice(0, 10));
+          if (row.replied_at) entry.dates.push(row.replied_at.slice(0, 10));
+          if (row.status === 'pending') entry.pending = true;
+          byStudent.set(row.student_id, entry);
+        }
+        const map = new Map<string, { date: string; pending: boolean }>();
+        for (const [studentId, entry] of byStudent) {
+          const date = entry.dates.sort().at(-1)!;
+          map.set(studentId, { date, pending: entry.pending });
+        }
+        setLastContactByStudent(map);
+      });
+  }, [tab, profile?.academy_id]);
 
   useEffect(() => {
     if (tab !== 'parents' || !profile?.academy_id || students.length === 0) return;
@@ -203,7 +261,7 @@ function StudentsPageContent() {
   const filtered = useMemo(
     () =>
       students.filter((s) => {
-        if (search && !s.name.includes(search)) return false;
+        if (search && !matchesHangulSearch(s.name, search)) return false;
         if (grade !== '전체' && s.grade !== grade) return false;
         if (classFilter !== '전체' && s.class_id !== classFilter) return false;
         if (status !== '전체' && s.status !== status) return false;
@@ -273,6 +331,16 @@ function StudentsPageContent() {
       setLoadingEdit(false);
     }
   };
+
+  useEffect(() => {
+    const y = readStudentsPageScroll();
+    if (y != null && y > 0) {
+      requestAnimationFrame(() => window.scrollTo({ top: y, behavior: 'instant' as ScrollBehavior }));
+    }
+    const onScroll = () => saveStudentsPageScroll(window.scrollY);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const editId = searchParams.get('edit');
@@ -437,6 +505,48 @@ function StudentsPageContent() {
       {tab === 'parents' && (
         <div className="space-y-4">
           <div
+            className="rounded-2xl px-4 py-3 flex flex-wrap items-center gap-3"
+            style={{
+              background: 'var(--app-surface)',
+              border: '1px solid var(--app-border)',
+              boxShadow: 'var(--s-xs)',
+            }}
+          >
+            <div className="relative flex-1 min-w-[160px]">
+              <i
+                className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+                style={{ color: 'var(--app-ink-4)' }}
+              />
+              <input
+                type="text"
+                value={parentSearch}
+                onChange={(e) => setParentSearch(e.target.value)}
+                placeholder="학생 이름·전화번호 검색"
+                className="w-full pl-8 pr-3 py-2 rounded-xl text-sm"
+                style={{
+                  background: 'var(--app-surface-2)',
+                  border: '1px solid var(--app-border)',
+                  color: 'var(--app-ink)',
+                  outline: 'none',
+                }}
+              />
+            </div>
+            <select
+              value={parentLinkFilter}
+              onChange={(e) => setParentLinkFilter(e.target.value as 'all' | 'linked' | 'unlinked')}
+              className="px-3 py-2 rounded-xl text-sm"
+              style={{
+                background: 'var(--app-surface-2)',
+                border: '1px solid var(--app-border)',
+                color: 'var(--app-ink)',
+              }}
+            >
+              <option value="all">전체</option>
+              <option value="linked">학부모 연결됨</option>
+              <option value="unlinked">학부모 미연결</option>
+            </select>
+          </div>
+          <div
             className="rounded-2xl overflow-hidden"
             style={{
               background: 'var(--app-surface)',
@@ -460,7 +570,12 @@ function StudentsPageContent() {
               </Link>
             </div>
             <ul>
-              {students.map((s) => (
+              {filteredParents.length === 0 ? (
+                <li className="px-5 py-8 text-center text-sm" style={{ color: 'var(--app-ink-3)' }}>
+                  검색 결과가 없습니다.
+                </li>
+              ) : (
+              filteredParents.map((s) => (
                 <li
                   key={s.id}
                   className="px-5 py-3 flex flex-wrap items-center gap-3"
@@ -478,6 +593,30 @@ function StudentsPageContent() {
                       .map((p) => formatPhoneDisplay(p))
                       .join(' · ') || '보호자 연락처 없음'}
                   </span>
+                  {(() => {
+                    const contact = lastContactByStudent.get(s.id);
+                    if (!contact) {
+                      return (
+                        <span className="text-xs" style={{ color: 'var(--app-ink-4)' }}>
+                          최근 연락 없음
+                        </span>
+                      );
+                    }
+                    return (
+                      <Link
+                        href={`/messages?student=${s.id}`}
+                        className="text-xs hover:underline flex items-center gap-1.5"
+                        style={{ color: 'var(--app-ink-3)' }}
+                      >
+                        최근 연락 {contact.date}
+                        {contact.pending && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full app-badge-warning">
+                            미답변
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })()}
                   <span
                     className={cn(
                       'text-[10px] font-semibold px-2.5 py-1 rounded-full',
@@ -490,14 +629,15 @@ function StudentsPageContent() {
                   </span>
                   <span
                     className={cn(
-                      'text-[10px] font-semibold px-2.5 py-1 rounded-full ml-auto',
+                      'text-[10px] font-semibold px-2.5 py-1 rounded-full',
                       isParentLinked(s, connectionsByStudent.get(s.id)) ? 'app-badge-success' : 'app-badge-warning'
                     )}
                   >
                     학부모 {isParentLinked(s, connectionsByStudent.get(s.id)) ? '연결됨' : '미연결'}
                   </span>
                 </li>
-              ))}
+              ))
+              )}
             </ul>
           </div>
         </div>

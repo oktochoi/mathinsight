@@ -2,6 +2,7 @@
 
 import { AuthProvider } from '@/context/AuthContext';
 import { ChatUnreadProvider } from '@/context/ChatUnreadContext';
+import { FlutterPushSync } from '@/components/providers/FlutterPushSync';
 import type { UserProfile } from '@/types/database';
 
 export default function AuthProviders({
@@ -13,6 +14,7 @@ export default function AuthProviders({
 }) {
   return (
     <AuthProvider initialProfile={initialProfile}>
+      <FlutterPushSync />
       <ChatUnreadProvider>{children}</ChatUnreadProvider>
     </AuthProvider>
   );

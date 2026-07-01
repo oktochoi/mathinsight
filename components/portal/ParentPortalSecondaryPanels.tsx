@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { parentReportPath } from '@/lib/documentRoutes';
 import { sanitizeParentReportText } from '@/lib/parentReportFormat';
@@ -9,15 +9,12 @@ import { usePortalAttendance } from '@/hooks/usePortalErp';
 import { usePortalPayments } from '@/hooks/useBilling';
 import { usePortalCounselingSessions } from '@/hooks/useCounselingSessions';
 import { usePortalAnnouncements } from '@/hooks/useAnnouncements';
-import { useParentMessagesPortal } from '@/hooks/useParentMessages';
 import { usePortalClassProgress } from '@/hooks/useCurriculum';
 import { PortalSection, PortalSubheading } from '@/components/portal/ParentUI';
 import { ParentAttendancePanel } from '@/components/portal/ParentAttendancePanel';
 import { ParentCounselingPanel } from '@/components/portal/ParentCounselingPanel';
 import { ParentNoticesPanel } from '@/components/portal/ParentNoticesPanel';
 import { ParentPaymentsPanel } from '@/components/portal/ParentPaymentsPanel';
-import { ParentMessagesPanel } from '@/components/portal/ParentMessagesPanel';
-import { ParentChatPanel } from '@/components/chat/ParentChatPanel';
 import { PortalSchedule } from '@/components/portal/PortalSchedule';
 import { cn } from '@/lib/cn';
 import type { Student } from '@/types/database';
@@ -25,18 +22,113 @@ import type { Student } from '@/types/database';
 type Props = {
   child: Student;
   academyName: string;
+  tab?: TabId;
+  onTabChange?: (tab: TabId) => void;
 };
 
-type TabId = 'attendance' | 'reports' | 'notices' | 'inquiry' | 'payments' | 'schedule';
+export type TabId = 'attendance' | 'reports' | 'notices' | 'payments' | 'schedule';
 
-const TABS: { id: TabId; label: string; icon: string }[] = [
+export const PARENT_SECONDARY_TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'attendance', label: '출결', icon: 'ri-calendar-check-line' },
   { id: 'reports', label: '상담 리포트', icon: 'ri-file-text-line' },
   { id: 'notices', label: '공지', icon: 'ri-megaphone-line' },
-  { id: 'inquiry', label: '문의', icon: 'ri-mail-send-line' },
   { id: 'payments', label: '수납', icon: 'ri-wallet-3-line' },
   { id: 'schedule', label: '일정', icon: 'ri-calendar-line' },
 ];
+
+const TAB_ROUTES: Record<TabId, string> = {
+  attendance: '/parent/attendance',
+  reports: '/parent/reports',
+  notices: '/parent/notices',
+  payments: '/parent/payments',
+  schedule: '/parent/schedule',
+};
+
+/** 홈 등에서 각 기능 화면으로 이동하는 카드 */
+export function ParentSecondaryQuickCards({
+  badges,
+}: {
+  badges?: Partial<Record<TabId, number>>;
+}) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      {PARENT_SECONDARY_TABS.map((t) => {
+        const count = badges?.[t.id];
+        return (
+          <Link
+            key={t.id}
+            href={TAB_ROUTES[t.id]}
+            className="relative flex flex-col items-start gap-1 rounded-xl border border-stone-200 bg-stone-50/80 px-3 py-3 text-left hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors"
+          >
+            <i className={cn(t.icon, 'text-lg text-indigo-600')} aria-hidden />
+            <span className="text-xs font-semibold text-stone-800">{t.label}</span>
+            {count != null && count > 0 && (
+              <span className="absolute top-2 right-2 text-[9px] font-bold min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                {count > 9 ? '9+' : count}
+              </span>
+            )}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+export function useParentSecondaryBadges(child: Student) {
+  const { reports } = useParentReports(child.id);
+  const { items: notices } = usePortalAnnouncements(child.id, child.class_id);
+  const { payments } = usePortalPayments(child.id);
+
+  const cutoff = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 14);
+    return d.toISOString().slice(0, 10);
+  }, []);
+
+  const recentReports = reports.filter((r) => r.created_at.slice(0, 10) >= cutoff).length;
+  const recentNotices = notices.filter((n) => (n.published_at ?? '').slice(0, 10) >= cutoff).length;
+  const overduePayments = payments.filter(
+    (p) => p.status === 'pending' && p.due_date < new Date().toISOString().slice(0, 10)
+  ).length;
+
+  return {
+    reports: recentReports,
+    notices: recentNotices,
+    payments: overduePayments,
+  } as Partial<Record<TabId, number>>;
+}
+
+export function ParentAttendanceContent({ studentId }: { studentId: string }) {
+  return <AttendanceTab studentId={studentId} />;
+}
+
+export function ParentReportsContent({ studentId }: { studentId: string }) {
+  return <ReportsTab studentId={studentId} />;
+}
+
+export function ParentNoticesContent({
+  studentId,
+  classId,
+}: {
+  studentId: string;
+  classId?: string | null;
+}) {
+  return <NoticesTab studentId={studentId} classId={classId} />;
+}
+
+export function ParentPaymentsContent({ studentId }: { studentId: string }) {
+  return <PaymentsTab studentId={studentId} />;
+}
+
+export function ParentScheduleContent({
+  classId,
+  academyName,
+}: {
+  classId?: string | null;
+  academyName: string;
+}) {
+  return <ScheduleTab classId={classId} academyName={academyName} />;
+}
 
 function AttendanceTab({ studentId }: { studentId: string }) {
   const { summary } = usePortalAttendance(studentId);
@@ -100,58 +192,6 @@ function NoticesTab({ studentId, classId }: { studentId: string; classId?: strin
   );
 }
 
-function InquiryTab({ child }: { child: Student }) {
-  const [mode, setMode] = useState<'chat' | 'ticket'>('chat');
-  const { messages, sendMessage } = useParentMessagesPortal(child.id);
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="문의 방식">
-        {(
-          [
-            ['chat', '선생님께 메시지', 'ri-chat-3-line'],
-            ['ticket', '일회 문의', 'ri-mail-send-line'],
-          ] as const
-        ).map(([id, label, icon]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={mode === id}
-            onClick={() => setMode(id)}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
-              mode === id
-                ? 'bg-indigo-600 text-white'
-                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-            )}
-          >
-            <i className={icon} aria-hidden />
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {mode === 'chat' ? (
-        <ParentChatPanel child={child} />
-      ) : (
-        <ParentMessagesPanel
-          messages={messages}
-          child={child}
-          onSend={async ({ subject, body }) => {
-            if (!child.academy_id) return { error: '학원 정보가 없습니다.' };
-            return sendMessage({
-              academy_id: child.academy_id,
-              student_id: child.id,
-              subject,
-              body,
-            });
-          }}
-        />
-      )}
-    </div>
-  );
-}
 
 function PaymentsTab({ studentId }: { studentId: string }) {
   const { payments, loading } = usePortalPayments(studentId);
@@ -165,11 +205,9 @@ function PaymentsTab({ studentId }: { studentId: string }) {
 function ScheduleTab({
   classId,
   academyName,
-  className,
 }: {
   classId?: string | null;
   academyName: string;
-  className?: string;
 }) {
   const { progress } = usePortalClassProgress(classId);
   return (
@@ -186,22 +224,28 @@ function ScheduleTab({
   );
 }
 
-/** 접기 섹션 — 탭 전환 시 해당 데이터만 로딩 */
-export function ParentPortalSecondaryPanels({ child, academyName }: Props) {
-  const [tab, setTab] = useState<TabId>('attendance');
-
+function TabBar({
+  tab,
+  onTabChange,
+  badges,
+}: {
+  tab: TabId;
+  onTabChange: (t: TabId) => void;
+  badges?: Partial<Record<TabId, number>>;
+}) {
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="추가 정보">
-        {TABS.map((t) => (
+    <div className="flex flex-wrap gap-2" role="tablist" aria-label="추가 정보">
+      {PARENT_SECONDARY_TABS.map((t) => {
+        const count = badges?.[t.id];
+        return (
           <button
             key={t.id}
             type="button"
             role="tab"
             aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
+            onClick={() => onTabChange(t.id)}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
+              'relative inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
               tab === t.id
                 ? 'bg-indigo-600 text-white'
                 : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
@@ -209,20 +253,50 @@ export function ParentPortalSecondaryPanels({ child, academyName }: Props) {
           >
             <i className={t.icon} aria-hidden />
             {t.label}
+            {count != null && count > 0 && (
+              <span
+                className={cn(
+                  'ml-0.5 text-[9px] font-bold min-w-[1rem] h-4 px-1 rounded-full flex items-center justify-center',
+                  tab === t.id ? 'bg-white/25 text-white' : 'bg-indigo-600 text-white'
+                )}
+              >
+                {count > 9 ? '9+' : count}
+              </span>
+            )}
           </button>
-        ))}
-      </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** 접기 섹션 — 탭 전환 시 해당 데이터만 로딩 */
+export function ParentPortalSecondaryPanels({
+  child,
+  academyName,
+  tab: controlledTab,
+  onTabChange,
+  badges,
+}: Props & { badges?: Partial<Record<TabId, number>> }) {
+  const [internalTab, setInternalTab] = useState<TabId>('attendance');
+  const tab = controlledTab ?? internalTab;
+  const setTab = onTabChange ?? setInternalTab;
+
+  useEffect(() => {
+    if (controlledTab) setInternalTab(controlledTab);
+  }, [controlledTab]);
+
+  return (
+    <div className="space-y-4">
+      <TabBar tab={tab} onTabChange={setTab} badges={badges} />
 
       {tab === 'attendance' && <AttendanceTab studentId={child.id} />}
       {tab === 'reports' && <ReportsTab studentId={child.id} />}
       {tab === 'notices' && <NoticesTab studentId={child.id} classId={child.class_id} />}
-      {tab === 'inquiry' && (
-        <PortalSection id="inquiry" title="학부모 문의" description="실시간 채팅 또는 일회 문의를 선택하세요.">
-          <InquiryTab child={child} />
-        </PortalSection>
-      )}
       {tab === 'payments' && <PaymentsTab studentId={child.id} />}
-      {tab === 'schedule' && <ScheduleTab classId={child.class_id} academyName={academyName} />}
+      {tab === 'schedule' && (
+        <ScheduleTab classId={child.class_id} academyName={academyName} />
+      )}
     </div>
   );
 }

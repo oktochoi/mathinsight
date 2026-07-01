@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/cn';
+import { formatSavedAt } from '@/lib/formatSavedAt';
 import type { LessonFormRow } from '@/lib/lessonLogRowDefaults';
 import type { AttendanceStatus, HomeworkStatus, Student } from '@/types/database';
 
@@ -59,6 +60,7 @@ type StudentRecordingCardProps = {
   row: LessonFormRow;
   disabled?: boolean;
   saving?: boolean;
+  savedAt?: number | null;
   inputStyle: React.CSSProperties;
   attendanceOptions: Option<AttendanceStatus>[];
   homeworkOptions: Option<HomeworkStatus>[];
@@ -70,6 +72,7 @@ export function StudentRecordingCard({
   row,
   disabled,
   saving,
+  savedAt,
   inputStyle,
   attendanceOptions,
   homeworkOptions,
@@ -94,11 +97,15 @@ export function StudentRecordingCard({
           {student.name}
         </p>
         <div className="flex items-center gap-1 shrink-0">
-          {saving && (
+          {saving ? (
             <span className="text-[10px] animate-pulse" style={{ color: 'var(--app-ink-4)' }}>
               저장…
             </span>
-          )}
+          ) : formatSavedAt(savedAt) ? (
+            <span className="text-[10px]" style={{ color: 'var(--app-ink-4)' }}>
+              저장됨 · {formatSavedAt(savedAt)}
+            </span>
+          ) : null}
           <span
             className="text-[10px] font-medium px-1.5 py-0.5 rounded"
             style={{

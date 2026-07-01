@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { signUpWithEmail } from '@/lib/auth';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
 import type { SignupRole } from '@/lib/roles';
-import { AuthMobileLogo } from '@/components/auth/AuthBrandPanel';
+import { AuthPageScaffold } from '@/components/auth/AuthPageScaffold';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
 import {
   AuthField,
@@ -17,8 +17,9 @@ import {
 } from '@/components/auth/AuthField';
 import { AuthDivider, GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { RolePicker } from '@/components/auth/RolePicker';
+import { AuthSignupFooter } from '@/components/auth/AuthFooter';
+import { PhoneSignupWizard } from '@/components/auth/PhoneSignupWizard';
 import { peekPendingAcademyCode } from '@/lib/academyCodeStorage';
-import { mkt } from '@/lib/marketing/ui';
 
 function SignupFormInner() {
   const router = useRouter();
@@ -103,27 +104,26 @@ function SignupFormInner() {
   };
 
   return (
-    <>
-      <AuthMobileLogo />
+    <AuthPageScaffold>
       <AuthFormCard title="회원가입" subtitle="역할을 선택하고 계정을 만들어 주세요">
-        {error && (
-          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {error}
-          </div>
-        )}
+        {error && <div className="auth-error-banner">{error}</div>}
 
-        <GoogleSignInButton disabled={loading} label="Google로 가입하기" />
-        <AuthDivider />
+        {role === 'parent' || role === 'student' ? null : role === 'owner' ? null : (
+          <>
+            <GoogleSignInButton disabled={loading} label="Google로 가입하기" />
+            <AuthDivider />
+          </>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <AuthField label="역할 선택">
             <RolePicker value={role} onChange={setRole} />
-            <p className="mt-1.5 text-[11px] text-slate-500">
-              선택: <span className="font-semibold text-slate-700">{roleLabels[role]}</span>
+            <p className="mt-1.5 text-[11px]" style={{ color: 'var(--auth-muted)' }}>
+              선택: <span className="font-semibold" style={{ color: 'var(--auth-ink)' }}>{roleLabels[role]}</span>
               {role === 'teacher' && ' · 가입 후 학원 초대 코드로 연결합니다'}
             </p>
             {role === 'teacher' && pendingAcademyCode && (
-              <p className="mt-2 text-xs rounded-lg bg-indigo-50 border border-indigo-100 px-3 py-2 text-indigo-800">
+              <p className="auth-info-banner mt-2 text-xs">
                 학원 코드 <strong className="font-mono">{pendingAcademyCode}</strong>가 저장되어 있습니다.
                 온보딩에서 자동으로 입력됩니다.
               </p>
@@ -131,17 +131,18 @@ function SignupFormInner() {
           </AuthField>
 
           {role === 'parent' || role === 'student' ? (
-            <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 space-y-3">
-              <p className="text-sm text-slate-700">
-                학생·학부모는 <strong>휴대폰 인증</strong>으로 가입합니다. 학원 연결은 로그인 후
-                포털에서 진행합니다.
+            <div className="space-y-3">
+              <p className="text-sm auth-info-banner">
+                휴대폰 인증으로 가입합니다. 학원 연결은 로그인 후 포털에서 진행합니다.
               </p>
-              <Link
-                href={role === 'student' ? '/signup/student' : '/signup/parent'}
-                className="inline-flex app-btn app-btn-primary text-sm"
-              >
-                {roleLabels[role]} 가입 계속하기
-              </Link>
+              <PhoneSignupWizard mode={role} embedded />
+            </div>
+          ) : role === 'owner' ? (
+            <div className="space-y-3">
+              <p className="text-sm auth-info-banner">
+                휴대폰 인증으로 가입합니다. 가입 후 학원 프로필을 설정합니다.
+              </p>
+              <PhoneSignupWizard mode="owner" embedded />
             </div>
           ) : (
             <>
@@ -184,16 +185,17 @@ function SignupFormInner() {
                 />
               </AuthField>
 
-              <label className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-600">
+              <label className="flex items-start gap-2.5 text-xs leading-relaxed" style={{ color: 'var(--auth-muted)' }}>
                 <input
                   type="checkbox"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  className="mt-0.5 rounded"
+                  style={{ borderColor: 'var(--auth-border)' }}
                 />
                 <span>
-                  <Link href="/terms" className={mkt.link}>이용약관</Link>과{' '}
-                  <Link href="/privacy" className={mkt.link}>개인정보처리방침</Link>에 동의합니다.
+                  <Link href="/terms" className="auth-link">이용약관</Link>과{' '}
+                  <Link href="/privacy" className="auth-link">개인정보처리방침</Link>에 동의합니다.
                 </span>
               </label>
 
@@ -204,12 +206,9 @@ function SignupFormInner() {
           )}
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-600">
-          이미 계정이 있으신가요?{' '}
-          <Link href={AUTH_ROUTES.login} className={mkt.link}>로그인</Link>
-        </p>
+        <AuthSignupFooter />
       </AuthFormCard>
-    </>
+    </AuthPageScaffold>
   );
 }
 

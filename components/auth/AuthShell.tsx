@@ -5,7 +5,7 @@ import { AuthBrandPanel } from '@/components/auth/AuthBrandPanel';
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/50 to-orange-50/40">
+    <div className="auth-shell">
       <Toaster position="top-center" richColors closeButton />
       <div className="grid min-h-screen lg:grid-cols-2">
         <AuthBrandPanel className="hidden lg:flex" />

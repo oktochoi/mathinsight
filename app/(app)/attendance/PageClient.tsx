@@ -5,18 +5,21 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useClassStudentIds } from '@/hooks/useClassStudentIds';
-import { useClasses, useLessonLogs } from '@/hooks/useLessonLogs';
+import { useClasses } from '@/hooks/useLessonLogs';
 import { useStudents } from '@/hooks/useStudents';
 import { useAppStore } from '@/store/useAppStore';
 import { loadClassDayData } from '@/lib/lessonOperationalRead';
+import { upsertAttendanceOnly } from '@/lib/lessonLogUpsert';
+import { supabase } from '@/lib/supabase';
 import { ATTENDANCE_LABELS } from '@/lib/statusLabels';
+import { notifyAttendancePushBatch } from '@/lib/push/notifyAttendanceClient';
 import { useToast } from '@/hooks/useToast';
 import { ErrorBanner, PageLoader } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Toast } from '@/components/ui/Toast';
 import { STAFF_PAGES } from '@/lib/staffPages';
 import { cn } from '@/lib/cn';
-import type { AttendanceStatus, LessonLog, LessonLogInsert } from '@/types/database';
+import type { AttendanceStatus, LessonLog } from '@/types/database';
 
 const attendanceOptions: { value: AttendanceStatus; label: string; style: string }[] = [
   { value: 'present', label: '출석', style: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
@@ -34,7 +37,6 @@ function AttendancePageContent() {
   const bumpDataVersion = useAppStore((s) => s.bumpDataVersion);
   const { classes, loading: classesLoading } = useClasses();
   const { students, loading: studentsLoading } = useStudents();
-  const { upsertLogs } = useLessonLogs();
 
   const [date, setDate] = useState(searchParams.get('date') ?? todayStr());
   const [classId, setClassId] = useState(searchParams.get('class') ?? '');
@@ -112,28 +114,38 @@ function AttendancePageContent() {
     }
     setSaving(true);
     setError('');
-    const rows: LessonLogInsert[] = classStudents.map((st) => {
-      const prev = existingLogs.get(st.id);
-      return {
-        academy_id: profile.academy_id!,
-        class_id: classId,
-        student_id: st.id,
-        teacher_id: profile.id,
-        lesson_date: date,
-        unit: prev?.unit ?? '출결 체크',
-        attendance_status: statusByStudent[st.id] ?? 'present',
-        homework_status: prev?.homework_status ?? 'complete',
-        test_score: prev?.test_score ?? null,
-        tags: prev?.tags ?? [],
-        memo: prev?.memo ?? null,
-      };
-    });
-    const result = await upsertLogs(rows);
+    const rows = classStudents.map((st) => ({
+      academy_id: profile.academy_id!,
+      class_id: classId,
+      student_id: st.id,
+      teacher_id: profile.id,
+      lesson_date: date,
+      attendance_status: statusByStudent[st.id] ?? 'present',
+    }));
+    const result = await upsertAttendanceOnly(supabase, rows, existingLogs);
     setSaving(false);
     if (result.error) {
       setError(result.error);
       return;
     }
+
+    const selectedClass = classes.find((c) => c.id === classId);
+    const changedItems = classStudents
+      .map((st) => {
+        const prev = existingLogs.get(st.id)?.attendance_status;
+        const next = statusByStudent[st.id] ?? 'present';
+        if (prev === next) return null;
+        return { studentId: st.id, attendanceStatus: next };
+      })
+      .filter((item): item is { studentId: string; attendanceStatus: AttendanceStatus } => item != null);
+
+    notifyAttendancePushBatch({
+      lessonDate: date,
+      classId,
+      className: selectedClass?.name,
+      items: changedItems,
+    });
+
     isDirtyRef.current = false;
     bumpDataVersion();
     showToast('출결이 저장되었습니다.');

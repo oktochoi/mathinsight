@@ -85,21 +85,6 @@ export function AuthProvider({
   }, [load]);
 
   useEffect(() => {
-    if (!profile?.id) return;
-
-    window.onFcmToken = async (token: string) => {
-      if (!token?.trim()) return;
-      await supabase.from('push_tokens').upsert(
-        {
-          user_id: profile.id,
-          token: token.trim(),
-          platform: 'flutter',
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' }
-      );
-    };
-
     window.onPushMessage = (title: string, body: string) => {
       window.dispatchEvent(
         new CustomEvent('eduflow:push', { detail: { title, body } })
@@ -107,10 +92,9 @@ export function AuthProvider({
     };
 
     return () => {
-      delete window.onFcmToken;
       delete window.onPushMessage;
     };
-  }, [profile?.id]);
+  }, []);
 
   const value = useMemo(
     () => ({ profile, academy, loading, error, refresh: load }),

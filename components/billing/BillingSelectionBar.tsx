@@ -4,14 +4,22 @@ import { cn } from '@/lib/cn';
 
 export function BillingSelectionBar({
   count,
+  smsLabel = '문자',
+  kakaoLabel = '카카오',
+  pushLabel = '미납 푸시',
   onChangeDueDate,
+  onPushOverdue,
   onSendSms,
   onSendKakao,
   onBulkNextMonth,
   onClear,
 }: {
   count: number;
+  smsLabel?: string;
+  kakaoLabel?: string;
+  pushLabel?: string;
   onChangeDueDate: () => void;
+  onPushOverdue: () => void;
   onSendSms: () => void;
   onSendKakao: () => void;
   onBulkNextMonth: () => void;
@@ -30,6 +38,13 @@ export function BillingSelectionBar({
       <span className="text-sm font-semibold tabular-nums mr-1">{count}건 선택</span>
       <button
         type="button"
+        onClick={onPushOverdue}
+        className="text-xs px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-400 font-semibold"
+      >
+        {pushLabel}
+      </button>
+      <button
+        type="button"
         onClick={onChangeDueDate}
         className="text-xs px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20"
       >
@@ -40,14 +55,14 @@ export function BillingSelectionBar({
         onClick={onSendSms}
         className="text-xs px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20"
       >
-        문자
+        {smsLabel}
       </button>
       <button
         type="button"
         onClick={onSendKakao}
         className="text-xs px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20"
       >
-        카카오
+        {kakaoLabel}
       </button>
       <button
         type="button"

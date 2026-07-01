@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
 import type { Exam, ExamScore } from '@/types/database';
+import { notifyExamScores } from '@/lib/push/notifyGradesClient';
 
 export function useExams(classId?: string) {
   const { profile } = useAuth();
@@ -85,6 +86,16 @@ export function useExams(classId?: string) {
     rows: { student_id: string; score: number | null; feedback_memo?: string }[]
   ) => {
     if (rows.length === 0) return { error: null };
+
+    const { data: prevRows } = await supabase
+      .from('exam_scores')
+      .select('student_id, score')
+      .eq('exam_id', examId);
+
+    const prevByStudent = new Map(
+      (prevRows ?? []).map((r) => [r.student_id as string, r.score as number | null])
+    );
+
     const payload = rows.map((r) => ({
       exam_id: examId,
       student_id: r.student_id,
@@ -95,6 +106,17 @@ export function useExams(classId?: string) {
       .from('exam_scores')
       .upsert(payload, { onConflict: 'exam_id,student_id' });
     if (err) return { error: err.message };
+
+    const notifyItems = rows
+      .filter((r) => r.score != null)
+      .filter((r) => prevByStudent.get(r.student_id) !== r.score)
+      .map((r) => ({
+        studentId: r.student_id,
+        score: r.score as number,
+        previousScore: prevByStudent.get(r.student_id) ?? null,
+      }));
+
+    notifyExamScores(examId, notifyItems);
     bumpDataVersion();
     return { error: null };
   };

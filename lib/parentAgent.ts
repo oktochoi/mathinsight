@@ -24,6 +24,17 @@ export function getSuggestedParentQuestions(): string[] {
   return [...SUGGESTED_QUESTIONS];
 }
 
+const STUDENT_SUGGESTED_QUESTIONS = [
+  '내 최근 학습 상태는 어때?',
+  '숙제를 어떻게 하면 좋을까?',
+  '이번 시험 준비는 뭘 해야 해?',
+  '선생님께 물어볼 만한 게 있을까?',
+];
+
+export function getSuggestedStudentQuestions(): string[] {
+  return [...STUDENT_SUGGESTED_QUESTIONS];
+}
+
 function scoreTrendHint(scores: number[]): string {
   if (scores.length < 2) return '· 추이: 비교할 이전 점수가 더 필요합니다.';
   const last = scores[scores.length - 1];

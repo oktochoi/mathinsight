@@ -1,11 +1,16 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import type { ConnectionRelationship, Student } from '@/types/database';
 import { STATUS_LABELS, STATUS_STYLES } from '@/lib/statusLabels';
 import { isParentLinked, isStudentPortalLinked } from '@/lib/studentPortal';
 import StudentDetail from '@/app/(app)/students/[id]/StudentDetail';
 import { cn } from '@/lib/cn';
+import {
+  readStudentsSidebarScroll,
+  saveStudentsSidebarScroll,
+} from '@/lib/studentsListScroll';
 
 export function StudentsByStudentView({
   students,
@@ -18,9 +23,24 @@ export function StudentsByStudentView({
   onSelect: (id: string) => void;
   connectionsByStudent?: Map<string, { relationship: ConnectionRelationship }[]>;
 }) {
+  const sidebarRef = useRef<HTMLDivElement>(null);
   const selected = students.find((s) => s.id === selectedId) ?? students[0];
   const activeId = selectedId || selected?.id;
   const selectedConnections = selected ? connectionsByStudent?.get(selected.id) : undefined;
+
+  useEffect(() => {
+    const el = sidebarRef.current;
+    if (!el) return;
+    const y = readStudentsSidebarScroll();
+    if (y != null && y > 0) {
+      requestAnimationFrame(() => {
+        el.scrollTop = y;
+      });
+    }
+    const onScroll = () => saveStudentsSidebarScroll(el.scrollTop);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [students.length]);
 
   if (students.length === 0) {
     return <p className="text-sm text-slate-500 p-6">등록된 학생이 없습니다.</p>;
@@ -28,7 +48,10 @@ export function StudentsByStudentView({
 
   return (
     <div className="flex flex-col lg:grid lg:grid-cols-[minmax(200px,240px)_1fr] lg:min-h-[480px] border-t border-slate-100">
-      <div className="lg:border-r border-slate-100 lg:max-h-[70vh] lg:overflow-y-auto">
+      <div
+        ref={sidebarRef}
+        className="lg:border-r border-slate-100 lg:max-h-[70vh] lg:overflow-y-auto"
+      >
         <p className="lg:hidden px-4 py-2 text-xs font-semibold text-slate-500 bg-slate-50 border-b border-slate-100">
           학생 선택
         </p>

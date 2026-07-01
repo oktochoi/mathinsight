@@ -32,6 +32,7 @@ import { StudentConsultationCenter } from '@/components/student-detail/StudentCo
 import { StudentParentCommunication } from '@/components/student-detail/StudentParentCommunication';
 import { StudentAiInsightFooter } from '@/components/student-detail/StudentAiInsightFooter';
 import { StudentDetailSection } from '@/components/student-detail/StudentDetailSection';
+import { StudentDetailSidebar } from '@/components/student-detail/StudentDetailSidebar';
 import { StaffBreadcrumb } from '@/components/navigation/StaffBreadcrumb';
 import type { LessonLog, Student } from '@/types/database';
 
@@ -130,7 +131,7 @@ export default function StudentDetail({
     retentionSignals.find((s) => s.student_id === studentId);
 
   return (
-    <div className="space-y-10 w-full min-w-0 max-w-3xl pb-12">
+    <div className="w-full min-w-0 max-w-7xl pb-12">
       {!embed && (
         <StaffBreadcrumb
           items={[
@@ -142,6 +143,8 @@ export default function StudentDetail({
 
       {logsError && <ErrorBanner message={logsError} />}
 
+      <div className="mt-6 grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+        <div className="xl:col-span-8 space-y-10 min-w-0">
       <StudentDetailHero
         student={student}
         grade={enrollmentGrade}
@@ -152,6 +155,7 @@ export default function StudentDetail({
         reregStatus={reregLabel}
         risk={riskAssessment}
         studentId={studentId}
+        briefing={analytics?.briefing ?? null}
       />
 
       <StudentOverviewRow
@@ -173,6 +177,31 @@ export default function StudentDetail({
             : '없음'
         }
         reregLabel={reregLabel}
+        attendanceDetail={
+          logs.length > 0
+            ? logs
+                .slice(0, 5)
+                .map((l) => `${l.lesson_date} ${ATTENDANCE_LABELS[l.attendance_status]}`)
+                .join('\n')
+            : undefined
+        }
+        homeworkDetail={
+          logs.length > 0
+            ? logs
+                .slice(0, 5)
+                .map((l) => `${l.lesson_date} ${HOMEWORK_LABELS[l.homework_status]}`)
+                .join('\n')
+            : undefined
+        }
+        scoreDetail={
+          logs.filter((l) => l.test_score != null).length > 0
+            ? logs
+                .filter((l) => l.test_score != null)
+                .slice(0, 5)
+                .map((l) => `${l.lesson_date} ${l.test_score}점 (${l.unit})`)
+                .join('\n')
+            : undefined
+        }
       />
 
       <StudentDetailSection
@@ -242,6 +271,19 @@ export default function StudentDetail({
       />
 
       <StudentAiInsightFooter lines={aiInsightLines} />
+        </div>
+
+        <div className="xl:col-span-4 min-w-0">
+          <StudentDetailSidebar
+            student={student}
+            studentId={studentId}
+            parents={hub.parents}
+            sessions={sessions}
+            recentLessons={recentLessons}
+            className={enrollmentClass}
+          />
+        </div>
+      </div>
 
       <StudentLessonDrawer
         log={selectedLog}

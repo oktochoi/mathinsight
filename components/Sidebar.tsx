@@ -16,6 +16,7 @@ import {
   type NavSection,
 } from '@/lib/staffNavigation';
 import { useStaffPermissions, type PermissionKey } from '@/lib/permissions';
+import { StaffScopeBanner } from '@/components/staff/StaffScopeBanner';
 
 type SidebarProps = {
   open?: boolean;
@@ -134,6 +135,12 @@ export default function Sidebar({
           </button>
         )}
       </div>
+
+      {!collapsed && (
+        <div className="px-3 pb-2">
+          <StaffScopeBanner />
+        </div>
+      )}
 
       {/* 메인 네비게이션 */}
       <nav className="flex-1 px-2 overflow-y-auto overscroll-contain pb-2" aria-label="업무 메뉴">

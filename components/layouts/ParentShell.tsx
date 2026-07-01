@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { PushInAppBanner } from '@/components/PushInAppBanner';
 import { PortalChildProvider } from '@/context/PortalChildContext';
 import { ParentNavLinks } from '@/components/portal/ParentNavLinks';
+import { ParentBottomTabBar } from '@/components/portal/ParentBottomTabBar';
 import { ParentChatFab } from '@/components/chat/ParentChatFab';
 
 function NavLinks({ vertical }: { vertical?: boolean }) {
@@ -95,18 +96,16 @@ export default function ParentShell({ children }: { children: React.ReactNode })
                   로그아웃
                 </button>
               </div>
-              <nav className="flex gap-1 pb-3 overflow-x-auto scrollbar-none">
-                <NavLinks />
-              </nav>
             </div>
           </header>
 
-          <main className="parent-portal-main flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 lg:py-10 pb-16 lg:pb-10 mobile-bottom-safe">
+          <main className="parent-portal-main flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 lg:py-10 pb-24 lg:pb-10">
             {children}
           </main>
         </div>
       </div>
       </div>
+      <ParentBottomTabBar />
       <ParentChatFab />
     </PortalChildProvider>
   );

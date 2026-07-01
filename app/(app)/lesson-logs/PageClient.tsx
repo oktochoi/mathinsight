@@ -10,6 +10,7 @@ import { loadTodayLessonRows, useTodayLesson } from '@/hooks/useTodayLesson';
 import { useLessonRowSave } from '@/hooks/useLessonRowSave';
 import { useLessonPageData } from '@/hooks/useLessonPageData';
 import { useLessonActions } from '@/hooks/useLessonActions';
+import { useCurriculum } from '@/hooks/useCurriculum';
 import { useToast } from '@/hooks/useToast';
 import { Toast } from '@/components/ui/Toast';
 import { EMPTY_LESSON_FORM_ROW, mergeLessonFormRow, type LessonFormRow } from '@/lib/lessonLogRowDefaults';
@@ -58,7 +59,13 @@ function LessonLogPageContent() {
   } = useTodayLesson(selectedClassId, date);
 
   const { classStudents, studentIds, studentIdsKey } = useClassStudentIds(students, selectedClassId);
-  const { saveRow, saving: autoSaving } = useLessonRowSave(lesson?.id ?? null, selectedClassId, date, unit);
+  const { saveRow, saving: autoSaving, savedAt: rowSavedAt } = useLessonRowSave(lesson?.id ?? null, selectedClassId, date, unit);
+
+  const { setClassProgress } = useCurriculum();
+  const [showInlineProgress, setShowInlineProgress] = useState(false);
+  const [inlineProgressUnit, setInlineProgressUnit] = useState('');
+  const [inlineProgressSaving, setInlineProgressSaving] = useState(false);
+  const homeworkDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     handleStartLesson,
@@ -67,6 +74,7 @@ function LessonLogPageContent() {
     handleReopenLesson,
     starting,
     savingHeader,
+    headerSavedAt,
     closing,
     reopening,
   } = useLessonActions({
@@ -148,6 +156,18 @@ function LessonLogPageContent() {
     if (lesson?.unit && !unit) setUnit(lesson.unit);
   }, [lesson?.unit, lesson?.id, unit]);
 
+  useEffect(() => {
+    if (lessonClosed || !homeworkNote.trim()) return;
+    if (homeworkDebounceRef.current) clearTimeout(homeworkDebounceRef.current);
+    homeworkDebounceRef.current = setTimeout(() => {
+      void handleSaveHeader({ silent: true });
+    }, 600);
+    return () => {
+      if (homeworkDebounceRef.current) clearTimeout(homeworkDebounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce homework text only
+  }, [homeworkNote, lessonClosed]);
+
   const updateRow = (
     studentId: string,
     field: keyof LessonFormRow,
@@ -194,11 +214,30 @@ function LessonLogPageContent() {
     if (!selectedClassId) return;
     const unitName = await fetchClassProgress();
     if (!unitName) {
-      showToast('등록된 진도가 없습니다. 진도 관리 → 반 선택 후 단원을 등록해 주세요.');
+      setInlineProgressUnit('');
+      setShowInlineProgress(true);
       return;
     }
     setUnit(unitName);
+    setShowInlineProgress(false);
     showToast('진도를 불러왔습니다.');
+  };
+
+  const saveInlineProgress = async () => {
+    if (!selectedClassId || !inlineProgressUnit.trim()) return;
+    setInlineProgressSaving(true);
+    const { error: err } = await setClassProgress({
+      class_id: selectedClassId,
+      unit_name: inlineProgressUnit.trim(),
+    });
+    setInlineProgressSaving(false);
+    if (err) {
+      showToast(err);
+      return;
+    }
+    setUnit(inlineProgressUnit.trim());
+    setShowInlineProgress(false);
+    showToast('진도를 등록했습니다.');
   };
 
   const selectedClass = classes.find((c) => c.id === selectedClassId);
@@ -233,6 +272,12 @@ function LessonLogPageContent() {
         unit={unit}
         onUnitChange={setUnit}
         onLoadProgress={() => void loadClassProgress()}
+        showInlineProgress={showInlineProgress}
+        inlineProgressUnit={inlineProgressUnit}
+        onInlineProgressUnitChange={setInlineProgressUnit}
+        onInlineProgressSave={() => void saveInlineProgress()}
+        onInlineProgressDismiss={() => setShowInlineProgress(false)}
+        inlineProgressSaving={inlineProgressSaving}
         startedAt={lesson?.started_at}
       />
 
@@ -263,11 +308,13 @@ function LessonLogPageContent() {
           onHomeworkNoteChange={setHomeworkNote}
           lessonClosed={lessonClosed}
           savingHeader={savingHeader}
+          headerSavedAt={headerSavedAt}
           onSaveHeader={() => void handleSaveHeader()}
           onMarkAllPresent={markAllPresent}
           onMarkAllHomeworkComplete={markAllHomeworkComplete}
           onUpdateRow={updateRow}
           autoSaving={autoSaving}
+          rowSavedAt={rowSavedAt}
           attendanceOptions={attendanceOptions}
           homeworkOptions={homeworkOptions}
           lessonInProgress={lessonInProgress}

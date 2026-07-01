@@ -29,6 +29,32 @@ export function getWeekDates(anchor: Date): string[] {
   return Array.from({ length: 7 }, (_, i) => dateStr(addDays(start, i)));
 }
 
+export type MonthGridCell = {
+  date: string;
+  inMonth: boolean;
+};
+
+/** 달력 그리드용 6주(42칸) — 일요일 시작 */
+export function getMonthGridDates(year: number, month: number): MonthGridCell[] {
+  const first = new Date(year, month, 1);
+  const gridStart = startOfWeek(first);
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = addDays(gridStart, i);
+    return { date: dateStr(d), inMonth: d.getMonth() === month };
+  });
+}
+
+export function getDatesBetween(start: string, end: string): string[] {
+  const out: string[] = [];
+  let cur = new Date(start + 'T12:00:00');
+  const last = new Date(end + 'T12:00:00');
+  while (cur <= last) {
+    out.push(dateStr(cur));
+    cur = addDays(cur, 1);
+  }
+  return out;
+}
+
 export function parseTimeToMinutes(t: string): number {
   const [h, m] = t.slice(0, 5).split(':').map(Number);
   return h * 60 + m;

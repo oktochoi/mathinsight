@@ -22,6 +22,12 @@ type Props = {
   unit: string;
   onUnitChange: (unit: string) => void;
   onLoadProgress: () => void;
+  showInlineProgress?: boolean;
+  inlineProgressUnit?: string;
+  onInlineProgressUnitChange?: (v: string) => void;
+  onInlineProgressSave?: () => void;
+  onInlineProgressDismiss?: () => void;
+  inlineProgressSaving?: boolean;
   startedAt?: string | null;
 };
 
@@ -44,6 +50,12 @@ export function LessonLogHeader({
   unit,
   onUnitChange,
   onLoadProgress,
+  showInlineProgress,
+  inlineProgressUnit = '',
+  onInlineProgressUnitChange,
+  onInlineProgressSave,
+  onInlineProgressDismiss,
+  inlineProgressSaving,
   startedAt,
 }: Props) {
   const inputStyle = lessonInputStyle(false);
@@ -156,6 +168,41 @@ export function LessonLogHeader({
               className="w-full px-3 py-2.5 rounded-xl text-sm"
               style={unitStyle}
             />
+            {showInlineProgress && (
+              <div
+                className="mt-3 rounded-xl p-3 space-y-2"
+                style={{ background: 'var(--app-warning-bg)', border: '1px solid var(--app-warning-border)' }}
+              >
+                <p className="text-xs font-semibold" style={{ color: 'var(--app-warning-text)' }}>
+                  등록된 진도가 없습니다. 여기서 바로 등록하거나{' '}
+                  <a href="/curriculum" className="underline">
+                    진도 관리
+                  </a>
+                  로 이동할 수 있습니다.
+                </p>
+                <input
+                  type="text"
+                  value={inlineProgressUnit}
+                  onChange={(e) => onInlineProgressUnitChange?.(e.target.value)}
+                  placeholder="단원명 입력"
+                  className="w-full px-3 py-2 rounded-lg text-sm"
+                  style={inputStyle}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={inlineProgressSaving || !inlineProgressUnit?.trim()}
+                    onClick={onInlineProgressSave}
+                    className="app-btn app-btn-primary app-btn-sm disabled:opacity-50"
+                  >
+                    {inlineProgressSaving ? '저장 중…' : '진도 등록'}
+                  </button>
+                  <button type="button" onClick={onInlineProgressDismiss} className="app-btn app-btn-ghost app-btn-sm">
+                    닫기
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}

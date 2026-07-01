@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useClasses } from '@/hooks/useLessonLogs';
 import { useCurriculum } from '@/hooks/useCurriculum';
-import { DEFAULT_MATH_UNITS } from '@/lib/curriculumDefaults';
+import { DEFAULT_MATH_UNITS, CURRICULUM_SUBJECTS } from '@/lib/curriculumDefaults';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PageLoader, ErrorBanner } from '@/components/ui/DataStates';
 import { STAFF_PAGES } from '@/lib/staffPages';
@@ -12,21 +12,25 @@ const grades = Object.keys(DEFAULT_MATH_UNITS);
 
 export default function CurriculumPage() {
   const { classes } = useClasses();
-  const { units, progress, loading, error, importDefaultUnits, setClassProgress } = useCurriculum();
+  const { units, progress, loading, error, importDefaultUnits, addCustomUnit, setClassProgress } = useCurriculum();
 
+  const [subject, setSubject] = useState<string>('수학');
   const [importGrade, setImportGrade] = useState('중2');
+  const [customUnitName, setCustomUnitName] = useState('');
+  const [customGrade, setCustomGrade] = useState('중2');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [unitName, setUnitName] = useState('');
   const [notes, setNotes] = useState('');
   const [toast, setToast] = useState('');
 
-  const importUnits = units.filter((u) => u.grade === importGrade);
+  const subjectUnits = useMemo(() => units.filter((u) => u.subject === subject), [units, subject]);
+  const importUnits = subjectUnits.filter((u) => u.grade === importGrade);
   const classProgress = progress.find((p) => p.class_id === selectedClassId);
   const selectedClass = classes.find((c) => c.id === selectedClassId);
 
   const unitOptions = useMemo(() => {
-    const byGrade = new Map<string, typeof units>();
-    for (const u of units) {
+    const byGrade = new Map<string, typeof subjectUnits>();
+    for (const u of subjectUnits) {
       const list = byGrade.get(u.grade) ?? [];
       list.push(u);
       byGrade.set(u.grade, list);
@@ -36,20 +40,30 @@ export default function CurriculumPage() {
       const bi = grades.indexOf(b);
       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
     });
-  }, [units]);
+  }, [subjectUnits]);
 
   const handleImport = async () => {
-    const result = await importDefaultUnits(importGrade);
+    const result = await importDefaultUnits(importGrade, subject);
     if (result.error) setToast(result.error);
     else {
-      setToast(`${importGrade} 수학 기본 단원을 등록했습니다.`);
+      setToast(`${importGrade} ${subject} 기본 단원을 등록했습니다.`);
+      setTimeout(() => setToast(''), 2500);
+    }
+  };
+
+  const handleAddUnit = async () => {
+    const result = await addCustomUnit({ subject, grade: customGrade, unit_name: customUnitName });
+    if (result.error) setToast(result.error);
+    else {
+      setToast(`「${customUnitName.trim()}」 단원을 추가했습니다.`);
+      setCustomUnitName('');
       setTimeout(() => setToast(''), 2500);
     }
   };
 
   const handleSaveProgress = async () => {
     if (!selectedClassId || !unitName.trim()) return;
-    const unit = units.find((u) => u.unit_name === unitName.trim());
+    const unit = subjectUnits.find((u) => u.unit_name === unitName.trim());
     const result = await setClassProgress({
       class_id: selectedClassId,
       unit_name: unitName.trim(),
@@ -77,32 +91,93 @@ export default function CurriculumPage() {
 
       <div className="flex flex-wrap gap-3 items-end">
         <label className="text-sm">
-          <span className="block app-label mb-1">기본 단원 불러오기 (학년)</span>
+          <span className="block app-label mb-1">과목</span>
           <select
-            value={importGrade}
-            onChange={(e) => setImportGrade(e.target.value)}
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
             className="rounded-xl px-3 py-2 text-sm"
             style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface)', color: 'var(--app-ink)' }}
           >
-            {grades.map((g) => (
-              <option key={g} value={g}>
-                {g}
+            {CURRICULUM_SUBJECTS.map((s) => (
+              <option key={s} value={s}>
+                {s}
               </option>
             ))}
           </select>
         </label>
-        <button type="button" onClick={() => void handleImport()} className="app-btn app-btn-secondary">
-          {importGrade} 기본 단원 등록
-        </button>
+        {subject === '수학' && (
+          <>
+            <label className="text-sm">
+              <span className="block app-label mb-1">기본 단원 불러오기 (학년)</span>
+              <select
+                value={importGrade}
+                onChange={(e) => setImportGrade(e.target.value)}
+                className="rounded-xl px-3 py-2 text-sm"
+                style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface)', color: 'var(--app-ink)' }}
+              >
+                {grades.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="button" onClick={() => void handleImport()} className="app-btn app-btn-secondary">
+              {importGrade} 기본 단원 등록
+            </button>
+          </>
+        )}
       </div>
+
+      {subject !== '수학' && (
+        <div className="app-card p-4 flex flex-wrap gap-3 items-end">
+          <label className="text-sm flex-1 min-w-[140px]">
+            <span className="block app-label mb-1">학년</span>
+            <select
+              value={customGrade}
+              onChange={(e) => setCustomGrade(e.target.value)}
+              className="w-full rounded-xl px-3 py-2 text-sm"
+              style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface)', color: 'var(--app-ink)' }}
+            >
+              {grades.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm flex-[2] min-w-[180px]">
+            <span className="block app-label mb-1">단원명 직접 등록</span>
+            <input
+              value={customUnitName}
+              onChange={(e) => setCustomUnitName(e.target.value)}
+              placeholder="예: 문법 1단원"
+              className="w-full rounded-xl px-3 py-2 text-sm"
+              style={{ border: '1px solid var(--app-border)', background: 'var(--app-surface)', color: 'var(--app-ink)' }}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => void handleAddUnit()}
+            disabled={!customUnitName.trim()}
+            className="app-btn app-btn-secondary disabled:opacity-50"
+          >
+            단원 추가
+          </button>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-4">
         <div className="app-card p-4">
           <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--app-ink)' }}>
-            등록된 단원 ({units.length})
+            {subject} 등록 단원 ({subjectUnits.length})
           </h2>
-          {units.length === 0 ? (
-            <p className="text-sm" style={{ color: 'var(--app-ink-3)' }}>학년을 선택하고 「기본 단원 등록」을 눌러 주세요.</p>
+          {subjectUnits.length === 0 ? (
+            <p className="text-sm" style={{ color: 'var(--app-ink-3)' }}>
+              {subject === '수학'
+                ? '학년을 선택하고 「기본 단원 등록」을 눌러 주세요.'
+                : '위에서 단원명을 직접 등록해 주세요.'}
+            </p>
           ) : (
             <div className="space-y-3 max-h-[360px] overflow-y-auto">
               {unitOptions.map(([grade, gradeUnits]) => (
@@ -220,14 +295,45 @@ export default function CurriculumPage() {
           {progress.length === 0 ? (
             <li className="p-6 text-sm text-center" style={{ color: 'var(--app-ink-3)' }}>등록된 진도가 없습니다.</li>
           ) : (
-            progress.map((p) => (
-              <li key={p.id} className="px-4 py-3 flex justify-between text-sm gap-4">
-                <span className="font-medium" style={{ color: 'var(--app-ink)' }}>
-                  {p.classes?.name ?? '반'} ({p.classes?.grade})
-                </span>
-                <span className="font-semibold text-right" style={{ color: 'var(--app-accent)' }}>{p.unit_name}</span>
-              </li>
-            ))
+            progress.map((p) => {
+              const classGrade = p.classes?.grade ?? '';
+              const gradeUnits = subjectUnits
+                .filter((u) => u.grade === classGrade)
+                .sort((a, b) => a.sort_order - b.sort_order);
+              const currentIdx = gradeUnits.findIndex((u) => u.unit_name === p.unit_name);
+              const pct =
+                gradeUnits.length > 0 && currentIdx >= 0
+                  ? Math.round(((currentIdx + 1) / gradeUnits.length) * 100)
+                  : null;
+              return (
+                <li key={p.id} className="px-4 py-3 space-y-2">
+                  <div className="flex justify-between text-sm gap-4">
+                    <span className="font-medium" style={{ color: 'var(--app-ink)' }}>
+                      {p.classes?.name ?? '반'} ({p.classes?.grade})
+                    </span>
+                    <span className="font-semibold text-right" style={{ color: 'var(--app-accent)' }}>
+                      {p.unit_name}
+                    </span>
+                  </div>
+                  {pct != null && (
+                    <div className="space-y-1">
+                      <div
+                        className="h-1.5 rounded-full overflow-hidden"
+                        style={{ background: 'var(--app-surface-2)' }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${pct}%`, background: 'var(--app-accent)' }}
+                        />
+                      </div>
+                      <p className="text-[10px]" style={{ color: 'var(--app-ink-4)' }}>
+                        {classGrade} {subject} · {currentIdx + 1}/{gradeUnits.length}단원 ({pct}%)
+                      </p>
+                    </div>
+                  )}
+                </li>
+              );
+            })
           )}
         </ul>
       </div>

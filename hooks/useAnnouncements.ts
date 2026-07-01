@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
 import type { Announcement, AnnouncementStatus, AnnouncementTargetType } from '@/types/database';
+import { notifyAnnouncementPublished } from '@/lib/push/notifyAnnouncementClient';
 
 export function useAnnouncements() {
   const { profile } = useAuth();
@@ -50,20 +51,25 @@ export function useAnnouncements() {
   }) => {
     if (!profile?.academy_id || !profile.id) return { error: '로그인 정보가 없습니다.' };
     const status: AnnouncementStatus = input.publish ? 'published' : 'draft';
-    const { error: err } = await supabase.from('announcements').insert({
-      academy_id: profile.academy_id,
-      title: input.title.trim(),
-      body: input.body.trim(),
-      target_type: input.target_type,
-      class_id: input.target_type === 'class' ? input.class_id ?? null : null,
-      student_id: input.target_type === 'student' ? input.student_id ?? null : null,
-      status,
-      published_at: input.publish ? new Date().toISOString() : null,
-      created_by: profile.id,
-    });
+    const { data, error: err } = await supabase
+      .from('announcements')
+      .insert({
+        academy_id: profile.academy_id,
+        title: input.title.trim(),
+        body: input.body.trim(),
+        target_type: input.target_type,
+        class_id: input.target_type === 'class' ? input.class_id ?? null : null,
+        student_id: input.target_type === 'student' ? input.student_id ?? null : null,
+        status,
+        published_at: input.publish ? new Date().toISOString() : null,
+        created_by: profile.id,
+      })
+      .select('id')
+      .single();
     if (err) return { error: err.message };
+    if (input.publish && data?.id) notifyAnnouncementPublished(data.id as string);
     bumpDataVersion();
-    return { error: null };
+    return { error: null, id: data?.id as string | undefined };
   };
 
   const publishAnnouncement = async (id: string) => {
@@ -72,6 +78,7 @@ export function useAnnouncements() {
       .update({ status: 'published', published_at: new Date().toISOString() })
       .eq('id', id);
     if (err) return { error: err.message };
+    notifyAnnouncementPublished(id);
     bumpDataVersion();
     return { error: null };
   };
@@ -103,6 +110,7 @@ export function useAnnouncements() {
       .eq('id', id)
       .eq('academy_id', profile.academy_id);
     if (err) return { error: err.message };
+    if (input.publish) notifyAnnouncementPublished(id);
     bumpDataVersion();
     return { error: null };
   };

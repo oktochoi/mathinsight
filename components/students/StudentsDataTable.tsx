@@ -8,6 +8,7 @@ import { DataTable } from '@/components/data-ui/DataTable';
 import { StatusBadge } from '@/components/data-ui/StatusBadge';
 import { assessStudentRisk } from '@/lib/studentRisk';
 import { ATTENDANCE_LABELS, HOMEWORK_LABELS } from '@/lib/statusLabels';
+import { saveStudentsPageScroll } from '@/lib/studentsListScroll';
 import type { ConsultationFollowup, LessonLog, Student } from '@/types/database';
 
 export type StudentRow = Student & {
@@ -145,17 +146,11 @@ export function StudentsDataTable({
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-          <Link
-            href={`/students/${row.original.id}`}
-            className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-medium"
-          >
-            상세
-          </Link>
           {onEdit && (
             <button
               type="button"
               onClick={() => onEdit(row.original)}
-              className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-medium hidden sm:inline"
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-medium"
             >
               수정
             </button>
@@ -205,7 +200,10 @@ export function StudentsDataTable({
       emptyTitle="학생이 없습니다"
       emptyDescription="반을 추가한 뒤 학생을 등록해 보세요."
       toolbar={toolbar}
-      onRowClick={(row) => router.push(`/students/${row.id}`)}
+      onRowClick={(row) => {
+        saveStudentsPageScroll(window.scrollY);
+        router.push(`/students/${row.id}`);
+      }}
     />
   );
 }

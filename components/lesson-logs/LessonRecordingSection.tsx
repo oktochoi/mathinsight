@@ -1,10 +1,12 @@
 'use client';
 
-import Link from 'next/link';
+import { useState } from 'react';
 import { WorkspaceSection } from '@/components/lesson-logs/WorkspaceSection';
 import { StudentRecordingCard } from '@/components/lesson-logs/StudentRecordingCard';
+import { LessonCloseFollowUpDrawer } from '@/components/lesson-logs/LessonCloseFollowUpDrawer';
 import { mergeLessonFormRow, type LessonFormRow } from '@/lib/lessonLogRowDefaults';
 import { lessonInputStyle } from '@/components/lesson-logs/lessonLogConstants';
+import { formatSavedAt } from '@/lib/formatSavedAt';
 import { cn } from '@/lib/cn';
 import type { AttendanceStatus, HomeworkStatus, Student } from '@/types/database';
 
@@ -17,6 +19,7 @@ type Props = {
   onHomeworkNoteChange: (v: string) => void;
   lessonClosed: boolean;
   savingHeader: boolean;
+  headerSavedAt?: number | null;
   onSaveHeader: () => void;
   onMarkAllPresent: () => void;
   onMarkAllHomeworkComplete: () => void;
@@ -26,6 +29,7 @@ type Props = {
     value: LessonFormRow[keyof LessonFormRow]
   ) => void;
   autoSaving: Record<string, boolean>;
+  rowSavedAt?: Record<string, number>;
   attendanceOptions: { value: AttendanceStatus; label: string }[];
   homeworkOptions: { value: HomeworkStatus; label: string }[];
   lessonInProgress: boolean;
@@ -90,11 +94,13 @@ export function LessonRecordingSection({
   onHomeworkNoteChange,
   lessonClosed,
   savingHeader,
+  headerSavedAt,
   onSaveHeader,
   onMarkAllPresent,
   onMarkAllHomeworkComplete,
   onUpdateRow,
   autoSaving,
+  rowSavedAt,
   attendanceOptions,
   homeworkOptions,
   lessonInProgress,
@@ -106,6 +112,7 @@ export function LessonRecordingSection({
   selectedClassId,
   date,
 }: Props) {
+  const [followUpOpen, setFollowUpOpen] = useState(false);
   const inputStyle = (disabled: boolean) => lessonInputStyle(disabled);
   const absentStudents = students.filter((s) => mergeLessonFormRow(rows[s.id]).attendance === 'absent');
   const missingHomeworkStudents = students.filter(
@@ -154,6 +161,7 @@ export function LessonRecordingSection({
                 row={row}
                 disabled={formDisabled}
                 saving={autoSaving[student.id]}
+                savedAt={rowSavedAt?.[student.id]}
                 inputStyle={inputStyle(formDisabled)}
                 attendanceOptions={attendanceOptions}
                 homeworkOptions={homeworkOptions}
@@ -163,34 +171,36 @@ export function LessonRecordingSection({
           })}
         </div>
 
-        <div className="mt-5 pt-4 border-t" style={{ borderColor: 'var(--app-border)' }}>
+        <div
+          className="mt-5 pt-4 border-t rounded-xl px-3 py-3 -mx-1"
+          style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface-2)' }}
+        >
           <div className="flex flex-wrap items-end justify-between gap-2 mb-1.5">
             <label className="app-label">
               <i className="ri-book-2-line mr-1" />
               오늘 내줄 숙제
+              <span className="ml-2 text-[10px] font-normal normal-case" style={{ color: 'var(--app-ink-4)' }}>
+                자동 저장
+              </span>
             </label>
-            {!lessonClosed && (
-              <button
-                type="button"
-                onClick={onSaveHeader}
-                disabled={savingHeader}
-                className="app-btn app-btn-ghost text-xs disabled:opacity-50"
-              >
-                {savingHeader ? '저장 중…' : '과제 저장'}
-              </button>
-            )}
+            <span className="text-[10px]" style={{ color: 'var(--app-ink-4)' }}>
+              {savingHeader ? '저장 중…' : formatSavedAt(headerSavedAt) ? `저장됨 · ${formatSavedAt(headerSavedAt)}` : ''}
+            </span>
           </div>
           <input
             type="text"
             value={homeworkNote}
             disabled={lessonClosed}
             onChange={(e) => onHomeworkNoteChange(e.target.value)}
+            onBlur={() => {
+              if (!lessonClosed && homeworkNote.trim()) onSaveHeader();
+            }}
             placeholder="예: p.45 예제 1~10번"
             className="w-full px-3 py-2.5 rounded-xl text-sm"
             style={inputStyle(lessonClosed)}
           />
           <p className="text-[11px] mt-1.5" style={{ color: 'var(--app-ink-4)' }}>
-            저장 시 학부모·학원 포털에 표시됩니다.
+            입력 후 잠시 기다리면 자동 저장됩니다. 학부모·학원 포털에 표시됩니다.
           </p>
         </div>
       </WorkspaceSection>
@@ -246,11 +256,19 @@ export function LessonRecordingSection({
             <p className="text-sm font-semibold" style={{ color: 'var(--app-ink)' }}>
               다음 단계를 확인하세요.
             </p>
+            <button
+              type="button"
+              onClick={() => setFollowUpOpen(true)}
+              className="mt-2 app-btn app-btn-primary app-btn-sm"
+            >
+              후속 작업 패널 열기
+            </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               {
-                href: `/schedule?class=${selectedClassId}&date=${date}&action=makeup`,
+                action: () => setFollowUpOpen(true),
+                step: 'makeup' as const,
                 icon: 'ri-calendar-check-line',
                 iconBg: 'var(--app-warning-bg)',
                 iconColor: 'var(--app-warning)',
@@ -261,7 +279,8 @@ export function LessonRecordingSection({
                     : '결석자 없음',
               },
               {
-                href: `/consultation-cards${selectedClassId ? `?class=${selectedClassId}` : ''}`,
+                action: () => setFollowUpOpen(true),
+                step: 'consultation' as const,
                 icon: 'ri-chat-check-line',
                 iconBg: 'var(--avatar-3-bg)',
                 iconColor: 'var(--avatar-3-text)',
@@ -269,7 +288,8 @@ export function LessonRecordingSection({
                 desc: 'AI 상담 준비 및 학부모 전달',
               },
               {
-                href: '/parent-reports',
+                action: () => setFollowUpOpen(true),
+                step: 'report' as const,
                 icon: 'ri-file-text-line',
                 iconBg: 'var(--avatar-4-bg)',
                 iconColor: 'var(--avatar-4-text)',
@@ -279,11 +299,12 @@ export function LessonRecordingSection({
                     ? `미제출 ${missingHomeworkStudents.length}명 포함 확인`
                     : '학부모 리포트 보내기',
               },
-            ].map(({ href, icon, iconBg, iconColor, title, desc }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-start gap-3 rounded-xl p-4 transition-all hover:shadow-[var(--s-md)]"
+            ].map(({ action, icon, iconBg, iconColor, title, desc }) => (
+              <button
+                key={title}
+                type="button"
+                onClick={action}
+                className="flex items-start gap-3 rounded-xl p-4 transition-all hover:shadow-[var(--s-md)] text-left w-full"
                 style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)' }}
               >
                 <span
@@ -296,11 +317,20 @@ export function LessonRecordingSection({
                   <p className="text-sm font-semibold" style={{ color: 'var(--app-ink)' }}>{title}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--app-ink-3)' }}>{desc}</p>
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
       )}
+
+      <LessonCloseFollowUpDrawer
+        open={followUpOpen}
+        onClose={() => setFollowUpOpen(false)}
+        absentStudents={absentStudents}
+        missingHomeworkStudents={missingHomeworkStudents}
+        selectedClassId={selectedClassId}
+        date={date}
+      />
     </div>
   );
 }

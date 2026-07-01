@@ -206,7 +206,7 @@ export function BillingChargesTable({
                     className="text-xs px-2.5 py-1.5 rounded-lg"
                     style={{ border: '1px solid var(--app-border)', color: 'var(--app-ink-2)' }}
                   >
-                    연락
+                    미납 푸시
                   </button>
                   <button
                     type="button"

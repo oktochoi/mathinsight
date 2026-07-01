@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
 import { upsertLessonLogs } from '@/lib/lessonLogUpsert';
+import { notifyHomeworkAssigned } from '@/lib/push/notifyHomeworkClient';
 import type { HomeworkAssignment, HomeworkStatus, HomeworkSubmission, LessonLogInsert } from '@/types/database';
 
 export function useHomeworkAssignments(classId?: string) {
@@ -78,6 +79,7 @@ export function useHomeworkAssignments(classId?: string) {
     const { error: subErr } = await supabase.from('homework_submissions').insert(subs);
     if (subErr) return { error: subErr.message };
 
+    notifyHomeworkAssigned(hw.id as string, input.studentIds);
     bumpDataVersion();
     return { error: null, assignmentId: hw.id as string };
   };

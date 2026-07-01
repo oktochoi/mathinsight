@@ -11,8 +11,14 @@ import {
   signInWithLoginId,
 } from '@/lib/auth';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
-import { AuthMobileLogo } from '@/components/auth/AuthBrandPanel';
+import { AuthPageScaffold } from '@/components/auth/AuthPageScaffold';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
+import {
+  AuthRoleTabs,
+  authAudienceHint,
+  authLoginPlaceholder,
+  type AuthAudience,
+} from '@/components/auth/AuthRoleTabs';
 import {
   AuthField,
   AuthInput,
@@ -20,11 +26,19 @@ import {
   AuthSubmitButton,
 } from '@/components/auth/AuthField';
 import { AuthDivider, GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
-import { mkt } from '@/lib/marketing/ui';
+import { AuthLoginFooter } from '@/components/auth/AuthFooter';
+
+function audienceFromParam(value: string | null): AuthAudience {
+  if (value === 'parent' || value === 'student' || value === 'staff') return value;
+  return 'staff';
+}
 
 function LoginFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [audience, setAudience] = useState<AuthAudience>(() =>
+    audienceFromParam(searchParams.get('as'))
+  );
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -49,6 +63,8 @@ function LoginFormInner() {
     if (searchParams.get('reset') === '1') {
       toast.success('비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.');
     }
+    const as = searchParams.get('as');
+    if (as === 'parent' || as === 'student') setAudience(as);
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,26 +101,33 @@ function LoginFormInner() {
   };
 
   return (
-    <>
-      <AuthMobileLogo />
+    <AuthPageScaffold>
       <AuthFormCard title="로그인" subtitle="EduFlow에 다시 오신 것을 환영해요">
-        {error && (
-          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {error}
-          </div>
+        <div className="mb-5">
+          <AuthRoleTabs value={audience} onChange={setAudience} />
+          <p className="mt-2 text-[11px] text-center" style={{ color: 'var(--auth-muted)' }}>
+            {authAudienceHint(audience)}
+          </p>
+        </div>
+
+        {error && <div className="auth-error-banner">{error}</div>}
+
+        {audience === 'staff' && (
+          <>
+            <GoogleSignInButton disabled={loading} />
+            <AuthDivider />
+          </>
         )}
 
-        <GoogleSignInButton disabled={loading} />
-        <AuthDivider />
-
         <form onSubmit={handleSubmit} className="space-y-4">
-          <AuthField label="아이디">
+          <AuthField label="휴대폰 번호">
             <AuthInput
               required
               autoComplete="username"
               value={loginId}
               onChange={(e) => setLoginId(e.target.value)}
-              placeholder="휴대폰 번호 또는 이메일"
+              placeholder={authLoginPlaceholder(audience)}
+              inputMode="numeric"
             />
           </AuthField>
           <AuthField label="비밀번호">
@@ -117,34 +140,31 @@ function LoginFormInner() {
               onToggle={() => setShowPassword((v) => !v)}
             />
           </AuthField>
-          <div className="flex justify-end">
-            <Link href={AUTH_ROUTES.forgotPassword} className="text-xs font-semibold text-sky-700 hover:underline">
-              비밀번호 찾기
-            </Link>
-          </div>
+          {audience === 'staff' && (
+            <div className="flex justify-end">
+              <Link href={AUTH_ROUTES.forgotPassword} className="auth-link text-xs">
+                비밀번호 찾기
+              </Link>
+            </div>
+          )}
           <AuthSubmitButton loading={loading}>{loading ? '로그인 중...' : '로그인'}</AuthSubmitButton>
         </form>
 
-        <p className="mt-3 text-[11px] text-slate-500 text-center">
-          학생·학부모는 가입한 휴대폰 번호, 원장·강사는 이메일로 로그인합니다.
-        </p>
-
-        <div className="mt-6 space-y-3 text-center text-sm">
-          <p className="text-slate-600">
-            계정이 없으신가요?{' '}
-            <Link href={AUTH_ROUTES.signup} className={mkt.link}>
-              회원가입
+        {audience !== 'staff' && (
+          <p className="mt-3 text-[11px] text-center" style={{ color: 'var(--auth-muted)' }}>
+            아직 계정이 없으신가요?{' '}
+            <Link
+              href={audience === 'student' ? '/signup/student' : '/signup/parent'}
+              className="auth-link"
+            >
+              {audience === 'student' ? '학생' : '학부모'} 가입
             </Link>
           </p>
-          <Link
-            href={AUTH_ROUTES.demo}
-            className="inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            데모 체험하기
-          </Link>
-        </div>
+        )}
+
+        {audience === 'staff' && <AuthLoginFooter />}
       </AuthFormCard>
-    </>
+    </AuthPageScaffold>
   );
 }
 
@@ -152,9 +172,13 @@ export function LoginForm() {
   return (
     <Suspense
       fallback={
-        <AuthFormCard title="로그인" subtitle="불러오는 중...">
-          <p className="py-8 text-center text-sm text-slate-500">잠시만 기다려 주세요</p>
-        </AuthFormCard>
+        <AuthPageScaffold>
+          <AuthFormCard title="로그인" subtitle="불러오는 중...">
+            <p className="py-8 text-center text-sm" style={{ color: 'var(--auth-muted)' }}>
+              잠시만 기다려 주세요
+            </p>
+          </AuthFormCard>
+        </AuthPageScaffold>
       }
     >
       <LoginFormInner />

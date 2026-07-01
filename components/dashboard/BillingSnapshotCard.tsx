@@ -64,14 +64,19 @@ export function BillingSnapshotCard({ stats }: { stats: DashboardStats }) {
         </div>
 
         <div
-          className="rounded-xl px-4 py-8 text-center text-xs font-medium"
+          className="rounded-xl px-4 py-5 text-center space-y-2"
           style={{
             background: 'var(--app-surface-2)',
-            border: '1px dashed var(--app-border)',
-            color: 'var(--app-ink-4)',
+            border: '1px solid var(--app-border)',
           }}
         >
-          [ Chart Placeholder — Billing Collection Trend ]
+          <i className="ri-bar-chart-grouped-line text-2xl" style={{ color: 'var(--app-ink-4)' }} aria-hidden />
+          <p className="text-xs font-medium" style={{ color: 'var(--app-ink-2)' }}>
+            수납 추이 차트는 준비 중입니다
+          </p>
+          <p className="text-[11px] leading-relaxed" style={{ color: 'var(--app-ink-4)' }}>
+            청구·입금 내역이 쌓이면 이번 달 수납 추이가 여기 표시됩니다. 지금은 수납 운영 센터에서 상세를 확인하세요.
+          </p>
         </div>
 
         <p className="text-xs leading-relaxed" style={{ color: 'var(--app-ink-3)' }}>

@@ -375,6 +375,15 @@ export interface DashboardStats {
   retentionHighRiskCount: number;
   unclosedLessonsToday: DashboardUnclosedLesson[];
   dashboardMode: 'owner' | 'teacher';
+  /** 어제 대비 증감 (양수=증가, 음수=감소). 비교 불가 시 해당 키 생략 */
+  kpiDayDeltas?: Partial<{
+    todayLessonCount: number;
+    inProgress: number;
+    unclosed: number;
+    counselingToday: number;
+    overduePayments: number;
+    pendingParentMessages: number;
+  }>;
 }
 
 export type StoredRiskLevel =

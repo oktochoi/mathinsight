@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { TimelineEntry } from '@/lib/studentTimeline';
+import type { TimelineEntry, TimelineEntryType } from '@/lib/studentTimeline';
 
 const TYPE_LABELS: Record<string, string> = {
   consultation_card: '상담',
@@ -12,6 +12,20 @@ const TYPE_LABELS: Record<string, string> = {
   attendance: '출결',
   counseling_session: '상담',
   followup: '상담 후 확인',
+};
+
+const ENTRY_META: Record<
+  TimelineEntryType,
+  { icon: string; color: string; dotColor: string }
+> = {
+  consultation_card: { icon: 'ri-discuss-line', color: '#6366f1', dotColor: '#818cf8' },
+  parent_report: { icon: 'ri-file-text-line', color: '#0891b2', dotColor: '#22d3ee' },
+  lesson_memo: { icon: 'ri-chat-quote-line', color: '#7c3aed', dotColor: '#a78bfa' },
+  score: { icon: 'ri-bar-chart-box-line', color: '#2563eb', dotColor: '#60a5fa' },
+  homework_missing: { icon: 'ri-alert-line', color: '#dc2626', dotColor: '#f87171' },
+  attendance: { icon: 'ri-calendar-close-line', color: '#ea580c', dotColor: '#fb923c' },
+  counseling_session: { icon: 'ri-psychotherapy-line', color: '#059669', dotColor: '#34d399' },
+  followup: { icon: 'ri-checkbox-circle-line', color: '#0369a1', dotColor: '#38bdf8' },
 };
 
 export function StudentActivityTimeline({ entries }: { entries: TimelineEntry[] }) {
@@ -29,6 +43,8 @@ export function StudentActivityTimeline({ entries }: { entries: TimelineEntry[] 
       </div>
     );
   }
+
+  const scoreEntries = entries.filter((e) => e.type === 'score');
 
   const grouped = entries.reduce<Map<string, TimelineEntry[]>>((map, e) => {
     const list = map.get(e.date) ?? [];
@@ -59,38 +75,72 @@ export function StudentActivityTimeline({ entries }: { entries: TimelineEntry[] 
                 {date}
               </p>
               <ul className="space-y-4">
-                {dayEntries.map((e) => {
-                  const body = (
+                {dayEntries.map((entry) => {
+                  const meta = ENTRY_META[entry.type];
+                  const scoreIdx =
+                    entry.type === 'score'
+                      ? scoreEntries.findIndex((e) => e.id === entry.id)
+                      : -1;
+                  const prevScore =
+                    scoreIdx >= 0 && scoreIdx < scoreEntries.length - 1
+                      ? parseFloat(scoreEntries[scoreIdx + 1].detail.match(/(\d+)점/)?.[1] ?? '0')
+                      : null;
+                  const thisScore = parseFloat(entry.detail.match(/(\d+)점/)?.[1] ?? '0');
+                  const scoreDelta = prevScore != null ? thisScore - prevScore : null;
+
+                  const content = (
                     <>
+                      <div
+                        className="absolute left-0 top-0.5 w-4 h-4 rounded-full flex items-center justify-center"
+                        style={{
+                          background: `${meta.color}20`,
+                          border: `1.5px solid ${meta.dotColor}`,
+                        }}
+                      >
+                        <i className={`${meta.icon} text-[9px]`} style={{ color: meta.color }} />
+                      </div>
+
                       <span
                         className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                         style={{ background: 'var(--app-surface-2)', color: 'var(--app-ink-2)' }}
                       >
-                        {TYPE_LABELS[e.type] ?? e.type}
+                        {TYPE_LABELS[entry.type] ?? entry.type}
                       </span>
-                      <p className="text-sm font-medium mt-1.5" style={{ color: 'var(--app-ink)' }}>
-                        {e.title}
+                      <p className="text-sm font-semibold mt-1.5" style={{ color: 'var(--app-ink)' }}>
+                        {entry.title}
+                        {scoreDelta != null && (
+                          <span
+                            className={`ml-2 text-xs font-bold ${
+                              scoreDelta > 0
+                                ? 'text-emerald-600'
+                                : scoreDelta < 0
+                                  ? 'text-red-600'
+                                  : 'text-slate-400'
+                            }`}
+                          >
+                            {scoreDelta > 0
+                              ? `↑ +${scoreDelta}점`
+                              : scoreDelta < 0
+                                ? `↓ ${scoreDelta}점`
+                                : '변화 없음'}
+                          </span>
+                        )}
                       </p>
                       <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--app-ink-3)' }}>
-                        {e.detail}
+                        {entry.detail}
                       </p>
                     </>
                   );
+
                   return (
-                    <li key={e.id} className="flex gap-4 pl-1">
-                      <div
-                        className="w-3.5 h-3.5 rounded-full shrink-0 mt-1 z-10"
-                        style={{ background: 'var(--app-accent)', border: '2px solid var(--app-surface)' }}
-                      />
-                      <div className="min-w-0 flex-1 pb-1">
-                        {e.href ? (
-                          <Link href={e.href} className="block hover:opacity-80 transition-opacity">
-                            {body}
-                          </Link>
-                        ) : (
-                          body
-                        )}
-                      </div>
+                    <li key={entry.id} className="relative pl-8">
+                      {entry.href ? (
+                        <Link href={entry.href} className="block hover:opacity-80 transition-opacity">
+                          {content}
+                        </Link>
+                      ) : (
+                        content
+                      )}
                     </li>
                   );
                 })}

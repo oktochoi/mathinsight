@@ -1,3 +1,6 @@
+export const CURRICULUM_SUBJECTS = ['수학', '영어', '국어', '과학', '기타'] as const;
+export type CurriculumSubject = (typeof CURRICULUM_SUBJECTS)[number];
+
 /** 중등·고등·초등 수학 기본 단원 (학원별 등록용) */
 export const DEFAULT_MATH_UNITS: Record<string, string[]> = {
   초1: ['9까지의 수', '덧셈과 뺄셈', '50까지의 수', '여러 가지 도형', '길이 비교', '시각과 시간'],

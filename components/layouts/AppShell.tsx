@@ -6,9 +6,8 @@ import Sidebar from '@/components/Sidebar';
 import TopNav from '@/components/TopNav';
 import { PushInAppBanner } from '@/components/PushInAppBanner';
 import { SubscriptionBanner } from '@/components/subscription/SubscriptionBanner';
-import { ChatFloatingWidget } from '@/components/chat/ChatFloatingWidget';
+import { StaffChatFab } from '@/components/chat/StaffChatFab';
 import { useAuth } from '@/context/AuthContext';
-import { isStaffProfile } from '@/lib/profileIntegrity';
 import { cn } from '@/lib/cn';
 
 function SidebarWithSearchParams(props: {
@@ -78,10 +77,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         <TopNav onMenuOpen={() => setNavOpen(true)} />
         <main className="flex-1 min-w-0 w-full max-w-full overflow-x-hidden p-4 sm:p-6 lg:p-8 mobile-bottom-safe">
-          <div className="w-full min-w-0 max-w-full">{children}</div>
+          <div className="w-full min-w-0 max-w-7xl xl:max-w-[1440px] mx-auto">{children}</div>
         </main>
       </div>
-      {profile && isStaffProfile(profile) && <ChatFloatingWidget variant="staff" />}
+      <StaffChatFab />
     </div>
   );
 }

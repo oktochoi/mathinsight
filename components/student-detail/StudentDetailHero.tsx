@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useRef, useState } from 'react';
 import { STATUS_LABELS } from '@/lib/statusLabels';
 import type { Student } from '@/types/database';
 import type { StudentRiskAssessment } from '@/lib/studentRisk';
+import { ConsultationBriefingOverlay } from '@/components/student-detail/ConsultationBriefingOverlay';
 import { cn } from '@/lib/cn';
 
 function signalMeta(
@@ -38,6 +40,7 @@ export function StudentDetailHero({
   reregStatus,
   risk,
   studentId,
+  briefing,
 }: {
   student: Student;
   grade: string;
@@ -48,8 +51,22 @@ export function StudentDetailHero({
   reregStatus: string | null;
   risk: StudentRiskAssessment | null;
   studentId: string;
+  briefing: { headline: string; lines: string[] } | null;
 }) {
+  const [briefingOpen, setBriefingOpen] = useState(false);
+  const [consultPulse, setConsultPulse] = useState(false);
+  const consultBtnRef = useRef<HTMLButtonElement>(null);
   const signal = signalMeta(student.status, risk);
+
+  const openBriefing = () => {
+    if (briefing) setBriefingOpen(true);
+  };
+
+  const focusConsultAction = () => {
+    consultBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setConsultPulse(true);
+    window.setTimeout(() => setConsultPulse(false), 1600);
+  };
 
   return (
     <header
@@ -88,24 +105,8 @@ export function StudentDetailHero({
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {signal.tone !== 'ok' ? (
-                  <a
-                    href="#consultation"
-                    className={cn(
-                      'text-xs font-semibold px-3 py-1.5 rounded-full border hover:opacity-90 transition-opacity',
-                      signal.tone === 'watch' && 'bg-amber-50 text-amber-900 border-amber-200',
-                      signal.tone === 'risk' && 'bg-rose-50 text-rose-800 border-rose-200'
-                    )}
-                  >
-                    {signal.label} →
-                  </a>
-                ) : (
-                  <span
-                    className={cn(
-                      'text-xs font-semibold px-3 py-1.5 rounded-full border',
-                      'bg-emerald-50 text-emerald-800 border-emerald-200'
-                    )}
-                  >
+                {signal.tone === 'ok' && (
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">
                     {signal.label}
                   </span>
                 )}
@@ -118,9 +119,60 @@ export function StudentDetailHero({
               </div>
             </div>
 
+            {signal.tone !== 'ok' && risk && risk.signals.length > 0 && (
+              <button
+                type="button"
+                onClick={focusConsultAction}
+                className="w-full rounded-xl border p-4 space-y-3 text-left transition-shadow hover:shadow-sm cursor-pointer"
+                style={{
+                  background: risk.kind === 'consultation' ? '#fff1f2' : '#faf5ff',
+                  borderColor: risk.kind === 'consultation' ? '#fecdd3' : '#e9d5ff',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <i
+                    className={cn(
+                      'text-sm',
+                      risk.kind === 'consultation'
+                        ? 'ri-alarm-warning-line text-red-600'
+                        : 'ri-information-line text-violet-600'
+                    )}
+                  />
+                  <p
+                    className="text-sm font-bold"
+                    style={{ color: risk.kind === 'consultation' ? '#991b1b' : '#5b21b6' }}
+                  >
+                    {risk.kind === 'consultation' ? '상담이 필요한 이유' : '보강을 검토할 이유'}
+                  </p>
+                  <span className="ml-auto text-[10px] font-medium" style={{ color: 'var(--app-ink-3)' }}>
+                    탭하여 상담 시작 →
+                  </span>
+                </div>
+
+                <ul className="space-y-1">
+                  {risk.signals
+                    .filter((s) => s.id !== 'ok' && s.id !== 'recovering')
+                    .map((s) => (
+                      <li key={s.id} className="flex items-start gap-2 text-sm">
+                        <span
+                          className="shrink-0 mt-1 w-1 h-1 rounded-full"
+                          style={{
+                            background: risk.kind === 'consultation' ? '#ef4444' : '#8b5cf6',
+                          }}
+                        />
+                        <span style={{ color: 'var(--app-ink-2)' }}>{s.label}</span>
+                      </li>
+                    ))}
+                </ul>
+              </button>
+            )}
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--app-ink-4)' }}>
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-wide"
+                  style={{ color: 'var(--app-ink-4)' }}
+                >
                   출석률
                 </p>
                 <p className="text-xl font-bold tabular-nums mt-0.5" style={{ color: 'var(--app-ink)' }}>
@@ -128,7 +180,10 @@ export function StudentDetailHero({
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--app-ink-4)' }}>
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-wide"
+                  style={{ color: 'var(--app-ink-4)' }}
+                >
                   평균 점수
                 </p>
                 <p className="text-xl font-bold tabular-nums mt-0.5" style={{ color: 'var(--app-ink)' }}>
@@ -136,7 +191,10 @@ export function StudentDetailHero({
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--app-ink-4)' }}>
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-wide"
+                  style={{ color: 'var(--app-ink-4)' }}
+                >
                   재등록
                 </p>
                 <p className="text-sm font-semibold mt-1" style={{ color: 'var(--app-ink)' }}>
@@ -144,7 +202,10 @@ export function StudentDetailHero({
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--app-ink-4)' }}>
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-wide"
+                  style={{ color: 'var(--app-ink-4)' }}
+                >
                   현재 신호
                 </p>
                 <p className="text-sm font-semibold mt-1" style={{ color: 'var(--app-ink)' }}>
@@ -154,13 +215,19 @@ export function StudentDetailHero({
             </div>
 
             <div className="flex flex-wrap gap-2 pt-2">
-              <Link
-                href={`/counseling?step=session&student=${studentId}`}
-                className="app-btn app-btn-primary text-sm"
+              <button
+                ref={consultBtnRef}
+                type="button"
+                onClick={openBriefing}
+                className={cn(
+                  'app-btn app-btn-primary text-sm transition-shadow',
+                  consultPulse && 'ring-2 ring-[var(--app-accent)] ring-offset-2'
+                )}
+                disabled={!briefing}
               >
                 <i className="ri-chat-smile-3-line" />
                 상담 시작
-              </Link>
+              </button>
               <Link href="/parent-hub" className="app-btn app-btn-secondary text-sm">
                 <i className="ri-parent-line" />
                 학부모 대화
@@ -173,6 +240,15 @@ export function StudentDetailHero({
           </div>
         </div>
       </div>
+
+      {briefingOpen && briefing && (
+        <ConsultationBriefingOverlay
+          studentId={studentId}
+          briefing={briefing}
+          kind={risk?.kind ?? 'stable'}
+          onClose={() => setBriefingOpen(false)}
+        />
+      )}
     </header>
   );
 }

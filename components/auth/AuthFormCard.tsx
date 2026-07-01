@@ -19,10 +19,10 @@ export function AuthFormCard({
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="mx-auto w-full max-w-md"
     >
-      <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-7 shadow-xl shadow-slate-900/5 backdrop-blur-sm md:p-8">
+      <div className="auth-card p-7 md:p-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-slate-900">{title}</h1>
-          {subtitle && <p className="mt-2 text-sm text-slate-600">{subtitle}</p>}
+          <h1 className="auth-card-title">{title}</h1>
+          {subtitle && <p className="auth-card-subtitle">{subtitle}</p>}
         </div>
         {children}
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { getSuggestedParentQuestions, type ParentAgentChatMessage } from '@/lib/parentAgent';
 import type { RagCitation } from '@/lib/vectorRag/types';
 import { RagCitations } from '@/components/portal/RagCitations';
@@ -11,18 +11,18 @@ type ChatMessage = ParentAgentChatMessage & {
   ragMode?: 'vector' | 'keyword';
 };
 
-export function ParentAgentChat({
-  studentId,
-  studentName,
-  academyName = '학원',
-  desktopSticky,
-}: {
-  studentId: string;
-  studentName: string;
-  academyName?: string;
-  /** PC: 사이드 열 높이에 맞춘 채팅 영역 */
-  desktopSticky?: boolean;
-}) {
+export const ParentAgentChat = forwardRef<
+  { sendMessage: (q: string) => void },
+  {
+    studentId: string;
+    studentName: string;
+    academyName?: string;
+    desktopSticky?: boolean;
+  }
+>(function ParentAgentChat(
+  { studentId, studentName, academyName = '학원', desktopSticky },
+  ref
+) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -90,6 +90,12 @@ export function ParentAgentChat({
       setLoading(false);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    sendMessage: (q: string) => {
+      void send(q);
+    },
+  }));
 
   const suggestions = getSuggestedParentQuestions();
 
@@ -222,4 +228,4 @@ export function ParentAgentChat({
       </div>
     </section>
   );
-}
+});

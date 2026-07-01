@@ -50,7 +50,7 @@ export default function DashboardClient() {
   }
 
   return (
-    <div className="space-y-6 w-full min-w-0 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 w-full min-w-0 max-w-7xl xl:max-w-[1440px] mx-auto pb-12">
       {stats.dashboardMode === 'teacher' ? (
         <TeacherActionBoard stats={stats} onRefresh={refetch} />
       ) : (
