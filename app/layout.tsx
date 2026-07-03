@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Pacifico } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ROOT_SITE_METADATA } from "@/lib/marketing/seo";
+import { SITE_THEME_COLOR } from "@/lib/marketing/siteAssets";
 import "./globals.css";
 
 const pacifico = Pacifico({
@@ -26,6 +27,7 @@ export const metadata: Metadata = ROOT_SITE_METADATA;
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: SITE_THEME_COLOR,
 };
 
 export const dynamic = 'force-dynamic';

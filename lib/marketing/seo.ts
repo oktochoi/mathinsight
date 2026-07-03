@@ -1,5 +1,14 @@
 import type { Metadata } from 'next';
 import { BRAND_NAME, BRAND_TAGLINE, CONTACT_EMAIL, SITE_URL } from '@/lib/brand';
+import {
+  SITE_APPLE_TOUCH_ICON,
+  SITE_FAVICON,
+  SITE_MANIFEST,
+  SITE_OG_IMAGE,
+  SITE_OG_IMAGE_ALT,
+  SITE_OG_IMAGE_HEIGHT,
+  SITE_OG_IMAGE_WIDTH,
+} from '@/lib/marketing/siteAssets';
 import { MARKETING_ROUTES } from '@/lib/marketing/siteStructure';
 
 /** 검색엔진 색인 대상 마케팅 페이지 (리다이렉트 전용 경로 제외) */
@@ -133,6 +142,31 @@ export const REDIRECT_PAGE_SEO = {
   },
 } as const satisfies Record<string, PageSeoConfig>;
 
+const SHARED_OG_IMAGE = {
+  url: SITE_OG_IMAGE,
+  width: SITE_OG_IMAGE_WIDTH,
+  height: SITE_OG_IMAGE_HEIGHT,
+  alt: SITE_OG_IMAGE_ALT,
+};
+
+/** 아이콘·manifest·OG 이미지 — 루트·페이지 메타 공통 */
+export const SHARED_SITE_METADATA: Pick<
+  Metadata,
+  'icons' | 'manifest' | 'openGraph' | 'twitter'
+> = {
+  icons: {
+    icon: [{ url: SITE_FAVICON, sizes: '48x48', type: 'image/x-icon' }],
+    apple: [{ url: SITE_APPLE_TOUCH_ICON, sizes: '180x180', type: 'image/png' }],
+  },
+  manifest: SITE_MANIFEST,
+  openGraph: {
+    images: [SHARED_OG_IMAGE],
+  },
+  twitter: {
+    images: [SITE_OG_IMAGE],
+  },
+};
+
 export function buildPageMetadata({
   title,
   description,
@@ -156,11 +190,13 @@ export function buildPageMetadata({
       siteName: BRAND_NAME,
       title: fullTitle,
       description,
+      images: [SHARED_OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
       title: fullTitle,
       description,
+      images: [SITE_OG_IMAGE],
     },
     robots: noIndex
       ? { index: false, follow: false }
@@ -189,6 +225,7 @@ export const ROOT_SITE_METADATA: Metadata = {
   creator: BRAND_NAME,
   publisher: BRAND_NAME,
   formatDetection: { email: false, address: false, telephone: false },
+  ...SHARED_SITE_METADATA,
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
@@ -196,11 +233,13 @@ export const ROOT_SITE_METADATA: Metadata = {
     siteName: BRAND_NAME,
     title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
     description: MARKETING_PAGE_SEO.home.description,
+    images: [SHARED_OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
     description: MARKETING_PAGE_SEO.home.description,
+    images: [SITE_OG_IMAGE],
   },
   robots: { index: true, follow: true },
   verification: {
@@ -213,3 +252,18 @@ export const ROOT_SITE_METADATA: Metadata = {
     'contact:email': CONTACT_EMAIL,
   },
 };
+
+export const ERROR_PAGE_SEO = {
+  notFound: {
+    path: '/404',
+    title: '페이지를 찾을 수 없습니다',
+    description: `요청하신 페이지가 없거나 주소가 변경되었습니다. ${BRAND_NAME} 홈으로 이동하거나 도입 문의를 이용해 주세요.`,
+    noIndex: true,
+  },
+  serverError: {
+    path: '/500',
+    title: '일시적인 오류가 발생했습니다',
+    description: `잠시 후 다시 시도해 주세요. 문제가 계속되면 ${CONTACT_EMAIL} 로 문의해 주세요.`,
+    noIndex: true,
+  },
+} as const satisfies Record<string, PageSeoConfig>;

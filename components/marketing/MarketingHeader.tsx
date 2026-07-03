@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BRAND_NAME } from '@/lib/brand';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { HEADER_NAV, MARKETING_ROUTES } from '@/lib/marketing/siteStructure';
 import { cn } from '@/lib/cn';
 import { mkt } from '@/lib/marketing/ui';
@@ -15,12 +15,7 @@ export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-md shadow-sm shadow-slate-900/5">
       <div className={cn(mkt.container, 'flex h-[72px] items-center gap-4')}>
-        <Link href={MARKETING_ROUTES.home} className={mkt.logo}>
-          <span className={mkt.logoMark} aria-hidden>
-            <i className="ri-flow-chart" />
-          </span>
-          <span className={mkt.logoText}>{BRAND_NAME}</span>
-        </Link>
+        <BrandLogo href={MARKETING_ROUTES.home} priority />
 
         <nav className="hidden flex-1 justify-end items-center gap-1 lg:flex" aria-label="주요">
           {HEADER_NAV.map((item) => (

@@ -1,11 +1,6 @@
 import Link from 'next/link';
-import {
-  BRAND_NAME,
-  COMPANY_DOMAIN,
-  COMPANY_LEGAL_NAME,
-  CONTACT_EMAIL,
-  SITE_URL,
-} from '@/lib/brand';
+import { BRAND_NAME, COMPANY_DOMAIN, COMPANY_LEGAL_NAME, CONTACT_EMAIL, SITE_URL } from '@/lib/brand';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { FOOTER_COLUMNS, MARKETING_ROUTES } from '@/lib/marketing/siteStructure';
 import { cn } from '@/lib/cn';
 import { mkt } from '@/lib/marketing/ui';
@@ -38,12 +33,7 @@ export function MarketingFooter() {
       <div className="border-t border-slate-200 bg-white py-10">
         <div className={cn(mkt.container, 'grid gap-8 md:grid-cols-[1.2fr_repeat(4,1fr)]')}>
           <div>
-            <Link href={MARKETING_ROUTES.home} className={mkt.logo}>
-              <span className={mkt.logoMark} aria-hidden>
-                <i className="ri-flow-chart" />
-              </span>
-              <span className={mkt.logoText}>{BRAND_NAME}</span>
-            </Link>
+            <BrandLogo href={MARKETING_ROUTES.home} />
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-600">
               AI 상담 운영 시스템 — 학생 기록이 상담 준비가 되는 학원 운영 플랫폼
             </p>

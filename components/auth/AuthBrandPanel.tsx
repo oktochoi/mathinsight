@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { BRAND_NAME } from '@/lib/brand';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
 import { mkt } from '@/lib/marketing/ui';
 
@@ -28,14 +29,7 @@ const PREVIEWS = [
 ];
 
 export function AuthMobileLogo() {
-  return (
-    <Link href="/" className={`${mkt.logo} mb-8 lg:hidden`}>
-      <span className={mkt.logoMark} aria-hidden>
-        <i className="ri-flow-chart" />
-      </span>
-      <span className={mkt.logoText}>{BRAND_NAME}</span>
-    </Link>
-  );
+  return <BrandLogo href="/" className={`${mkt.logo} mb-8 lg:hidden`} />;
 }
 
 export function AuthBrandPanel({ className = '' }: { className?: string }) {
@@ -47,12 +41,7 @@ export function AuthBrandPanel({ className = '' }: { className?: string }) {
       <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
 
       <div className="relative z-10">
-        <Link href="/" className="inline-flex items-center gap-2.5 text-white">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-lg backdrop-blur-sm">
-            <i className="ri-flow-chart" aria-hidden />
-          </span>
-          <span className="text-xl font-extrabold tracking-tight">{BRAND_NAME}</span>
-        </Link>
+        <BrandLogo href="/" variant="light" />
       </div>
 
       <div className="relative z-10 my-10 max-w-md">

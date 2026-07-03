@@ -5,6 +5,7 @@ import {
   CONTACT_EMAIL,
   SITE_URL,
 } from '@/lib/brand';
+import { SITE_OG_IMAGE_ABSOLUTE } from '@/lib/marketing/siteAssets';
 
 export function MarketingJsonLd() {
   const organization = {
@@ -15,6 +16,7 @@ export function MarketingJsonLd() {
     url: SITE_URL,
     email: CONTACT_EMAIL,
     description: BRAND_DESCRIPTION,
+    logo: SITE_OG_IMAGE_ABSOLUTE,
     sameAs: [SITE_URL],
   };
 
@@ -41,6 +43,7 @@ export function MarketingJsonLd() {
     url: SITE_URL,
     description: BRAND_DESCRIPTION,
     author: { '@type': 'Organization', name: COMPANY_LEGAL_NAME },
+    image: SITE_OG_IMAGE_ABSOLUTE,
     offers: {
       '@type': 'Offer',
       price: '0',

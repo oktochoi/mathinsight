@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/cn';
 import { BrandMark } from '@/components/brand/BrandMark';
+import { BrandLogoImage } from '@/components/brand/BrandLogo';
 import {
   STAFF_NAV_SECTIONS,
   TODAY_HUB_HREF,
@@ -115,13 +116,11 @@ export default function Sidebar({
           onClick={onClose}
           title="오늘 현황"
         >
-          <div
-            className="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center"
-            style={{ background: 'var(--app-accent)' }}
-          >
-            <i className="ri-sun-fill text-white text-xs" />
-          </div>
-          {!collapsed && <BrandMark variant="dark" nameClassName="text-[13px] font-semibold" />}
+          {collapsed ? (
+            <BrandLogoImage size={28} />
+          ) : (
+            <BrandMark variant="dark" nameClassName="text-[13px] font-semibold" logoSize={28} />
+          )}
         </Link>
         {!collapsed && (
           <button

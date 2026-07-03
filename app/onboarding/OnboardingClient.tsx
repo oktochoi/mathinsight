@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { roleHomePath } from '@/lib/roles';
 import { cn } from '@/lib/cn';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import type { UserRole } from '@/types/database';
 
 import StepProfile from './steps/StepProfile';
@@ -153,12 +154,7 @@ export default function OnboardingClient() {
       )}>
         {/* Logo */}
         <div className="px-10 pt-10">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20">
-              <i className="ri-flow-chart text-lg" />
-            </div>
-            <span className="text-lg font-extrabold tracking-tight">EduFlow</span>
-          </div>
+          <BrandLogo href="/" variant="light" size={36} />
         </div>
 
         {/* Role badge + headline */}
@@ -232,15 +228,7 @@ export default function OnboardingClient() {
 
           {/* Mobile header */}
           <div className="mb-8 flex items-center justify-between lg:hidden">
-            <div className="flex items-center gap-2">
-              <div className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br text-white text-sm',
-                meta.gradient
-              )}>
-                <i className="ri-flow-chart" />
-              </div>
-              <span className="font-extrabold text-slate-800">EduFlow</span>
-            </div>
+            <BrandLogo href="/" size={32} nameClassName="font-extrabold text-slate-800" />
             <div className={cn(
               'rounded-full px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r',
               meta.gradient

@@ -1,3 +1,5 @@
+import { BrandLogoImage } from '@/components/brand/BrandLogo';
+
 export function LandingCustomerCenter() {
   return (
     <section id="support" className="corp-support scroll-mt-20">
@@ -5,7 +7,7 @@ export function LandingCustomerCenter() {
         <div className="corp-support-inner">
           <div className="corp-support-brand">
             <span className="corp-support-logo" aria-hidden>
-              <i className="ri-flow-chart" />
+              <BrandLogoImage size={44} />
             </span>
             <div>
               <p className="corp-support-label">EduFlow 고객센터</p>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { BRAND_NAME } from '@/lib/brand';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 
 const NAV = [
   { href: '#features', label: '기능' },
@@ -25,12 +25,7 @@ export function LandingNav({ scrollY }: Props) {
       }`}
     >
       <div className="ef-container ef-nav-inner">
-        <Link href="/" className="ef-logo">
-          <span className="ef-logo-mark" aria-hidden>
-            <i className="ri-flow-chart" />
-          </span>
-          <span>{BRAND_NAME}</span>
-        </Link>
+        <BrandLogo href="/" className="ef-logo" nameClassName="ef-logo-text" imageClassName="ef-logo-image" />
 
         <nav className="hidden md:flex items-center gap-1" aria-label="주요">
           {NAV.map((item) => (

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BRAND_NAME } from '@/lib/brand';
+import { BrandLogoImage } from '@/components/brand/BrandLogo';
 
 export function LandingCorporateHero() {
   return (
@@ -43,7 +44,7 @@ export function LandingCorporateHero() {
             </div>
             <div className="corp-hero-illust">
               <div className="corp-illust-main">
-                <i className="ri-flow-chart text-5xl text-white/90" />
+                <BrandLogoImage size={80} className="opacity-95" />
               </div>
               <div className="corp-illust-orbit corp-orbit-a">
                 <i className="ri-book-open-line" />

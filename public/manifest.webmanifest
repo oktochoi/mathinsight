@@ -1,0 +1,34 @@
+{
+  "name": "EduFlow — 학원 AI 상담·재등록 운영 플랫폼",
+  "short_name": "EduFlow",
+  "description": "수업·출결·숙제·성적·상담 기록을 하나로 연결하는 학원 운영 SaaS. AI 상담 브리핑, 학부모 리포트, 재등록 관리.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#0284c7",
+  "lang": "ko",
+  "dir": "ltr",
+  "categories": ["education", "business", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

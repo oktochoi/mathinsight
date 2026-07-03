@@ -1,17 +1,13 @@
 import Link from 'next/link';
 import { BRAND_NAME, BRAND_TAGLINE } from '@/lib/brand';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 
 export function LandingFooter() {
   return (
     <footer className="ef-footer">
       <div className="ef-container ef-footer-inner">
         <div className="ef-footer-brand">
-          <Link href="/" className="ef-logo ef-logo-footer">
-            <span className="ef-logo-mark" aria-hidden>
-              <i className="ri-flow-chart" />
-            </span>
-            <span>{BRAND_NAME}</span>
-          </Link>
+          <BrandLogo href="/" className="ef-logo ef-logo-footer" />
           <p className="ef-footer-tagline">{BRAND_TAGLINE}</p>
           <p className="ef-footer-sub">AI Counseling Operating System</p>
         </div>
