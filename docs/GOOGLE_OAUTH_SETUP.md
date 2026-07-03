@@ -7,7 +7,7 @@ EduFlow는 **Supabase Auth**가 Google OAuth를 처리합니다. Client Secret�
 1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → **Credentials**
 2. OAuth 2.0 Client ID (Web application)
 3. **Authorized JavaScript origins**
-   - `https://mathinsight-eight.vercel.app`
+   - `https://eduflowclass.com`
    - (로컬 개발 시) `http://localhost:3000`
 4. **Authorized redirect URIs** (Supabase만 — 앱이 아님)
    - `https://vzmdggsmuatyqvxqfkdc.supabase.co/auth/v1/callback`
@@ -27,8 +27,8 @@ EduFlow는 **Supabase Auth**가 Google OAuth를 처리합니다. Client Secret�
 
 | 항목 | 로컬 개발 |
 |------|-----------|
-| Site URL | `https://mathinsight-eight.vercel.app` |
-| Redirect URLs | `https://mathinsight-eight.vercel.app/auth/callback` |
+| Site URL | `https://eduflowclass.com` |
+| Redirect URLs | `https://eduflowclass.com/auth/callback` |
 
 로컬 개발 시 위 URL에 `http://localhost:3000` 및 `http://localhost:3000/auth/callback` 추가.
 
@@ -40,7 +40,7 @@ EduFlow는 **Supabase Auth**가 Google OAuth를 처리합니다. Client Secret�
 
 ```env
 # Vercel Environment Variables에도 동일하게 설정
-NEXT_PUBLIC_SITE_URL=https://mathinsight-eight.vercel.app
+NEXT_PUBLIC_SITE_URL=https://eduflowclass.com
 ```
 
 `npm run dev`가 `-H 0.0.0.0`이어도 OAuth는 이 env를 사용합니다. **0.0.0.0을 Redirect URL에 넣지 마세요.**

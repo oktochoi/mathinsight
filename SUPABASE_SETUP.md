@@ -50,7 +50,7 @@ Supabase Dashboard → **SQL Editor**에서 다음 파일을 실행하세요:
 ## 2. 환경 변수 (`.env.local`)
 
 ```env
-# 로컬: http://localhost:3000  ·  Vercel: https://mathinsight-eight.vercel.app
+# 로컬: http://localhost:3000  ·  프로덕션: https://eduflowclass.com
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
@@ -62,8 +62,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
 
 | 항목 | 프로덕션 |
 |------|----------|
-| **Site URL** | `https://mathinsight-eight.vercel.app` |
-| **Redirect URLs** | `https://mathinsight-eight.vercel.app/auth/callback` (로컬 개발 시 `http://localhost:3000/auth/callback` 추가) |
+| **Site URL** | `https://eduflowclass.com` |
+| **Redirect URLs** | `https://eduflowclass.com/auth/callback` (로컬 개발 시 `http://localhost:3000/auth/callback` 추가) |
 
 Site URL이 `localhost`이면 **가입 인증 메일**이 로컬로 연결됩니다. Vercel **Environment Variables**에 `NEXT_PUBLIC_SITE_URL`도 동일하게 설정하세요.
 

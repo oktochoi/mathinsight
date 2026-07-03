@@ -1,8 +1,21 @@
+import { COMPANY_DOMAIN } from '@/lib/brand';
+
 const INVALID_HOSTS = new Set(['0.0.0.0', '127.0.0.1']);
+const OFFICIAL_SITE_ORIGIN = `https://${COMPANY_DOMAIN}`;
 
 /** 브라우저·OAuth에서 쓰면 안 되는 호스트 */
 export function isInvalidPublicHost(hostname: string): boolean {
   return INVALID_HOSTS.has(hostname);
+}
+
+/** 프로덕션에서 구 Vercel 기본 도메인(.vercel.app)은 공식 도메인으로 대체 */
+function isLegacyVercelOrigin(origin: string): boolean {
+  try {
+    const host = new URL(origin).hostname;
+    return host.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
 }
 
 /** 절대 URL origin 정규화 (0.0.0.0 등 제외) */
@@ -17,8 +30,23 @@ export function normalizeSiteOrigin(raw: string | undefined | null): string | nu
   }
 }
 
+function resolveConfiguredOrigin(raw: string | undefined): string | null {
+  const origin = normalizeSiteOrigin(raw);
+  if (!origin) return null;
+  if (process.env.VERCEL_ENV === 'production' && isLegacyVercelOrigin(origin)) {
+    return null;
+  }
+  return origin;
+}
+
 /** Vercel·.env에 설정된 공개 사이트 URL (서버·클라이언트 공통) */
 export function getConfiguredSiteOrigin(): string | null {
+  if (process.env.VERCEL_ENV === 'production') {
+    const fromEnv = resolveConfiguredOrigin(process.env.NEXT_PUBLIC_SITE_URL);
+    if (fromEnv) return fromEnv;
+    return OFFICIAL_SITE_ORIGIN;
+  }
+
   const candidates = [
     process.env.NEXT_PUBLIC_SITE_URL,
     process.env.NEXT_PUBLIC_APP_URL,
@@ -29,7 +57,7 @@ export function getConfiguredSiteOrigin(): string | null {
   ];
 
   for (const raw of candidates) {
-    const origin = normalizeSiteOrigin(raw);
+    const origin = resolveConfiguredOrigin(raw);
     if (origin) return origin;
   }
   return null;
@@ -42,7 +70,12 @@ export function getClientSiteOrigin(): string {
 
   if (typeof window !== 'undefined') {
     const fromBrowser = normalizeSiteOrigin(window.location.origin);
-    if (fromBrowser) return fromBrowser;
+    if (fromBrowser) {
+      if (process.env.NODE_ENV === 'production' && isLegacyVercelOrigin(fromBrowser)) {
+        return OFFICIAL_SITE_ORIGIN;
+      }
+      return fromBrowser;
+    }
   }
 
   return 'http://localhost:3000';
@@ -62,14 +95,24 @@ export function getRequestSiteOrigin(request: Request): string {
         request.headers.get('x-forwarded-proto')?.split(',')[0].trim() ??
         (hostname.includes('localhost') ? 'http' : 'https');
       const origin = normalizeSiteOrigin(`${proto}://${hostHeader.split(',')[0].trim()}`);
-      if (origin) return origin;
+      if (origin) {
+        if (process.env.VERCEL_ENV === 'production' && isLegacyVercelOrigin(origin)) {
+          return OFFICIAL_SITE_ORIGIN;
+        }
+        return origin;
+      }
     }
   }
 
   const fromUrl = normalizeSiteOrigin(new URL(request.url).origin);
-  if (fromUrl) return fromUrl;
+  if (fromUrl) {
+    if (process.env.VERCEL_ENV === 'production' && isLegacyVercelOrigin(fromUrl)) {
+      return OFFICIAL_SITE_ORIGIN;
+    }
+    return fromUrl;
+  }
 
-  return 'http://localhost:3000';
+  return process.env.VERCEL_ENV === 'production' ? OFFICIAL_SITE_ORIGIN : 'http://localhost:3000';
 }
 
 export function absolutePath(path: string, origin: string): string {
