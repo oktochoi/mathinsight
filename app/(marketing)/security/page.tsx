@@ -1,10 +1,7 @@
-import type { Metadata } from 'next';
 import { SecurityPageContent } from '@/components/marketing/pages/SecurityPageContent';
+import { buildMarketingMetadata } from '@/lib/marketing/seo';
 
-export const metadata: Metadata = {
-  title: 'Security — EduFlow',
-  description: '개인정보, 권한, AI 데이터 사용 원칙.',
-};
+export const metadata = buildMarketingMetadata('security');
 
 export default function SecurityPage() {
   return <SecurityPageContent />;

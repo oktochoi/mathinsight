@@ -7,6 +7,7 @@ export type ScreenshotKey =
   | 'counseling'
   | 'parent-report'
   | 'reregistration'
+  | 'billing'
   | 'teacher'
   | 'ai-summary'
   | 'ai-risk'
@@ -56,6 +57,11 @@ export const SCREENSHOTS: Record<ScreenshotKey, ScreenshotSpec> = {
   },
   reregistration: {
     label: 'Re-registration',
+    width: 1280,
+    height: 720,
+  },
+  billing: {
+    label: 'Billing',
     width: 1280,
     height: 720,
   },

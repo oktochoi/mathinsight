@@ -17,7 +17,7 @@ const SCREENSHOT_MAP: Record<string, ScreenshotKey> = {
   'today-workspace': 'today-lesson',
   'student-detail': 'student-hub',
   'parent-app': 'parent-report',
-  billing: 'dashboard',
+  billing: 'billing',
 };
 
 const TAB_ICONS: Record<string, string> = {

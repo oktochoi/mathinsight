@@ -1,12 +1,19 @@
 import Link from 'next/link';
-import { BRAND_NAME } from '@/lib/brand';
+import {
+  BRAND_NAME,
+  COMPANY_DOMAIN,
+  COMPANY_LEGAL_NAME,
+  CONTACT_EMAIL,
+  SITE_URL,
+} from '@/lib/brand';
 import { FOOTER_COLUMNS, MARKETING_ROUTES } from '@/lib/marketing/siteStructure';
 import { cn } from '@/lib/cn';
 import { mkt } from '@/lib/marketing/ui';
 
 const BAR_LINKS = [
   { href: MARKETING_ROUTES.about, label: '회사소개' },
-  { href: MARKETING_ROUTES.privacy, label: '개인정보 처리방침' },
+  { href: MARKETING_ROUTES.terms, label: '이용약관' },
+  { href: MARKETING_ROUTES.privacy, label: '개인정보처리방침' },
   { href: MARKETING_ROUTES.contact, label: '도입 문의' },
   { href: MARKETING_ROUTES.security, label: '정보보호' },
 ];
@@ -62,9 +69,21 @@ export function MarketingFooter() {
 
         <div className={cn(mkt.container, 'mt-8 border-t border-slate-100 pt-5 text-sm text-slate-500')}>
           <p>
-            <strong className="text-slate-700">(주)에듀플로우</strong>
+            <strong className="text-slate-700">{COMPANY_LEGAL_NAME}</strong>
           </p>
-          <p>hello@eduflow.app · 파일럿 운영 중</p>
+          <p>
+            <a href={SITE_URL} className="text-slate-600 hover:text-sky-700">
+              {COMPANY_DOMAIN}
+            </a>
+            {' · '}
+            파일럿 운영 중
+          </p>
+          <p className="mt-1">
+            문의 메일:{' '}
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-sky-700 hover:underline">
+              {CONTACT_EMAIL}
+            </a>
+          </p>
           <p className="mt-2 text-xs text-slate-400">
             © {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
           </p>

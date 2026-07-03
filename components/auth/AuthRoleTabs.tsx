@@ -11,8 +11,8 @@ const OPTIONS: { key: AuthAudience; label: string }[] = [
 ];
 
 export function authAudienceHint(audience: AuthAudience): string {
-  if (audience === 'staff') return '휴대폰 번호 또는 Google 계정으로 로그인합니다.';
-  return '가입 시 인증한 휴대폰 번호로 로그인합니다.';
+  if (audience === 'staff') return 'Google 또는 휴대폰 번호로 로그인합니다. Google 사용 시 휴대폰 인증이 필요합니다.';
+  return 'Google 또는 휴대폰 번호로 로그인합니다. Google 사용 시 휴대폰 인증이 필요합니다.';
 }
 
 export function authLoginPlaceholder(audience: AuthAudience): string {

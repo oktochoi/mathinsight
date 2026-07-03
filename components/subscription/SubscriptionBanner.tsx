@@ -2,12 +2,23 @@
 
 import Link from 'next/link';
 import { useSubscription } from '@/hooks/useSubscription';
+import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 import { cn } from '@/lib/cn';
 
 export function SubscriptionBanner() {
   const { status, daysLeft, loading } = useSubscription();
 
-  if (loading || status !== 'trialing' || daysLeft == null) return null;
+  if (loading) return null;
+
+  if (PROMO_ALL_FREE.active) {
+    return (
+      <div className="shrink-0 px-4 py-2 text-center text-xs font-medium border-b bg-green-50 text-green-800 border-green-100">
+        <strong>{PROMO_ALL_FREE.badge}</strong> — 현재 모든 플랜을 무료로 이용 중입니다.
+      </div>
+    );
+  }
+
+  if (status !== 'trialing' || daysLeft == null) return null;
 
   const urgent = daysLeft <= 1;
 

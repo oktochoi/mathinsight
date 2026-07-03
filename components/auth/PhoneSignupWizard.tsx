@@ -12,7 +12,7 @@ import { AuthFormCard } from '@/components/auth/AuthFormCard';
 import { AuthField, AuthInput, AuthPasswordInput, AuthSubmitButton } from '@/components/auth/AuthField';
 import { AuthSignupFooter } from '@/components/auth/AuthFooter';
 
-type Mode = 'student' | 'parent' | 'owner';
+type Mode = 'student' | 'parent' | 'owner' | 'teacher';
 
 type Props = {
   mode: Mode;
@@ -22,7 +22,7 @@ type Props = {
 
 type Step = 'phone' | 'verify' | 'account';
 
-const MODE_LABEL = { student: '학생', parent: '학부모', owner: '원장' } as const;
+const MODE_LABEL = { student: '학생', parent: '학부모', owner: '원장', teacher: '강사' } as const;
 
 export function PhoneSignupWizard({ mode, embedded }: Props) {
   const router = useRouter();
@@ -134,8 +134,12 @@ export function PhoneSignupWizard({ mode, embedded }: Props) {
         setError('가입 후 로그인이 필요합니다.');
         return;
       }
-      if (mode === 'owner') {
-        toast.success('가입이 완료되었습니다. 학원 프로필을 설정해 주세요.');
+      if (mode === 'owner' || mode === 'teacher') {
+        toast.success(
+          mode === 'owner'
+            ? '가입이 완료되었습니다. 학원 프로필을 설정해 주세요.'
+            : '가입이 완료되었습니다. 학원 연결을 진행해 주세요.'
+        );
         router.replace('/onboarding');
         return;
       }
@@ -259,7 +263,9 @@ export function PhoneSignupWizard({ mode, embedded }: Props) {
           <p className="text-[11px] text-center" style={{ color: 'var(--auth-muted)' }}>
             {mode === 'owner'
               ? '가입 후 학원 프로필 설정을 진행합니다.'
-              : '가입 후 학원 연결은 포털 화면에서 한 번만 진행합니다.'}
+              : mode === 'teacher'
+                ? '가입 후 학원 초대 코드로 연결합니다.'
+                : '가입 후 학원 연결은 포털 화면에서 한 번만 진행합니다.'}
           </p>
         </div>
       )}
@@ -277,7 +283,7 @@ export function PhoneSignupWizard({ mode, embedded }: Props) {
         subtitle="휴대폰 인증 후 로그인에 사용할 비밀번호를 설정합니다"
       >
         {formBody}
-        <AuthSignupFooter audience={mode === 'owner' ? undefined : mode} />
+        <AuthSignupFooter audience={mode === 'owner' || mode === 'teacher' ? undefined : mode} />
       </AuthFormCard>
     </AuthPageScaffold>
   );

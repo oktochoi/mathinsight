@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: '무료 체험 기간과 요금은?',
-    a: '14일 무료 체험 후 Starter·Pro·Enterprise 중 선택합니다. Enterprise는 다지점·맞춤 연동이 필요한 경우 문의해 주세요.',
+    a: '현재 행사 기간으로 Starter·Pro·Enterprise 등 모든 플랜을 무료로 이용하실 수 있습니다. 카드 등록 없이 가입 후 바로 시작하세요.',
   },
 ];
 

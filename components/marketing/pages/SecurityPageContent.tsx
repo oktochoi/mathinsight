@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from '@/lib/brand';
 import { MARKETING_ROUTES, SECURITY_TOPICS } from '@/lib/marketing/siteStructure';
 import { PageHeroMinimal } from '@/components/marketing/ui/PageHero';
 import { Section, SectionInner } from '@/components/marketing/ui/Section';
@@ -42,6 +43,12 @@ export function SecurityPageContent() {
             <li>외부 모델 학습용으로 학생 데이터를 제공하지 않습니다.</li>
             <li>역할별 접근 권한으로 최소 노출을 적용합니다.</li>
           </ul>
+          <p className="mt-6 text-sm text-slate-600">
+            보안·개인정보 관련 문의:{' '}
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-sky-700 hover:underline">
+              {CONTACT_EMAIL}
+            </a>
+          </p>
         </SectionInner>
       </Section>
 

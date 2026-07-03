@@ -1,11 +1,9 @@
 /**
- * EduFlow 공모전 데모 Auth 계정 생성
+ * EduFlow 데모 Auth 계정 4종 생성/갱신
  *
- * 사용법:
- *   SUPABASE_SERVICE_ROLE_KEY=eyJ... node scripts/create-demo-auth-users.mjs
+ *   npm run demo:auth
  *
- * .env.local 의 NEXT_PUBLIC_SUPABASE_URL 과 함께 service role 키가 필요합니다.
- * (Dashboard → Settings → API → service_role secret)
+ * 필요: .env.local 의 NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (eyJ... 또는 sb_secret_...)
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -26,6 +24,13 @@ function loadEnvLocal() {
     if (i < 0) continue;
     const key = t.slice(0, i).trim();
     const val = t.slice(i + 1).trim();
+    if (!val || val === '{' || val.startsWith('"type"')) continue;
+    if (key === 'SUPABASE_SERVICE_ROLE_KEY') {
+      if (val.startsWith('eyJ') || val.startsWith('sb_secret_')) {
+        process.env.SUPABASE_SERVICE_ROLE_KEY = val;
+      }
+      continue;
+    }
     if (!process.env[key]) process.env[key] = val;
   }
 }
@@ -33,18 +38,21 @@ function loadEnvLocal() {
 loadEnvLocal();
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
+/** 원장 · 강사 3 · 학부모 · 학생 (DB role) */
 const DEMO_USERS = [
   { email: 'okto0914@gmail.com', password: 'okto0914!', role: 'admin', name: '김원장' },
-  { email: 'okto0915@gmail.com', password: 'okto0914!', role: 'parent', name: '김학부모' },
-  { email: 'okto0916@gmail.com', password: 'okto0914!', role: 'student', name: '김민준' },
+  { email: 'okto0915@gmail.com', password: 'okto0914!', role: 'teacher', name: '이강사' },
+  { email: 'okto0918@gmail.com', password: 'okto0914!', role: 'teacher', name: '박강사' },
+  { email: 'okto0919@gmail.com', password: 'okto0914!', role: 'teacher', name: '최강사' },
+  { email: 'okto0916@gmail.com', password: 'okto0914!', role: 'parent', name: '김학부모' },
+  { email: 'okto0917@gmail.com', password: 'okto0914!', role: 'student', name: '김민준' },
 ];
 
 if (!url || !serviceKey) {
   console.error(
-    'NEXT_PUBLIC_SUPABASE_URL 과 SUPABASE_SERVICE_ROLE_KEY 가 필요합니다.\n' +
-      '예: SUPABASE_SERVICE_ROLE_KEY=eyJ... node scripts/create-demo-auth-users.mjs'
+    'NEXT_PUBLIC_SUPABASE_URL 과 SUPABASE_SERVICE_ROLE_KEY(eyJ... 또는 sb_secret_...) 가 필요합니다.'
   );
   process.exit(1);
 }
@@ -93,11 +101,11 @@ async function upsertDemoUser({ email, password, role, name }) {
 }
 
 async function main() {
-  console.log('EduFlow 데모 Auth 계정 생성 중...\n');
+  console.log('EduFlow 데모 Auth 계정 6종 생성 중...\n');
   for (const u of DEMO_USERS) {
     await upsertDemoUser(u);
   }
-  console.log('\n완료. 이어서 Supabase SQL Editor에서 supabase/seed-eduflow-demo.sql 을 실행하세요.');
+  console.log('\n완료 → npm run demo:seed 로 DB 시드까지 진행하세요.');
 }
 
 main().catch((err) => {

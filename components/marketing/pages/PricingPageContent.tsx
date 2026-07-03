@@ -16,6 +16,7 @@ import { Button } from '@/components/marketing/ui/Button';
 import { FadeIn } from '@/components/marketing/motion/FadeIn';
 import { Reveal, RevealItem } from '@/components/marketing/motion/Reveal';
 import { mkt } from '@/lib/marketing/ui';
+import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 
 const VALUE_PROPS = [
   { icon: 'ri-time-line', title: '상담 준비 시간 ↓', desc: '수업 기록이 즉시 AI 브리핑으로 변환됩니다.' },
@@ -46,12 +47,20 @@ export function PricingPageContent() {
         <div className={cn(mkt.container, 'text-center')}>
           <FadeIn>
             <p className={cn(mkt.eyebrow, 'mb-3')}>Pricing</p>
-            <h1 className={mkt.h1}>학원 규모에 맞는 플랜 선택</h1>
+            <h1 className={mkt.h1}>
+              {PROMO_ALL_FREE.active ? PROMO_ALL_FREE.title : '학원 규모에 맞는 플랜 선택'}
+            </h1>
             <p className={cn(mkt.lead, 'mt-4 mx-auto max-w-xl')}>
-              모든 플랜에 3일 무료 체험이 포함됩니다. 카드 등록 없이 바로 시작하세요.
+              {PROMO_ALL_FREE.active
+                ? PROMO_ALL_FREE.subtitle
+                : '모든 플랜에 3일 무료 체험이 포함됩니다. 카드 등록 없이 바로 시작하세요.'}
             </p>
 
-            {/* Monthly / Annual toggle */}
+            {PROMO_ALL_FREE.active ? (
+              <span className="mt-5 inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-bold text-green-800">
+                {PROMO_ALL_FREE.badge}
+              </span>
+            ) : (
             <div className="mt-7 inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
               <button
                 type="button"
@@ -80,6 +89,7 @@ export function PricingPageContent() {
                 </span>
               </button>
             </div>
+            )}
           </FadeIn>
         </div>
       </section>
@@ -91,8 +101,15 @@ export function PricingPageContent() {
             {PRICING_PLANS.map((plan) => {
               const monthlyPrice = plan.price;
               const annualPrice = Math.round(monthlyPrice * 0.8 / 100) * 100;
-              const displayPrice = annual ? annualPrice : monthlyPrice;
-              const displayLabel = displayPrice.toLocaleString('ko-KR');
+              const displayPrice = PROMO_ALL_FREE.active
+                ? PROMO_ALL_FREE.priceLabel
+                : annual
+                  ? annualPrice
+                  : monthlyPrice;
+              const displayLabel =
+                typeof displayPrice === 'string'
+                  ? displayPrice
+                  : displayPrice.toLocaleString('ko-KR');
 
               return (
                 <RevealItem key={plan.name}>
@@ -118,18 +135,30 @@ export function PricingPageContent() {
 
                     <div className="my-6">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-sm text-slate-400">₩</span>
-                        <span className="text-4xl font-extrabold tracking-tight text-slate-900">
+                        {!PROMO_ALL_FREE.active && (
+                          <span className="text-sm text-slate-400">₩</span>
+                        )}
+                        <span
+                          className={cn(
+                            'text-4xl font-extrabold tracking-tight',
+                            PROMO_ALL_FREE.active ? 'text-green-600' : 'text-slate-900'
+                          )}
+                        >
                           {displayLabel}
                         </span>
-                        <span className="text-sm text-slate-400">/월</span>
+                        {!PROMO_ALL_FREE.active && (
+                          <span className="text-sm text-slate-400">/월</span>
+                        )}
+                        {PROMO_ALL_FREE.active && (
+                          <span className="text-sm text-slate-500">(행사 기간)</span>
+                        )}
                       </div>
-                      {annual && (
+                      {!PROMO_ALL_FREE.active && annual && (
                         <p className="mt-1 text-xs text-slate-400 line-through">
                           ₩{plan.priceLabel}/월
                         </p>
                       )}
-                      {annual && (
+                      {annual && !PROMO_ALL_FREE.active && (
                         <p className="mt-0.5 text-xs font-semibold text-green-600">
                           연간 ₩{(annualPrice * 12).toLocaleString('ko-KR')} 결제
                         </p>
@@ -152,7 +181,7 @@ export function PricingPageContent() {
                       variant={plan.featured ? 'primary' : 'secondary'}
                       className="w-full"
                     >
-                      3일 무료 체험 시작
+                      {PROMO_ALL_FREE.active ? PROMO_ALL_FREE.cta : '3일 무료 체험 시작'}
                     </Button>
                   </article>
                 </RevealItem>
@@ -164,8 +193,9 @@ export function PricingPageContent() {
             <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-5 text-center">
               <p className="text-sm text-slate-600">
                 <i className="ri-information-line mr-1.5 text-slate-400" />
-                모든 플랜은 3일 무료 체험으로 시작합니다. 체험 기간 중 카드 청구 없음.
-                기간 후 원하는 플랜으로 전환하거나 자유롭게 취소하세요.
+                {PROMO_ALL_FREE.active
+                  ? `${PROMO_ALL_FREE.footnote} 행사 기간 중 모든 플랜 요금은 0원입니다.`
+                  : '모든 플랜은 3일 무료 체험으로 시작합니다. 체험 기간 중 카드 청구 없음. 기간 후 원하는 플랜으로 전환하거나 자유롭게 취소하세요.'}
               </p>
             </div>
           </FadeIn>
@@ -246,9 +276,17 @@ export function PricingPageContent() {
 
       <CTASection
         variant="blue"
-        title="3일 무료 체험으로 시작하세요"
-        description="카드 등록 없이 시작 · Demo로 먼저 확인 가능"
-        primary={{ href: MARKETING_ROUTES.signup, label: '무료 체험', variant: 'accent' }}
+        title={PROMO_ALL_FREE.active ? `${PROMO_ALL_FREE.badge} — 모든 플랜 무료` : '3일 무료 체험으로 시작하세요'}
+        description={
+          PROMO_ALL_FREE.active
+            ? PROMO_ALL_FREE.footnote
+            : '카드 등록 없이 시작 · Demo로 먼저 확인 가능'
+        }
+        primary={{
+          href: MARKETING_ROUTES.signup,
+          label: PROMO_ALL_FREE.active ? PROMO_ALL_FREE.cta : '무료 체험',
+          variant: 'accent',
+        }}
         secondary={{ href: MARKETING_ROUTES.contact, label: '도입 문의' }}
       />
     </>

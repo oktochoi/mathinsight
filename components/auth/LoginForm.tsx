@@ -112,12 +112,11 @@ function LoginFormInner() {
 
         {error && <div className="auth-error-banner">{error}</div>}
 
-        {audience === 'staff' && (
-          <>
-            <GoogleSignInButton disabled={loading} />
-            <AuthDivider />
-          </>
-        )}
+        <GoogleSignInButton disabled={loading} />
+        <p className="text-[11px] text-center -mt-2 mb-1" style={{ color: 'var(--auth-muted)' }}>
+          Google 로그인 후 휴대폰 인증이 필요할 수 있습니다.
+        </p>
+        <AuthDivider />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <AuthField label="휴대폰 번호">

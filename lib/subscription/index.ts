@@ -1,4 +1,5 @@
 import { fromDbRole, isStaffRole } from '@/lib/roles';
+import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 import type { UserProfile } from '@/types/database';
 import { checkAcademySubscription } from './guard';
 
@@ -40,6 +41,8 @@ export async function subscriptionRedirectPath(
   const appRole = fromDbRole(rawDbRole ?? undefined) ?? profile?.role;
   if (!appRole || !isStaffRole(appRole)) return null;
   if (!profile?.academy_id) return null;
+
+  if (PROMO_ALL_FREE.active) return null;
 
   const onStaffApp = STAFF_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
   if (!onStaffApp) return null;

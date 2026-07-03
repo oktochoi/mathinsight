@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Pacifico } from "next/font/google";
-import { BRAND_DESCRIPTION, BRAND_META_TITLE, BRAND_TAGLINE } from "@/lib/brand";
+import { Analytics } from "@vercel/analytics/next";
+import { ROOT_SITE_METADATA } from "@/lib/marketing/seo";
 import "./globals.css";
 
 const pacifico = Pacifico({
@@ -20,10 +21,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: BRAND_META_TITLE,
-  description: `${BRAND_TAGLINE}. ${BRAND_DESCRIPTION}`,
-};
+export const metadata: Metadata = ROOT_SITE_METADATA;
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -43,6 +41,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} antialiased bg-white overflow-x-hidden`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );

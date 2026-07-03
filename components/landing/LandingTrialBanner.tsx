@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BRAND_NAME } from '@/lib/brand';
+import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 
 export function LandingTrialBanner() {
   return (
@@ -17,14 +18,24 @@ export function LandingTrialBanner() {
           </div>
           <div className="corp-trial-copy">
             <p className="corp-trial-lead">
-              {BRAND_NAME}를 <strong>1개월 무료</strong>로 체험해 보세요!
+              {PROMO_ALL_FREE.active ? (
+                <>
+                  {BRAND_NAME} <strong>행사 기간 — 모든 플랜 무료</strong>
+                </>
+              ) : (
+                <>
+                  {BRAND_NAME}를 <strong>1개월 무료</strong>로 체험해 보세요!
+                </>
+              )}
             </p>
             <p className="corp-trial-sub">
-              수업·출결·상담 데이터를 연결한 뒤, 재등록 상담 흐름이 어떻게 바뀌는지 직접 확인하세요.
+              {PROMO_ALL_FREE.active
+                ? PROMO_ALL_FREE.subtitle
+                : '수업·출결·상담 데이터를 연결한 뒤, 재등록 상담 흐름이 어떻게 바뀌는지 직접 확인하세요.'}
             </p>
           </div>
           <Link href="/signup" className="corp-trial-cta">
-            <span>무료 체험</span>
+            <span>{PROMO_ALL_FREE.active ? PROMO_ALL_FREE.cta : '무료 체험'}</span>
             <span>신청하기</span>
           </Link>
         </div>

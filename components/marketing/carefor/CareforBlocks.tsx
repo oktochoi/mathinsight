@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { CONTACT_EMAIL } from '@/lib/brand';
 import useEmblaCarousel from 'embla-carousel-react';
 import { CF_QUICK_LINKS, CF_HERO_SLIDES } from '@/lib/marketing/siteStructure';
+import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 import { HERO_BG, mkt } from '@/lib/marketing/ui';
 import { cn } from '@/lib/cn';
 
@@ -38,13 +40,23 @@ export function CfTrialBanner() {
     <section className="bg-gradient-to-r from-lime-500 to-green-600 py-8 text-white">
       <div className={cn(mkt.container, 'flex flex-col items-start justify-between gap-4 md:flex-row md:items-center')}>
         <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-white/90">Free Trial</p>
-          <h2 className="mt-1 text-xl font-extrabold md:text-2xl">14일 무료 체험 — 카드 등록 없이 시작</h2>
-          <p className="mt-1 text-sm text-white/90">Demo Academy로 먼저 보고, 우리 학원 데이터로 바로 시작하세요.</p>
+          <p className="text-sm font-bold uppercase tracking-wider text-white/90">
+            {PROMO_ALL_FREE.active ? PROMO_ALL_FREE.badge : 'Free Trial'}
+          </p>
+          <h2 className="mt-1 text-xl font-extrabold md:text-2xl">
+            {PROMO_ALL_FREE.active
+              ? `${PROMO_ALL_FREE.title} — 카드 등록 없이 시작`
+              : '14일 무료 체험 — 카드 등록 없이 시작'}
+          </h2>
+          <p className="mt-1 text-sm text-white/90">
+            {PROMO_ALL_FREE.active
+              ? PROMO_ALL_FREE.subtitle
+              : 'Demo Academy로 먼저 보고, 우리 학원 데이터로 바로 시작하세요.'}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
           <Link href="/signup" className={mkt.btnOrange}>
-            무료 체험 시작
+            {PROMO_ALL_FREE.active ? PROMO_ALL_FREE.cta : '무료 체험 시작'}
           </Link>
           <Link href="/demo" className={mkt.btnOutlineLight}>
             Demo 보기
@@ -62,9 +74,9 @@ export function CfCustomerCenter() {
         <h2 className="mb-6 text-lg font-extrabold text-slate-800">고객센터</h2>
         <div className="grid gap-6 sm:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-sky-700">문의</p>
-            <a href="mailto:hello@eduflow.app" className="mt-2 block text-lg font-bold text-slate-800">
-              hello@eduflow.app
+            <p className="text-xs font-bold uppercase tracking-wider text-sky-700">문의 메일</p>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="mt-2 block text-lg font-bold text-slate-800">
+              {CONTACT_EMAIL}
             </a>
             <p className="mt-1 text-sm text-slate-500">평일 09:00 – 18:00</p>
           </div>

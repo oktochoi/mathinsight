@@ -7,6 +7,7 @@ import { MockPayButton } from '@/components/subscription/MockPayButton';
 import { DevTools } from '@/components/subscription/DevTools';
 import { useSubscription } from '@/hooks/useSubscription';
 import type { PlanId } from '@/lib/payment/types';
+import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 
 const REASON_COPY: Record<string, { title: string; desc: string }> = {
   trial_expired: {
@@ -46,8 +47,17 @@ export default function SubscribePageClient() {
     <div className="max-w-4xl mx-auto space-y-8 py-4">
       <div className="text-center space-y-2">
         <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">EduFlow 구독</p>
-        <h1 className="text-2xl font-bold text-stone-900">{banner.title}</h1>
-        <p className="text-sm text-stone-500">{banner.desc}</p>
+        {PROMO_ALL_FREE.active ? (
+          <>
+            <h1 className="text-2xl font-bold text-green-700">{PROMO_ALL_FREE.title}</h1>
+            <p className="text-sm text-stone-600">{PROMO_ALL_FREE.subtitle}</p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-bold text-stone-900">{banner.title}</h1>
+            <p className="text-sm text-stone-500">{banner.desc}</p>
+          </>
+        )}
       </div>
 
       <PlanSelector selected={plan} onSelect={setPlan} />

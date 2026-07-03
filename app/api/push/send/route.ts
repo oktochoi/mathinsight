@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       reason: result.reason,
       message: result.skipped
         ? result.reason === 'fcm_not_configured'
-          ? 'FCM_SERVER_KEY 미설정 — 푸시를 건너뛰었습니다.'
+          ? 'FIREBASE_SERVICE_ACCOUNT_JSON 또는 FCM_SERVER_KEY 미설정 — 푸시를 건너뛰었습니다.'
           : '등록된 푸시 토큰이 없습니다.'
         : `푸시 ${result.sent}건 발송${result.failed > 0 ? `, 실패 ${result.failed}건` : ''}`,
     });

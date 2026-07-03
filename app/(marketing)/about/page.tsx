@@ -1,10 +1,7 @@
-import type { Metadata } from 'next';
 import { AboutPageContent } from '@/components/marketing/pages/AboutPageContent';
+import { buildMarketingMetadata } from '@/lib/marketing/seo';
 
-export const metadata: Metadata = {
-  title: 'About — EduFlow',
-  description: 'EduFlow 철학 — ERP가 아닌 AI 상담 운영 시스템.',
-};
+export const metadata = buildMarketingMetadata('about');
 
 export default function AboutPage() {
   return <AboutPageContent />;

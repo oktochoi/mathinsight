@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, use, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { PhoneSignupWizard } from '@/components/auth/PhoneSignupWizard';
 import { AuthMobileLogo } from '@/components/auth/AuthBrandPanel';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
@@ -56,28 +55,7 @@ function JoinAcademyPageInner({ academyCode }: { academyCode: string }) {
     return (
       <>
         <AuthMobileLogo />
-        <AuthFormCard
-          title="강사 가입"
-          subtitle={`학원 코드 ${academyCode} — 이메일 계정으로 가입합니다`}
-        >
-          <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-            강사는 이메일·비밀번호로 가입합니다. 가입 후 온보딩 화면에서 이 학원 코드가 자동으로
-            채워집니다.
-          </p>
-          <Link
-            href="/signup?role=teacher"
-            className="flex w-full items-center justify-center rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
-          >
-            강사 가입 계속하기
-          </Link>
-          <button
-            type="button"
-            onClick={() => setRole(null)}
-            className="mt-3 w-full py-2.5 text-sm text-slate-500 hover:text-slate-700"
-          >
-            ← 역할 다시 선택
-          </button>
-        </AuthFormCard>
+        <PhoneSignupWizard mode="teacher" />
       </>
     );
   }

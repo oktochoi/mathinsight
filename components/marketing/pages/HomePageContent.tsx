@@ -9,6 +9,7 @@ import { Section, SectionInner } from '@/components/marketing/ui/Section';
 import { SectionHeader } from '@/components/marketing/ui/SectionHeader';
 import { cn } from '@/lib/cn';
 import { mkt } from '@/lib/marketing/ui';
+import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 
 const PROBLEMS = [
   {
@@ -81,7 +82,7 @@ export function HomePageContent() {
             <FadeIn>
               <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3.5 py-1.5 text-xs font-semibold text-sky-700 mb-6">
                 <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                AI Native 학원 운영 SaaS
+                {PROMO_ALL_FREE.active ? PROMO_ALL_FREE.badge : 'AI Native 학원 운영 SaaS'}
               </div>
               <h1 className="text-4xl font-extrabold leading-[1.15] tracking-tight text-slate-900 md:text-[3rem]">
                 학생 기록이
@@ -101,7 +102,7 @@ export function HomePageContent() {
                   href={MARKETING_ROUTES.signup}
                   className={cn(mkt.btnGreen, 'px-6 py-3 text-[15px]')}
                 >
-                  3일 무료 체험 →
+                  {PROMO_ALL_FREE.active ? `${PROMO_ALL_FREE.cta} →` : '3일 무료 체험 →'}
                 </Link>
                 <Link
                   href={`${MARKETING_ROUTES.product}#tour`}
@@ -119,7 +120,8 @@ export function HomePageContent() {
                 </span>
                 <span className="h-4 w-px bg-slate-200" />
                 <span className="flex items-center gap-1.5">
-                  <i className="ri-check-line text-green-500" /> 3일 무료 체험
+                  <i className="ri-check-line text-green-500" />{' '}
+                  {PROMO_ALL_FREE.active ? '행사 기간 전 플랜 무료' : '3일 무료 체험'}
                 </span>
                 <span className="h-4 w-px bg-slate-200" />
                 <span className="flex items-center gap-1.5">
@@ -280,9 +282,9 @@ export function HomePageContent() {
           <div className={cn(mkt.card, 'overflow-hidden')}>
             <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
               {[
-                { plan: '스타터', price: '39,000', students: '50명', color: 'text-slate-700' },
-                { plan: '성장', price: '79,000', students: '150명', color: 'text-sky-700', badge: '추천' },
-                { plan: '프로', price: '149,000', students: '무제한', color: 'text-violet-700' },
+                { plan: '스타터', price: PROMO_ALL_FREE.active ? '무료' : '39,000', students: '50명', color: 'text-slate-700' },
+                { plan: '성장', price: PROMO_ALL_FREE.active ? '무료' : '79,000', students: '150명', color: 'text-sky-700', badge: '추천' },
+                { plan: '프로', price: PROMO_ALL_FREE.active ? '무료' : '149,000', students: '무제한', color: 'text-violet-700' },
               ].map((p) => (
                 <div key={p.plan} className="relative p-6 text-center">
                   {p.badge && (
@@ -291,9 +293,11 @@ export function HomePageContent() {
                     </span>
                   )}
                   <p className={cn('text-sm font-bold', p.color)}>{p.plan}</p>
-                  <p className="mt-1 text-2xl font-extrabold text-slate-900">
-                    ₩{p.price}
-                    <span className="text-sm font-normal text-slate-400">/월</span>
+                  <p className={cn('mt-1 text-2xl font-extrabold', PROMO_ALL_FREE.active ? 'text-green-600' : 'text-slate-900')}>
+                    {PROMO_ALL_FREE.active ? p.price : `₩${p.price}`}
+                    {!PROMO_ALL_FREE.active && (
+                      <span className="text-sm font-normal text-slate-400">/월</span>
+                    )}
                   </p>
                   <p className="mt-1 text-xs text-slate-400">학생 {p.students}</p>
                 </div>
@@ -301,7 +305,13 @@ export function HomePageContent() {
             </div>
             <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4 text-center">
               <p className="text-sm text-slate-500">
-                3일 무료 체험 · 카드 등록 없음 ·{' '}
+                {PROMO_ALL_FREE.active ? (
+                  <>
+                    <strong className="text-green-700">{PROMO_ALL_FREE.badge}</strong> · 모든 플랜 무료 ·{' '}
+                  </>
+                ) : (
+                  <>3일 무료 체험 · 카드 등록 없음 · </>
+                )}
                 <Link href={MARKETING_ROUTES.pricing} className={mkt.link}>
                   자세한 플랜 비교 →
                 </Link>
@@ -314,9 +324,21 @@ export function HomePageContent() {
       {/* ── CTA ──────────────────────────────────────── */}
       <CTASection
         variant="green"
-        title="3일 무료 체험 — 카드 등록 없이 시작"
-        description="Demo Academy로 먼저 둘러보거나, 바로 우리 학원 데이터로 시작할 수 있습니다."
-        primary={{ href: MARKETING_ROUTES.signup, label: '무료 체험 시작', variant: 'accent' }}
+        title={
+          PROMO_ALL_FREE.active
+            ? `${PROMO_ALL_FREE.badge} — 모든 플랜 무료`
+            : '3일 무료 체험 — 카드 등록 없이 시작'
+        }
+        description={
+          PROMO_ALL_FREE.active
+            ? PROMO_ALL_FREE.subtitle
+            : 'Demo Academy로 먼저 둘러보거나, 바로 우리 학원 데이터로 시작할 수 있습니다.'
+        }
+        primary={{
+          href: MARKETING_ROUTES.signup,
+          label: PROMO_ALL_FREE.active ? PROMO_ALL_FREE.cta : '무료 체험 시작',
+          variant: 'accent',
+        }}
         secondary={{ href: MARKETING_ROUTES.demo, label: '화면 투어 보기' }}
       />
     </>

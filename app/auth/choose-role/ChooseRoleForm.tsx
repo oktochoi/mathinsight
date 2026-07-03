@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { completeProfileSetup } from '@/lib/auth';
+import { completeProfileSetup, postAuthPath } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
+import { toDbRole } from '@/lib/roles';
 import type { SignupRole } from '@/lib/roles';
 import { AuthPageScaffold } from '@/components/auth/AuthPageScaffold';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
@@ -49,8 +51,14 @@ export function ChooseRoleForm({ initialName, showPendingInfo }: Props) {
     }
 
     toast.success('설정이 완료되었습니다.');
-    // 모든 역할: 온보딩으로 이동 (onboarding_complete = false)
-    router.replace('/onboarding');
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+    router.replace(postAuthPath(user, profile, toDbRole(profile.role)));
   };
 
   return (

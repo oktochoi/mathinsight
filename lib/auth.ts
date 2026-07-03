@@ -62,6 +62,13 @@ export function formatAuthError(error: AuthError | { message?: string; status?: 
     return '이메일 또는 비밀번호가 올바르지 않습니다.';
   }
 
+  if (/invalid api key/i.test(msg)) {
+    return (
+      'Supabase API 키가 올바르지 않습니다. .env.local의 NEXT_PUBLIC_SUPABASE_ANON_KEY(또는 PUBLISHABLE_KEY)를 ' +
+      'Dashboard → Settings → API 의 anon public 키로 맞춘 뒤 dev 서버를 재시작해 주세요.'
+    );
+  }
+
   if (status === 401 || /jwt|not authorized|unauthorized/i.test(msg)) {
     return (
       '인증에 실패했습니다. Supabase SQL에 002_auth_user_trigger.sql을 실행했는지 확인해 주세요. ' +

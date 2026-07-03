@@ -41,49 +41,64 @@ export const PRODUCT_PROBLEMS = [
 ] as const;
 
 export const PRODUCT_WORKFLOW_STEPS = [
-  { title: '시간표', desc: '오늘 수업과 담당 반을 한눈에 확인합니다.' },
-  { title: '오늘 수업', desc: 'Today Workspace에서 수업을 시작합니다.' },
-  { title: '출결', desc: '1분 안에 출결을 기록합니다.' },
-  { title: '숙제', desc: '제출 여부를 바로 입력합니다.' },
-  { title: '점수', desc: '시험·평가 점수를 함께 남깁니다.' },
-  { title: '수업 종료', desc: 'Lesson 단위로 수업을 마감합니다.' },
-  { title: 'AI 요약', desc: '기록을 바탕으로 상담 포인트를 정리합니다.' },
-  { title: '학부모 전달', desc: '리포트로 상담 맥락을 공유합니다.' },
-  { title: '재등록', desc: '상담·기록과 연결해 재등록을 관리합니다.' },
+  { title: '시간표' },
+  { title: '오늘 수업' },
+  { title: '출결' },
+  { title: '숙제' },
+  { title: '점수' },
+  { title: '수업 종료' },
+  { title: 'AI 요약' },
+  { title: '학부모 전달' },
+  { title: '재등록' },
 ] as const;
 
-export const PRODUCT_KEY_FEATURES = [
+/** Product — AI·RAG 엔진 (Workflow 아래) */
+export const PRODUCT_AI_CAPABILITIES = [
   {
-    id: 'today-workspace',
-    title: 'Today Workspace',
-    desc: '오늘 수업 입력의 중심. 출결·숙제·점수·메모를 한 흐름으로 기록합니다.',
-    icon: 'ri-book-open-line',
+    id: 'student-rag',
+    title: 'Student RAG',
+    desc: '출결·숙제·상담 기록을 인덱싱해 맥락 있는 검색.',
+    icon: 'ri-database-2-line',
+    tag: 'RAG',
   },
   {
-    id: 'student-crm',
-    title: 'Student CRM',
-    desc: '학생 한 명의 기록·상담·학부모 소통을 타임라인으로 이해합니다.',
-    icon: 'ri-user-heart-line',
-  },
-  {
-    id: 'billing',
-    title: 'Billing',
-    desc: '수납·미납·재등록을 운영 흐름과 함께 관리합니다.',
-    icon: 'ri-wallet-3-line',
-  },
-  {
-    id: 'schedule',
-    title: 'Schedule',
-    desc: '반·강사·시간표를 기준으로 오늘 운영을 시작합니다.',
-    icon: 'ri-calendar-schedule-line',
-  },
-  {
-    id: 'parent-app',
-    title: 'Parent App',
-    desc: '학부모가 리포트와 소통 맥락을 앱에서 확인합니다.',
+    id: 'parent-agent',
+    title: 'Parent Agent',
+    desc: '학부모 포털 AI — 우리 학원 데이터만 근거로 응답.',
     icon: 'ri-parent-line',
+    tag: 'Agent',
+  },
+  {
+    id: 'briefing',
+    title: '상담 브리핑',
+    desc: '상담 전 30초 학생 요약·talking points.',
+    icon: 'ri-clipboard-line',
+    tag: 'AI',
+  },
+  {
+    id: 'risk-scan',
+    title: 'Risk Snapshot',
+    desc: '이탈·미납·성적 하락 신호를 큐로 모음.',
+    icon: 'ri-alarm-warning-line',
+    tag: 'Proactive',
+  },
+  {
+    id: 'care-workflow',
+    title: 'Care Workflow',
+    desc: '위험 학생별 자동 케어 워크플로.',
+    icon: 'ri-git-branch-line',
+    tag: 'Automation',
+  },
+  {
+    id: 'report-draft',
+    title: '리포트 초안',
+    desc: '상담 결과 → 학부모용 문장 변환.',
+    icon: 'ri-file-text-line',
+    tag: 'AI',
   },
 ] as const;
+
+export const PRODUCT_KEY_FEATURES = PRODUCT_AI_CAPABILITIES;
 
 export const PRODUCT_AI_POINTS = [
   {
@@ -132,32 +147,32 @@ export const DEMO_TOUR_SECTIONS = [
   {
     id: 'dashboard',
     title: 'Dashboard',
-    desc: '출근 후 10초 — 오늘 상담, 위험 학생, 미마감 수업을 큐로 받습니다.',
+    desc: '오늘 상담·위험 학생·미마감 수업을 큐로 받습니다.',
     cta: 'Dashboard 체험',
   },
   {
     id: 'today-workspace',
     title: 'Today Workspace',
-    desc: '오늘 수업에서 출결·숙제·점수·메모를 한 화면에서 입력합니다.',
-    cta: '수업 입력 체험',
+    desc: '출결·숙제·점수·메모를 한 화면에서 입력합니다.',
+    cta: '수업 입력',
   },
   {
     id: 'student-detail',
     title: 'Student Detail',
-    desc: '학생 기록·타임라인·상담 준비를 한곳에서 이해합니다.',
-    cta: '학생 상세 보기',
+    desc: '타임라인·AI 브리핑·상담·재등록을 한곳에서.',
+    cta: '학생 상세',
   },
   {
     id: 'parent-app',
     title: 'Parent App',
-    desc: '학부모가 리포트와 소통 맥락을 확인하는 화면입니다.',
-    cta: '학부모 화면 보기',
+    desc: '리포트·AI 도우미·일정 — 모바일 포털.',
+    cta: '학부모 화면',
   },
   {
     id: 'billing',
     title: 'Billing',
-    desc: '수납·미납·재등록을 운영 흐름과 함께 관리합니다.',
-    cta: '수납 화면 보기',
+    desc: '미납·연체·재등록 필터와 수납 테이블.',
+    cta: '수납 화면',
   },
 ] as const;
 
@@ -190,8 +205,8 @@ export const FOOTER_COLUMNS = [
   {
     title: 'Legal',
     links: [
-      { href: MARKETING_ROUTES.privacy, label: 'Privacy Policy' },
-      { href: MARKETING_ROUTES.terms, label: 'Terms' },
+      { href: MARKETING_ROUTES.privacy, label: '개인정보처리방침' },
+      { href: MARKETING_ROUTES.terms, label: '이용약관' },
     ],
   },
 ] as const;
@@ -425,7 +440,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: '무료 체험은 어떻게 하나요?',
-    a: '14일 무료 체험으로 시작할 수 있습니다. 카드 등록 없이 /signup에서 바로 시작하거나, /demo에서 화면을 먼저 확인하세요.',
+    a: '현재 행사 기간으로 모든 플랜을 무료로 이용하실 수 있습니다. 카드 등록 없이 /signup에서 바로 시작하거나, /demo에서 화면을 먼저 확인하세요.',
   },
   {
     q: '작은 학원도 사용할 수 있나요?',

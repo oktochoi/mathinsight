@@ -2,13 +2,14 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/middleware';
 import { isProtectedAppPath, portalRedirectForProtectedPath } from '@/lib/authRedirectPolicy';
 import { authGateRedirect, isAuthGatePath, readUserDbRole } from '@/lib/middlewareAuth';
+import { needsPhoneVerification } from '@/lib/phoneVerificationPolicy';
 import { subscriptionRedirectPath } from '@/lib/subscription';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  if (!isAuthGatePath(path) && !isProtectedAppPath(path)) {
+  if (!isAuthGatePath(path) && !isProtectedAppPath(path) && path !== '/onboarding' && !path.startsWith('/onboarding/')) {
     return NextResponse.next();
   }
 
@@ -25,7 +26,7 @@ export async function proxy(request: NextRequest) {
 
     if (isAuthGatePath(path)) {
       if (!user) {
-        if (path === AUTH_ROUTES.chooseRole) {
+        if (path === AUTH_ROUTES.chooseRole || path === AUTH_ROUTES.verifyPhone) {
           const redirect = request.nextUrl.clone();
           redirect.pathname = AUTH_ROUTES.login;
           redirect.search = '';
@@ -50,6 +51,23 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(redirect);
       }
 
+      return response;
+    }
+
+    if (path === '/onboarding' || path.startsWith('/onboarding/')) {
+      if (!user) {
+        const redirect = request.nextUrl.clone();
+        redirect.pathname = AUTH_ROUTES.login;
+        redirect.searchParams.set('next', path);
+        return NextResponse.redirect(redirect);
+      }
+      const { profile } = await readUserDbRole(supabase, user.id, user);
+      if (needsPhoneVerification(profile)) {
+        const redirect = request.nextUrl.clone();
+        redirect.pathname = AUTH_ROUTES.verifyPhone;
+        redirect.search = '';
+        return NextResponse.redirect(redirect);
+      }
       return response;
     }
 
@@ -93,6 +111,7 @@ export const config = {
     '/reset-password',
     '/auth',
     '/auth/choose-role',
+    '/auth/verify-phone',
     '/dashboard',
     '/dashboard/:path*',
     '/schedule',
@@ -132,6 +151,8 @@ export const config = {
     '/billing/:path*',
     '/notifications',
     '/notifications/:path*',
+    '/onboarding',
+    '/onboarding/:path*',
     '/parent',
     '/parent/:path*',
     '/student',

@@ -5,10 +5,11 @@ import { postAuthDestination } from '@/lib/authRedirectPolicy';
 import { resolvePostLoginPath } from '@/lib/authRedirect';
 import { resolveUserRoleState } from '@/lib/resolveUserRole';
 import { AUTH_ROUTES, isAuthEntryPath } from '@/lib/authRoutes';
+import { needsPhoneVerification } from '@/lib/phoneVerificationPolicy';
 import type { UserProfile } from '@/types/database';
 
 export function isAuthGatePath(path: string): boolean {
-  return isAuthEntryPath(path) || path === AUTH_ROUTES.chooseRole;
+  return isAuthEntryPath(path) || path === AUTH_ROUTES.chooseRole || path === AUTH_ROUTES.verifyPhone;
 }
 
 export async function readUserDbRole(
@@ -45,6 +46,14 @@ export function authGateRedirect(
   if (path === AUTH_ROUTES.chooseRole) {
     if (!hasRole) return null;
     return postAuthDestination(user, profile, rawDbRole);
+  }
+
+  if (path === AUTH_ROUTES.verifyPhone) {
+    if (!hasRole) return AUTH_ROUTES.chooseRole;
+    if (!needsPhoneVerification(profile)) {
+      return postAuthDestination(user, profile, rawDbRole);
+    }
+    return null;
   }
 
   if (isAuthEntryPath(path)) {

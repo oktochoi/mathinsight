@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { COMPANY_DOMAIN, COMPANY_LEGAL_NAME, CONTACT_EMAIL } from '@/lib/brand';
 import { MARKETING_ROUTES } from '@/lib/marketing/siteStructure';
 import { cn } from '@/lib/cn';
 import { PageHeroMinimal } from '@/components/marketing/ui/PageHero';
@@ -37,22 +38,27 @@ export function ContactPageContent() {
           <div className={mkt.contactGrid}>
             <div>
               <h2 className={mkt.sectionTitle}>연락처</h2>
-              <a href="mailto:hello@eduflow.app" className={mkt.contactEmail}>
-                hello@eduflow.app
+              <p className="text-sm text-slate-500">문의 메일</p>
+              <a href={`mailto:${CONTACT_EMAIL}`} className={mkt.contactEmail}>
+                {CONTACT_EMAIL}
               </a>
               <p className={mkt.contactMeta}>평일 09:00 – 18:00 (KST)</p>
               <hr className={mkt.contactDivider} />
               <p className={mkt.contactMeta}>
-                <strong className="text-zinc-900">(주)에듀플로우</strong>
+                <strong className="text-zinc-900">{COMPANY_LEGAL_NAME}</strong>
                 <br />
-                서울 · 파일럿 운영 중
+                {COMPANY_DOMAIN} · 파일럿 운영 중
               </p>
               <Link href={MARKETING_ROUTES.demo} className={cn(mkt.link, 'mt-4 inline-block')}>
                 Demo 먼저 보기 →
               </Link>
             </div>
 
-            <form className={mkt.contactForm} action="mailto:hello@eduflow.app" encType="text/plain">
+            <form
+              className={mkt.contactForm}
+              action={`mailto:${CONTACT_EMAIL}`}
+              encType="text/plain"
+            >
               <Field label="이름">
                 <input type="text" name="name" required placeholder="홍길동" className={mkt.fieldInput} />
               </Field>

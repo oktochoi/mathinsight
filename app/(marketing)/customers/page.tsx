@@ -1,10 +1,7 @@
-import type { Metadata } from 'next';
 import { CustomersPageContent } from '@/components/marketing/pages/CustomersPageContent';
+import { buildMarketingMetadata } from '@/lib/marketing/seo';
 
-export const metadata: Metadata = {
-  title: 'Customers — EduFlow',
-  description: '파일럿 준비 중 — 원장 인터뷰와 Before/After.',
-};
+export const metadata = buildMarketingMetadata('customers');
 
 export default function CustomersPage() {
   return <CustomersPageContent />;

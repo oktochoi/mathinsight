@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 
 export type GuardResult =
   | { allowed: true; status: 'trialing' | 'active'; daysLeft?: number }
@@ -8,6 +9,10 @@ export type GuardResult =
     };
 
 export async function checkAcademySubscription(academyId: string): Promise<GuardResult> {
+  if (PROMO_ALL_FREE.active) {
+    return { allowed: true, status: 'active' };
+  }
+
   const admin = createAdminClient();
   if (!admin) {
     return { allowed: true, status: 'trialing', daysLeft: 3 };

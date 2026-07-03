@@ -1,6 +1,8 @@
 import type { User } from '@supabase/supabase-js';
 import { hasAssignedDbRole, needsProfileSetup } from '@/lib/authProfileSetup';
+import { needsPhoneVerification } from '@/lib/phoneVerificationPolicy';
 import { fromDbRole, isStaffRole, roleHomePath, toDbRole } from '@/lib/roles';
+import { AUTH_ROUTES } from '@/lib/authRoutes';
 import type { UserProfile } from '@/types/database';
 
 /** DB role · 프로필 · metadata 중 할당된 역할 문자열 */
@@ -57,7 +59,11 @@ export function portalRedirectForProtectedPath(
   rawDbRole?: string | null
 ): string | null {
   if (needsProfileSetup(undefined, profile, rawDbRole)) {
-    return '/auth/choose-role';
+    return AUTH_ROUTES.chooseRole;
+  }
+
+  if (needsPhoneVerification(profile)) {
+    return AUTH_ROUTES.verifyPhone;
   }
 
   const appRole = fromDbRole(rawDbRole!) ?? profile?.role;
@@ -87,7 +93,10 @@ export function postAuthDestination(
 ): string {
   const dbRole = resolveDbRole(user, profile, rawDbRole);
   if (!hasAssignedDbRole(dbRole)) {
-    return '/auth/choose-role';
+    return AUTH_ROUTES.chooseRole;
+  }
+  if (needsPhoneVerification(profile)) {
+    return AUTH_ROUTES.verifyPhone;
   }
   // 온보딩 미완료 → 온보딩으로 (=== false: undefined는 제외, 기존 유저 영향 없음)
   if (profile?.onboarding_complete === false) {
