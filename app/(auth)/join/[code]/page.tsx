@@ -4,11 +4,13 @@ import { Suspense, use, useEffect, useState } from 'react';
 import { PhoneSignupWizard } from '@/components/auth/PhoneSignupWizard';
 import { AuthMobileLogo } from '@/components/auth/AuthBrandPanel';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
+import { RolePicker } from '@/components/auth/RolePicker';
 import { savePendingAcademyCode } from '@/lib/academyCodeStorage';
 import type { SignupRole } from '@/lib/roles';
-import { cn } from '@/lib/cn';
 
 type JoinRole = Extract<SignupRole, 'student' | 'parent' | 'teacher'>;
+
+const JOIN_ROLES: JoinRole[] = ['student', 'parent', 'teacher'];
 
 function JoinAcademyPageInner({ academyCode }: { academyCode: string }) {
   const [role, setRole] = useState<JoinRole | null>(null);
@@ -25,27 +27,12 @@ function JoinAcademyPageInner({ academyCode }: { academyCode: string }) {
           <p className="text-xs text-slate-500 mb-4">
             가입 후 포털·온보딩에서 학원 연결을 진행합니다. 코드는 한 번만 입력하면 됩니다.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {(
-              [
-                { value: 'student' as const, label: '학생', icon: 'ri-graduation-cap-line' },
-                { value: 'parent' as const, label: '학부모', icon: 'ri-parent-line' },
-                { value: 'teacher' as const, label: '강사', icon: 'ri-user-star-line' },
-              ] as const
-            ).map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setRole(opt.value)}
-                className={cn(
-                  'flex flex-col items-start gap-1 px-3.5 py-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-indigo-300 cursor-pointer text-left'
-                )}
-              >
-                <i className={`${opt.icon} text-xl text-indigo-500`} />
-                <span className="text-xs font-bold">{opt.label}</span>
-              </button>
-            ))}
-          </div>
+          <RolePicker
+            allowedRoles={JOIN_ROLES}
+            onChange={(next) => {
+              if (JOIN_ROLES.includes(next as JoinRole)) setRole(next as JoinRole);
+            }}
+          />
         </AuthFormCard>
       </>
     );

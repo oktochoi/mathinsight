@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
+import { resolveStaffProfileId } from '@/lib/studentParents';
 import type {
   AcquisitionSource,
   IntakeConsultation,
@@ -112,6 +113,8 @@ export function useIntakeConsultations() {
 
     const studentId = student.id as string;
     const title = `신입 상담 · ${input.prospect_name.trim()}`;
+    const counselorUserId = input.counselor_id || profile.id;
+    const sessionCounselorId = await resolveStaffProfileId(profile.academy_id, counselorUserId);
 
     const { data: session, error: sessionErr } = await supabase
       .from('counseling_sessions')
@@ -123,7 +126,7 @@ export function useIntakeConsultations() {
         scheduled_at: new Date(input.scheduled_at).toISOString(),
         title,
         created_by: profile.id,
-        counselor_id: input.counselor_id || profile.id,
+        counselor_id: sessionCounselorId,
       })
       .select('id')
       .single();
@@ -146,7 +149,7 @@ export function useIntakeConsultations() {
         parent_phone: input.parent_phone?.trim() || null,
         interested_subjects: input.interested_subjects?.trim() || null,
         preferred_class: input.preferred_class?.trim() || null,
-        counselor_id: input.counselor_id || profile.id,
+        counselor_id: counselorUserId,
         acquisition_source: input.acquisition_source,
         acquisition_source_other:
           input.acquisition_source === 'other' ? input.acquisition_source_other?.trim() || null : null,

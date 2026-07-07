@@ -1,4 +1,5 @@
 import { smsProvider } from '@/lib/sms';
+import { toSmsApiError } from '@/lib/sms/apiErrors';
 import { normalizePhoneKr } from '@/lib/phone';
 import { NextResponse } from 'next/server';
 
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : '서버 오류';
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const { message, status } = toSmsApiError(e);
+    return NextResponse.json({ error: message }, { status });
   }
 }

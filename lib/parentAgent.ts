@@ -2,6 +2,7 @@ import { generateWithGemini } from '@/lib/ai/gemini';
 import { isGeminiConfigured, geminiConfigHint, getGeminiConfigStatus } from '@/lib/ai/env';
 import { PARENT_AGENT_SYSTEM } from '@/lib/ai/parentAgentPrompt';
 import { formatParentAgentAnswer } from '@/lib/parentAgentFormat';
+import { guardAiOutput } from '@/lib/ai/security';
 import type { ParentAgentContextBundle } from '@/lib/parentAgentContext';
 
 export type ParentAgentChatMessage = {
@@ -157,7 +158,8 @@ ${q}
   };
 
   try {
-    const answer = await generateParentAgentAnswer(userPrompt, q, geminiOptions);
+    const raw = await generateParentAgentAnswer(userPrompt, q, geminiOptions);
+    const answer = guardAiOutput(formatParentAgentAnswer(raw));
     return { ok: true, answer, source: 'gemini', fallbackReason: undefined };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

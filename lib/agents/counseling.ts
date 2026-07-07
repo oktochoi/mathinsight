@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { generateWithGemini } from '@/lib/ai/gemini';
 import { isGeminiConfigured } from '@/lib/ai/env';
+import { SYSTEM_INSTRUCTION } from '@/lib/ai/prompts';
 import { retrieveStudentRagContext } from '@/lib/rag/retrieve';
 import { assessStudentRisk } from '@/lib/studentRisk';
 import { buildConsultationBriefing } from '@/lib/consultationBriefing';
@@ -132,19 +133,22 @@ ${riskLines.join('\n')}
 [기존 브리핑]
 ${briefingLines.join('\n')}
 
-위 데이터만 사용해 JSON 형식으로 답하세요 (마크다운 없음):
+[요청]
+위 데이터만 사용해 상담 준비 JSON을 작성하세요. 기록에 없는 내용은 추측하지 마세요.
+
 {
-  "summary": "상담 요약 3~5문장",
-  "mainIssues": ["주요 문제 1", "주요 문제 2"],
-  "consultationPoints": ["상담 포인트 1", "상담 포인트 2"],
-  "recommendedActions": ["추천 액션 1", "추천 액션 2"]
-}`;
+  "summary": "상담 요약 4~6문장 — 학부모·강사가 읽기 쉽게, 근거를 드러내며",
+  "mainIssues": ["기록 근거 주요 이슈 1~3개"],
+  "consultationPoints": ["상담실에서 실제로 할 말 2~4개"],
+  "recommendedActions": ["후속 조치 1~3개"]
+}
+
+JSON만 출력합니다. 마크다운 없음.`;
 
   try {
     const { text } = await generateWithGemini(prompt, {
-      systemInstruction:
-        '학원 상담 준비 Agent. 기록에 없는 내용은 추측하지 마세요. JSON만 출력하세요.',
-      temperature: 0.3,
+      systemInstruction: SYSTEM_INSTRUCTION,
+      temperature: 0.32,
       maxOutputTokens: 2048,
     });
     const jsonMatch = text.match(/\{[\s\S]*\}/);

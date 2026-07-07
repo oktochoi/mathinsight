@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/useToast';
 import { ErrorBanner, PageLoader } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Toast } from '@/components/ui/Toast';
+import { LessonLogsHintBanner } from '@/components/staff/LessonLogsHintBanner';
 import { STAFF_PAGES } from '@/lib/staffPages';
 import { cn } from '@/lib/cn';
 import type { HomeworkStatus, LessonLog, LessonLogInsert } from '@/types/database';
@@ -225,6 +226,8 @@ function HomeworkPageContent() {
           </button>
         ))}
       </div>
+
+      {tab === 'daily' && <LessonLogsHintBanner context="일일 숙제" />}
 
       <div className="flex flex-wrap gap-3 items-end">
         <label className="text-sm">

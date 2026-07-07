@@ -172,11 +172,17 @@ export function useDashboardStats() {
         .select('id, created_at')
         .eq('academy_id', academyId)
         .eq('status', 'pending'),
-      supabase
-        .from('student_payments')
-        .select('id, status, due_date')
-        .eq('academy_id', academyId)
-        .eq('status', 'pending'),
+      (async () => {
+        let q = supabase
+          .from('student_payments')
+          .select('id, status, due_date, student_id')
+          .eq('academy_id', academyId)
+          .eq('status', 'pending');
+        if (teacherStudentSet && scope.studentIds.length > 0) {
+          q = q.in('student_id', scope.studentIds);
+        }
+        return q;
+      })(),
       supabase
         .from('counseling_sessions')
         .select('id, student_id, title, status, scheduled_at, students(id, name)')

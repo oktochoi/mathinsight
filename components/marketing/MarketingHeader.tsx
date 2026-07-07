@@ -15,7 +15,7 @@ export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-md shadow-sm shadow-slate-900/5">
       <div className={cn(mkt.container, 'flex h-[72px] items-center gap-4')}>
-        <BrandLogo href={MARKETING_ROUTES.home} priority />
+        <BrandLogo href={MARKETING_ROUTES.home} priority size={56} />
 
         <nav className="hidden flex-1 justify-end items-center gap-1 lg:flex" aria-label="주요">
           {HEADER_NAV.map((item) => (

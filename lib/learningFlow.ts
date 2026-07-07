@@ -360,7 +360,7 @@ export function buildDashboardPriorities(
       items.push({
         id: `soon-${lesson.event.id}`,
         text: `${lesson.event.className} 수업 ${state.minutesUntilStart}분 전`,
-        href: `/schedule/prep?classId=${lesson.event.classId}&date=${today}`,
+        href: `/schedule?classId=${lesson.event.classId}&date=${today}`,
         tone: 'warning',
       });
     }

@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/useToast';
 import { ErrorBanner, PageLoader } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Toast } from '@/components/ui/Toast';
+import { LessonLogsHintBanner } from '@/components/staff/LessonLogsHintBanner';
 import { STAFF_PAGES } from '@/lib/staffPages';
 import { cn } from '@/lib/cn';
 import type { AttendanceStatus, LessonLog } from '@/types/database';
@@ -157,6 +158,7 @@ function AttendancePageContent() {
   return (
     <div className="space-y-6 w-full min-w-0 max-w-full">
       <PageHeader title={STAFF_PAGES.attendance.title} />
+      <LessonLogsHintBanner context="출결" />
       <Toast message={toast} />
 
       <div className="grid lg:grid-cols-[1fr_280px] gap-4">

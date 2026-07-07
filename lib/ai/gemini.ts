@@ -9,6 +9,8 @@ import {
   type GeminiBackend,
 } from '@/lib/ai/env';
 
+const GEMINI_TIMEOUT_MS = 50_000;
+
 type GenerateOptions = {
   systemInstruction?: string;
   temperature?: number;
@@ -73,6 +75,7 @@ async function generateWithAiStudio(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildRequestBody(userPrompt, options)),
+    signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
   });
 
   const data = (await res.json()) as GeminiResponse;
@@ -108,6 +111,7 @@ async function vertexGenerateOnce(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildRequestBody(userPrompt, options)),
+    signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
   });
 
   const data = (await res.json()) as GeminiResponse & {
@@ -175,6 +179,7 @@ async function generateWithGeminiOnce(
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(buildRequestBody(userPrompt, options)),
+          signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
         });
         const data = (await res.json()) as GeminiResponse & {
           error?: { message?: string };
@@ -201,6 +206,7 @@ async function generateWithGeminiOnce(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildRequestBody(userPrompt, options)),
+    signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
   });
   const data = (await res.json()) as GeminiResponse;
   if (!res.ok) {

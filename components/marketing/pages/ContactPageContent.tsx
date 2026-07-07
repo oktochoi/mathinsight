@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useState } from 'react';
 import { COMPANY_DOMAIN, COMPANY_LEGAL_NAME, CONTACT_EMAIL } from '@/lib/brand';
 import { MARKETING_ROUTES } from '@/lib/marketing/siteStructure';
 import { cn } from '@/lib/cn';
@@ -25,6 +28,44 @@ function Field({
 }
 
 export function ContactPageContent() {
+  const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setBusy(true);
+    setToast(null);
+
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+
+    try {
+      const res = await fetch('/api/marketing/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fd.get('name'),
+          email: fd.get('email'),
+          academy: fd.get('academy'),
+          type: fd.get('type'),
+          body: fd.get('body'),
+          website: fd.get('website'),
+        }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string; message?: string };
+      if (!res.ok || !data.ok) {
+        setToast({ type: 'err', text: data.error ?? '문의 접수에 실패했습니다.' });
+        return;
+      }
+      setToast({ type: 'ok', text: data.message ?? '문의가 접수되었습니다.' });
+      form.reset();
+    } catch {
+      setToast({ type: 'err', text: '네트워크 오류가 발생했습니다.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <>
       <PageHeroMinimal
@@ -54,11 +95,15 @@ export function ContactPageContent() {
               </Link>
             </div>
 
-            <form
-              className={mkt.contactForm}
-              action={`mailto:${CONTACT_EMAIL}`}
-              encType="text/plain"
-            >
+            <form className={mkt.contactForm} onSubmit={(e) => void handleSubmit(e)}>
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                className="hidden"
+                aria-hidden
+              />
               <Field label="이름">
                 <input type="text" name="name" required placeholder="홍길동" className={mkt.fieldInput} />
               </Field>
@@ -91,8 +136,24 @@ export function ContactPageContent() {
                   className={mkt.fieldInput}
                 />
               </Field>
-              <Button type="submit" variant="primary" className={cn(mkt.fieldFull, 'w-full cursor-pointer')}>
-                문의하기
+              {toast && (
+                <p
+                  className={cn(
+                    mkt.fieldFull,
+                    'text-sm rounded-lg px-3 py-2',
+                    toast.type === 'ok' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'
+                  )}
+                >
+                  {toast.text}
+                </p>
+              )}
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={busy}
+                className={cn(mkt.fieldFull, 'w-full cursor-pointer')}
+              >
+                {busy ? '전송 중…' : '문의하기'}
               </Button>
             </form>
           </div>

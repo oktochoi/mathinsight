@@ -59,6 +59,18 @@ export const STAFF_NAV_SECTIONS: NavSection[] = [
         icon: 'ri-bar-chart-box-line',
         requiredPermissions: ['students.view'],
       },
+      {
+        label: '숙제',
+        href: '/homework',
+        icon: 'ri-task-line',
+        requiredPermissions: ['lessons.view'],
+      },
+      {
+        label: '커리큘럼',
+        href: '/curriculum',
+        icon: 'ri-road-map-line',
+        requiredPermissions: ['lessons.view'],
+      },
     ],
   },
   {
@@ -121,6 +133,12 @@ export const STAFF_NAV_SECTIONS: NavSection[] = [
         label: '상담',
         href: '/counseling',
         icon: 'ri-chat-smile-3-line',
+        requiredPermissions: ['counseling.view'],
+      },
+      {
+        label: '상담 요약 카드',
+        href: '/consultation-cards',
+        icon: 'ri-article-line',
         requiredPermissions: ['counseling.view'],
       },
       {
@@ -192,7 +210,8 @@ const NAV_PATH_SECTION_MAP = STAFF_NAV_SECTIONS.flatMap((section) =>
 /** 하위·연관 경로만 수동 보강 (사이드바에 없는 실제 페이지) */
 const EXTRA_PATH_SECTION_MAP: { prefix: string; sectionId: string }[] = [
   { prefix: '/consultation-cards', sectionId: 'counseling' },
-  { prefix: '/schedule/prep', sectionId: 'classes' },
+  { prefix: '/curriculum', sectionId: 'classes' },
+  { prefix: '/homework', sectionId: 'classes' },
   { prefix: '/notifications', sectionId: 'settings' },
   { prefix: '/integrations', sectionId: 'settings' },
 ];
@@ -229,8 +248,7 @@ export function isNavItemActive(pathname: string, search: string, href: string):
     if (path === '/counseling' && (search.includes('view=') || search.includes('step=')))
       return href === '/counseling';
     if (path === '/settings' && search.includes('tab=')) return href === '/settings';
-    if (path === '/schedule/prep') return pathname === '/schedule/prep';
-    if (path === '/schedule') return pathname === '/schedule';
+    if (path === '/schedule') return pathname === '/schedule' || pathname.startsWith('/schedule/');
     return pathname === path || (path === '/students' && pathname.startsWith('/students/'));
   }
   const params = new URLSearchParams(query);

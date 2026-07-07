@@ -5,5 +5,5 @@ import { MARKETING_ROUTES } from '@/lib/marketing/siteStructure';
 export const metadata = buildRedirectMetadata('resources');
 
 export default function ResourcesPage() {
-  redirect(`${MARKETING_ROUTES.product}#features`);
+  redirect(`${MARKETING_ROUTES.product}#ai`);
 }

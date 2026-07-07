@@ -44,7 +44,7 @@ export function LandingCorporateHero() {
             </div>
             <div className="corp-hero-illust">
               <div className="corp-illust-main">
-                <BrandLogoImage size={80} className="opacity-95" />
+                <BrandLogoImage size={96} className="opacity-95" />
               </div>
               <div className="corp-illust-orbit corp-orbit-a">
                 <i className="ri-book-open-line" />

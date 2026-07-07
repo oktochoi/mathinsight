@@ -181,7 +181,7 @@ export const FOOTER_COLUMNS = [
     title: 'Product',
     links: [
       { href: `${MARKETING_ROUTES.product}#workflow`, label: 'Workflow' },
-      { href: `${MARKETING_ROUTES.product}#features`, label: 'Features' },
+      { href: `${MARKETING_ROUTES.product}#ai`, label: 'Features' },
       { href: `${MARKETING_ROUTES.product}#ai`, label: 'AI Assistant' },
       { href: MARKETING_ROUTES.demo, label: 'Demo' },
     ],

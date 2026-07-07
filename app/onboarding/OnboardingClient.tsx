@@ -154,7 +154,7 @@ export default function OnboardingClient() {
       )}>
         {/* Logo */}
         <div className="px-10 pt-10">
-          <BrandLogo href="/" variant="light" size={36} />
+          <BrandLogo href="/" variant="light" size={44} />
         </div>
 
         {/* Role badge + headline */}
@@ -228,7 +228,7 @@ export default function OnboardingClient() {
 
           {/* Mobile header */}
           <div className="mb-8 flex items-center justify-between lg:hidden">
-            <BrandLogo href="/" size={32} nameClassName="font-extrabold text-slate-800" />
+            <BrandLogo href="/" size={40} nameClassName="font-extrabold text-slate-800" />
             <div className={cn(
               'rounded-full px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r',
               meta.gradient

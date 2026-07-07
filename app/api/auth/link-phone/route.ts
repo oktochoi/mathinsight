@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { smsProvider } from '@/lib/sms';
+import { toSmsApiError } from '@/lib/sms/apiErrors';
 import { isValidPhoneKr, normalizePhoneKr, phoneToAuthEmail } from '@/lib/phone';
 
 export async function POST(req: Request) {
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, phone });
   } catch (e) {
-    const message = e instanceof Error ? e.message : '서버 오류';
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    const { message, status } = toSmsApiError(e);
+    return NextResponse.json({ ok: false, error: message }, { status });
   }
 }

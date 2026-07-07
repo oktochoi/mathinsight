@@ -82,7 +82,7 @@ export function LessonFlowCard({
           </Link>
         ) : (
           <Link
-            href={`/schedule/prep?classId=${event.classId}&date=${event.date}`}
+            href={`/schedule?classId=${event.classId}&date=${event.date}`}
             className="text-xs px-3 py-2 rounded-lg bg-indigo-600 text-white text-center cursor-pointer"
           >
             수업 준비

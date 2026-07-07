@@ -78,12 +78,10 @@ export function ParentReportsPageContent() {
     try {
       const result = await fetchAiGenerate({
         task: 'parentReport',
-        logs: periodLogs,
-        student: { name: student.name, grade: student.grade },
+        studentId: student.id,
         periodStart,
         periodEnd,
         tone: 'friendly',
-        academyName: academy?.name ?? '학원',
       });
       if (result.ok && result.text) {
         setReportText(result.text);

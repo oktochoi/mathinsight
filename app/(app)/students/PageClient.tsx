@@ -237,10 +237,6 @@ function StudentsPageContent() {
     })();
   }, [tab, profile?.academy_id, students]);
 
-  useEffect(() => {
-    if (tab === 'classes') router.replace('/classes');
-  }, [tab, router]);
-
   const [form, setForm] = useState({
     name: '',
     grade: '중1',

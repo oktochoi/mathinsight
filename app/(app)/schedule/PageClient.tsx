@@ -155,6 +155,9 @@ function SchedulePageContent() {
       )
     : [];
 
+  const prepClassId = searchParams.get('classId');
+  const prepDate = searchParams.get('date');
+
   /* Current time line update */
   useEffect(() => {
     const update = () => setNowY(nowPosition());
@@ -162,6 +165,28 @@ function SchedulePageContent() {
     const id = setInterval(update, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  /* /schedule/prep 딥링크 → 해당 수업 선택 */
+  useEffect(() => {
+    if (!prepClassId || tab !== 'calendar' || calendarSlots.length === 0) return;
+    const targetDate = prepDate ?? today;
+    if (prepDate) {
+      setWeekAnchor(new Date(`${targetDate}T12:00:00`));
+    }
+    for (const slot of calendarSlots) {
+      const idx = slot.items.findIndex(
+        (item) =>
+          item.kind === 'lesson' &&
+          item.event.classId === prepClassId &&
+          item.event.date === targetDate
+      );
+      if (idx >= 0) {
+        setSelectedSlot(slot);
+        setSelectedItemIndex(idx);
+        break;
+      }
+    }
+  }, [prepClassId, prepDate, tab, calendarSlots, today]);
 
   const shiftWeek = (delta: number) => {
     const d = new Date(weekAnchor);

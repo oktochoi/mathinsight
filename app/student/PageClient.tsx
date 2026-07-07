@@ -9,7 +9,7 @@ import { usePortalAnnouncements } from '@/hooks/useAnnouncements';
 import { usePortalSchedules } from '@/hooks/useClassSchedules';
 import { usePortalClassProgress } from '@/hooks/useCurriculum';
 import { expandCalendarEvents, eventsToday, getWeekDates } from '@/lib/schedules';
-import { calculateHomeworkTrend, calculateScoreTrend } from '@/lib/analytics';
+import { calculateHomeworkTrend } from '@/lib/analytics';
 import { StudentPortalGate } from '@/components/portal/StudentPortalGate';
 import { StudentStat } from '@/components/student/StudentUI';
 import { cn } from '@/lib/cn';
@@ -28,9 +28,12 @@ function StudentHomeContent() {
   const { progress: classProgress } = usePortalClassProgress(student.class_id);
 
   const today = new Date().toISOString().slice(0, 10);
-  const scoreTrend = calculateScoreTrend(logs);
   const hw = calculateHomeworkTrend(logs);
-  const latestScore = scoreTrend.recentAvg;
+  const latestLessonScore =
+    logs
+      .filter((l) => l.test_score != null)
+      .sort((a, b) => b.lesson_date.localeCompare(a.lesson_date))[0]?.test_score ?? null;
+  const latestExamScore = exams.find((e) => e.score?.score != null)?.score?.score ?? null;
   const academyName =
     (student as Student & { academies?: { name: string } }).academies?.name ?? '학원';
   const className =
@@ -64,12 +67,19 @@ function StudentHomeContent() {
         icon: 'ri-task-line',
       });
     }
-    if (exams.length > 0 && latestScore != null) {
+    if (latestExamScore != null) {
       list.push({
         href: '/student/exams',
-        title: `최근 점수 ${latestScore}점`,
-        sub: '성적 변화를 확인하세요.',
+        title: `최근 시험 ${latestExamScore}점`,
+        sub: '정식 시험 성적을 확인하세요.',
         icon: 'ri-medal-line',
+      });
+    } else if (latestLessonScore != null) {
+      list.push({
+        href: '/student/learning',
+        title: `수업 테스트 ${latestLessonScore}점`,
+        sub: '학습 추세를 확인하세요.',
+        icon: 'ri-line-chart-line',
       });
     }
     if (notices.length > 0) {
@@ -82,14 +92,14 @@ function StudentHomeContent() {
     }
     if (feedbackCount > 0) {
       list.push({
-        href: '/student/history',
+        href: '/student/learning?tab=history',
         title: `선생님 피드백 ${feedbackCount}건`,
         sub: '수업 기록에서 확인하세요.',
         icon: 'ri-chat-smile-3-line',
       });
     }
     return list;
-  }, [todayLessons.length, pendingHw, exams.length, latestScore, notices.length, feedbackCount]);
+  }, [todayLessons.length, pendingHw, latestExamScore, latestLessonScore, notices.length, feedbackCount]);
 
   return (
     <div className="space-y-6 max-w-lg mx-auto lg:max-w-2xl">
@@ -109,9 +119,21 @@ function StudentHomeContent() {
             </p>
           )}
           <div className="grid grid-cols-3 gap-3 mt-5 max-w-md">
-            <StudentStat label="최근 점수" value={latestScore != null ? `${latestScore}점` : '—'} />
-            <StudentStat label="숙제" value={logs.length > 0 ? `${hw.recentRate}%` : '—'} />
-            <StudentStat label="수업" value={`${logs.length}건`} />
+            <Link href={latestExamScore != null ? '/student/exams' : latestLessonScore != null ? '/student/learning' : '/student/learning'}>
+              <StudentStat
+                label={latestExamScore != null ? '최근 시험' : '수업 테스트'}
+                value={latestExamScore != null ? `${latestExamScore}점` : latestLessonScore != null ? `${latestLessonScore}점` : '—'}
+              />
+            </Link>
+            <Link href="/student/homework">
+              <StudentStat
+                label="숙제 과제"
+                value={assignments.length > 0 ? `${pendingHw}건 미제출` : logs.length > 0 ? `완료 ${hw.recentRate}%` : '—'}
+              />
+            </Link>
+            <Link href="/student/learning?tab=history">
+              <StudentStat label="수업 기록" value={`${logs.length}건`} />
+            </Link>
           </div>
         </div>
       </header>

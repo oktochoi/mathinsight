@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { requireStaff } from '@/lib/api/staffAuth';
 import { checkAiQuota, logAiGenerate } from '@/lib/aiUsage';
-import { runAiGenerate, type AiGenerateInput } from '@/lib/ai/generate';
+import { runAiGenerate } from '@/lib/ai/generate';
+import { loadStudentAiContext } from '@/lib/ai/loadStudentAiContext';
 import type { AiPromptTask } from '@/lib/ai/prompts';
 import type { ReportTone } from '@/types/database';
 
@@ -16,6 +17,8 @@ const TASKS: AiPromptTask[] = [
 ];
 
 const TONES: ReportTone[] = ['friendly', 'objective', 'exam_focused', 'encouraging'];
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function POST(request: Request) {
   try {
@@ -37,30 +40,52 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = (await request.json()) as Partial<AiGenerateInput>;
+    const body = (await request.json()) as {
+      task?: AiPromptTask;
+      studentId?: string;
+      periodStart?: string;
+      periodEnd?: string;
+      tone?: ReportTone;
+    };
 
     if (!body.task || !TASKS.includes(body.task)) {
       return NextResponse.json({ ok: false, error: '유효하지 않은 task입니다.' }, { status: 400 });
     }
 
-    if (!body.student?.name || !body.periodStart || !body.periodEnd || !body.academyName) {
+    if (!body.studentId?.trim() || !body.periodStart || !body.periodEnd) {
       return NextResponse.json(
-        { ok: false, error: 'student, period, academyName이 필요합니다.' },
+        { ok: false, error: 'studentId, periodStart, periodEnd가 필요합니다.' },
         { status: 400 }
       );
+    }
+
+    if (!DATE_RE.test(body.periodStart) || !DATE_RE.test(body.periodEnd)) {
+      return NextResponse.json({ ok: false, error: '기간 형식이 올바르지 않습니다.' }, { status: 400 });
     }
 
     if (body.task === 'parentReport' && body.tone && !TONES.includes(body.tone)) {
       return NextResponse.json({ ok: false, error: '유효하지 않은 tone입니다.' }, { status: 400 });
     }
 
-    const result = await runAiGenerate({
-      task: body.task,
-      logs: Array.isArray(body.logs) ? body.logs : [],
-      student: body.student,
+    const loaded = await loadStudentAiContext(supabase, auth, {
+      studentId: body.studentId.trim(),
       periodStart: body.periodStart,
       periodEnd: body.periodEnd,
-      academyName: body.academyName,
+    });
+
+    if (!loaded.ok) {
+      return NextResponse.json({ ok: false, error: loaded.error }, { status: loaded.status });
+    }
+
+    const { student, logs, academyName } = loaded.ctx;
+
+    const result = await runAiGenerate({
+      task: body.task,
+      logs,
+      student: { name: student.name, grade: student.grade },
+      periodStart: body.periodStart,
+      periodEnd: body.periodEnd,
+      academyName,
       tone: body.tone,
     });
 
@@ -76,8 +101,7 @@ export async function POST(request: Request) {
       text: result.text,
       points: result.points,
       backend: result.source === 'gemini' ? result.backend : undefined,
-      fallbackReason:
-        result.source === 'rules' ? result.fallbackReason : undefined,
+      fallbackReason: result.source === 'rules' ? result.fallbackReason : undefined,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : '서버 오류';

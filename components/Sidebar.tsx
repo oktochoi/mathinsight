@@ -117,9 +117,9 @@ export default function Sidebar({
           title="오늘 현황"
         >
           {collapsed ? (
-            <BrandLogoImage size={28} />
+            <BrandLogoImage size={36} />
           ) : (
-            <BrandMark variant="dark" nameClassName="text-[13px] font-semibold" logoSize={28} />
+            <BrandMark variant="dark" nameClassName="text-[13px] font-semibold" logoSize={36} />
           )}
         </Link>
         {!collapsed && (

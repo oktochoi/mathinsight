@@ -1,5 +1,6 @@
 import { generateWithGemini } from '@/lib/ai/gemini';
 import { isGeminiConfigured, geminiConfigHint, getGeminiConfigStatus } from '@/lib/ai/env';
+import { guardAiOutput } from '@/lib/ai/security';
 
 export type StaffAgentChatMessage = {
   role: 'user' | 'assistant';
@@ -113,7 +114,7 @@ ${q}
       temperature: 0.35,
       maxOutputTokens: 2048,
     });
-    const answer = text.trim();
+    const answer = guardAiOutput(text.trim());
     if (!answer) throw new Error('빈 응답');
     return { ok: true, answer, source: 'gemini' };
   } catch {

@@ -88,7 +88,7 @@ export function ProductPageContent() {
         </SectionInner>
       </Section>
 
-      <Section id="features" muted className="scroll-mt-20">
+      <Section id="ai" muted className="scroll-mt-20">
         <SectionInner>
           <SectionHeader
             eyebrow="AI Engine"

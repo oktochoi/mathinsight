@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { ClassRow } from '@/types/database';
 import { formatLessonTime, lessonInputStyle } from '@/components/lesson-logs/lessonLogConstants';
 
@@ -175,9 +176,9 @@ export function LessonLogHeader({
               >
                 <p className="text-xs font-semibold" style={{ color: 'var(--app-warning-text)' }}>
                   등록된 진도가 없습니다. 여기서 바로 등록하거나{' '}
-                  <a href="/curriculum" className="underline">
+                  <Link href="/curriculum" className="underline">
                     진도 관리
-                  </a>
+                  </Link>
                   로 이동할 수 있습니다.
                 </p>
                 <input

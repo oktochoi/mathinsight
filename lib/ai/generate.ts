@@ -7,6 +7,8 @@ import {
   geminiConfigHint,
   isGeminiConfigured,
 } from '@/lib/ai/env';
+import { guardAiOutput, sanitizeApiError } from '@/lib/ai/security';
+import { TASK_GEMINI_CONFIG } from '@/lib/ai/taskConfig';
 import {
   generateLearningSummary,
   generateEvidenceSummary,
@@ -33,7 +35,6 @@ export type AiGenerateResult =
       source: 'rules';
       text: string;
       points?: string[];
-      /** Gemini 미사용·실패 시 이유 (개발·UI 안내용) */
       fallbackReason?: string;
     }
   | { ok: false; error: string };
@@ -47,6 +48,24 @@ function buildContext(input: AiGenerateInput) {
     periodEnd: input.periodEnd,
     logs: input.logs,
   };
+}
+
+function buildUserPrompt(input: AiGenerateInput): string | null {
+  const ctx = buildContext(input);
+  switch (input.task) {
+    case 'learningSummary':
+      return prompts.learningSummary(ctx);
+    case 'evidenceSummary':
+      return prompts.evidenceSummary(ctx);
+    case 'consultationPoints':
+      return prompts.consultationPoints(ctx);
+    case 'parentMessage':
+      return prompts.parentMessage(ctx);
+    case 'parentReport':
+      return prompts.parentReport({ ...ctx, tone: input.tone ?? 'objective' });
+    default:
+      return null;
+  }
 }
 
 function fallbackRules(
@@ -111,45 +130,27 @@ function fallbackRules(
   }
 }
 
-/** 서버 전용 — Gemini 우선, 실패 시 규칙 기반 폴백 (HTTP 200이어도 source로 구분) */
+/** 서버 전용 — Gemini 우선, 실패 시 규칙 기반 폴백 */
 export async function runAiGenerate(input: AiGenerateInput): Promise<AiGenerateResult> {
   const configStatus = getGeminiConfigStatus();
   if (!isGeminiConfigured()) {
     return fallbackRules(input, geminiConfigHint(configStatus));
   }
 
-  const ctx = buildContext(input);
+  const userPrompt = buildUserPrompt(input);
+  if (!userPrompt) {
+    return { ok: false, error: '알 수 없는 작업입니다.' };
+  }
 
   try {
-    let userPrompt: string;
+    const cfg = TASK_GEMINI_CONFIG[input.task];
+    const { text: rawText, backend } = await generateWithGemini(userPrompt, {
+      systemInstruction: SYSTEM_INSTRUCTION,
+      temperature: cfg.temperature,
+      maxOutputTokens: cfg.maxOutputTokens,
+    });
 
-    switch (input.task) {
-      case 'learningSummary':
-        userPrompt = prompts.learningSummary(ctx);
-        break;
-      case 'evidenceSummary':
-        userPrompt = prompts.evidenceSummary(ctx);
-        break;
-      case 'consultationPoints':
-        userPrompt = prompts.consultationPoints(ctx);
-        break;
-      case 'parentMessage':
-        userPrompt = prompts.parentMessage(ctx);
-        break;
-      case 'parentReport':
-        userPrompt = prompts.parentReport({ ...ctx, tone: input.tone ?? 'objective' });
-        break;
-      default:
-        return { ok: false, error: '알 수 없는 작업입니다.' };
-    }
-
-    const geminiOptions =
-      input.task === 'parentReport'
-        ? { systemInstruction: SYSTEM_INSTRUCTION, maxOutputTokens: 8192, temperature: 0.4 }
-        : { systemInstruction: SYSTEM_INSTRUCTION };
-
-    const { text, backend } = await generateWithGemini(userPrompt, geminiOptions);
-
+    const text = guardAiOutput(rawText);
     const backendLabel = geminiBackendLabel(backend);
 
     if (input.task === 'consultationPoints') {
@@ -164,9 +165,6 @@ export async function runAiGenerate(input: AiGenerateInput): Promise<AiGenerateR
         outText.includes('[맺음말]') || /드림\s*$/m.test(outText);
       const sectionMarkers = (outText.match(/\[[^\]]+\]/g) ?? []).length;
       if (outText.length < minLen || !hasClosing || sectionMarkers < 4) {
-        console.warn(
-          `[runAiGenerate] parentReport incomplete (${outText.length} chars), rules fallback`
-        );
         return fallbackRules(
           input,
           outText.length < minLen
@@ -179,11 +177,28 @@ export async function runAiGenerate(input: AiGenerateInput): Promise<AiGenerateR
 
     return { ok: true, source: 'gemini', text, backend: backendLabel };
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
+    const message = sanitizeApiError(e);
     console.error(`[runAiGenerate] Gemini failed (${input.task}):`, message);
-    return fallbackRules(
-      input,
-      `Gemini 호출 실패 → 규칙 기반으로 대체했습니다. (${message})`
-    );
+    return fallbackRules(input, `Gemini 호출 실패 → 규칙 기반으로 대체했습니다.`);
   }
+}
+
+/** 상담 카드 4종 병렬 생성 */
+export async function runAiGenerateBatch(
+  input: Omit<AiGenerateInput, 'task'>
+): Promise<{
+  learningSummary: AiGenerateResult;
+  evidenceSummary: AiGenerateResult;
+  consultationPoints: AiGenerateResult;
+  parentMessage: AiGenerateResult;
+}> {
+  const [learningSummary, evidenceSummary, consultationPoints, parentMessage] =
+    await Promise.all([
+      runAiGenerate({ ...input, task: 'learningSummary' }),
+      runAiGenerate({ ...input, task: 'evidenceSummary' }),
+      runAiGenerate({ ...input, task: 'consultationPoints' }),
+      runAiGenerate({ ...input, task: 'parentMessage' }),
+    ]);
+
+  return { learningSummary, evidenceSummary, consultationPoints, parentMessage };
 }

@@ -1,8 +1,10 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useBillingCenter } from '@/hooks/useBillingCenter';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useStaffPermissions } from '@/lib/permissions';
 import { notifyPaymentOverdueBulk } from '@/lib/push/notifyPaymentClient';
 import { BillingHero } from '@/components/billing/BillingHero';
 import { BillingOverview } from '@/components/billing/BillingOverview';
@@ -36,7 +38,14 @@ function defaultFilter(rows: EnrichedPaymentRow[]): BillingListFilter {
   return 'all';
 }
 
+function isBillingListFilter(value: string): value is BillingListFilter {
+  return PRIMARY_FILTERS.some((f) => f.key === value) || value === 'pending' || value === 'overdue_14' || value === 'notify_needed';
+}
+
 export default function BillingPage() {
+  const searchParams = useSearchParams();
+  const { can } = useStaffPermissions();
+  const canManage = can('billing.manage');
   const center = useBillingCenter();
   const { sendDemo } = useNotifications();
   const chargesRef = useRef<HTMLElement>(null);
@@ -51,6 +60,13 @@ export default function BillingPage() {
   const [newDueDate, setNewDueDate] = useState('');
   const [actionBusy, setActionBusy] = useState(false);
   const [toast, setToast] = useState('');
+
+  useEffect(() => {
+    const filter = searchParams.get('filter');
+    if (filter && isBillingListFilter(filter)) {
+      setListFilter(filter);
+    }
+  }, [searchParams]);
 
   const activeFilter = listFilter ?? defaultFilter(center.enrichedRows);
 
@@ -67,6 +83,14 @@ export default function BillingPage() {
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3500);
+  };
+
+  const guardManage = () => {
+    if (!canManage) {
+      showToast('수납 등록·수정 권한이 없습니다.');
+      return false;
+    }
+    return true;
   };
 
   const scrollToCharges = () => {
@@ -101,6 +125,7 @@ export default function BillingPage() {
   };
 
   const handleMarkPaid = async (row: EnrichedPaymentRow) => {
+    if (!guardManage()) return;
     const result = await center.updatePaymentStatus(row.payment.id, 'paid');
     if (result.error) {
       showToast(result.error);
@@ -309,7 +334,9 @@ export default function BillingPage() {
 
       <BillingHero
         kpis={center.kpis}
-        onRegisterCharge={() => setChargeModalOpen(true)}
+        onRegisterCharge={() => {
+          if (guardManage()) setChargeModalOpen(true);
+        }}
         onManageOverdue={handleManageOverdue}
         onExport={handleExport}
       />

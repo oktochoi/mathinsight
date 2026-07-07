@@ -5,7 +5,7 @@ import { SITE_LOGO } from '@/lib/marketing/siteAssets';
 import { cn } from '@/lib/cn';
 import { mkt } from '@/lib/marketing/ui';
 
-export const BRAND_LOGO_SIZE_DEFAULT = 40;
+export const BRAND_LOGO_SIZE_DEFAULT = 56;
 
 type BrandLogoImageProps = {
   size?: number;

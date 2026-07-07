@@ -52,10 +52,10 @@ export function useNotifications() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
-    const json = (await res.json()) as { ok: boolean; error?: string };
+    const json = (await res.json()) as { ok: boolean; error?: string; message?: string; demo?: boolean };
     if (!json.ok) return { error: json.error ?? '발송에 실패했습니다.' };
     bumpDataVersion();
-    return { error: null };
+    return { error: null, message: json.message, demo: json.demo };
   };
 
   return { logs, loading, error, refetch: fetchLogs, sendDemo };

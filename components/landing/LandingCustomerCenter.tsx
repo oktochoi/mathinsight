@@ -7,7 +7,7 @@ export function LandingCustomerCenter() {
         <div className="corp-support-inner">
           <div className="corp-support-brand">
             <span className="corp-support-logo" aria-hidden>
-              <BrandLogoImage size={44} />
+              <BrandLogoImage size={52} />
             </span>
             <div>
               <p className="corp-support-label">EduFlow 고객센터</p>

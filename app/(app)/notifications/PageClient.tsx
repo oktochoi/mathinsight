@@ -71,7 +71,7 @@ export default function NotificationsPage() {
       setToast(result.error);
       return;
     }
-    setToast('발송 기록이 저장되었습니다. (데모 모드일 수 있음)');
+    setToast(result.message ?? '발송되었습니다.');
     setTimeout(() => setToast(''), 3000);
   };
 

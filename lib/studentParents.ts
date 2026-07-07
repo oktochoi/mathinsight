@@ -38,6 +38,18 @@ export async function resolveCounselingContext(
   };
 }
 
+/** users.id → counseling_sessions.counselor_id (staff_profiles.id) */
+export async function resolveStaffProfileId(academyId: string, userId: string) {
+  const { data } = await supabase
+    .from('staff_profiles')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('academy_id', academyId)
+    .maybeSingle();
+
+  return (data as { id?: string } | null)?.id ?? null;
+}
+
 /** 학생의 primary 보호자 (parents 엔티티) */
 export async function fetchStudentParents(studentId: string) {
   const { data } = await supabase

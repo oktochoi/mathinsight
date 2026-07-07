@@ -3,6 +3,9 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { requireStaff } from '@/lib/api/staffAuth';
 import { generateWithGemini } from '@/lib/ai/gemini';
+import { prompts, SYSTEM_INSTRUCTION } from '@/lib/ai/prompts';
+import { TASK_GEMINI_CONFIG } from '@/lib/ai/taskConfig';
+import { AI_LIMITS, guardAiOutput, sanitizeApiError, sanitizeUserText } from '@/lib/ai/security';
 
 export async function POST(request: Request) {
   try {
@@ -34,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     if (body.mode === 'save_manual') {
-      const text = body.transcript?.trim();
+      const text = sanitizeUserText(body.transcript ?? '', AI_LIMITS.transcript);
       if (!text) {
         return NextResponse.json({ ok: false, error: '전사 내용이 필요합니다.' }, { status: 400 });
       }
@@ -50,7 +53,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, transcript: text, source: 'manual' });
     }
 
-    const raw = body.transcript?.trim() || session.transcript?.trim();
+    const raw = sanitizeUserText(
+      body.transcript?.trim() || session.transcript?.trim() || '',
+      AI_LIMITS.transcript
+    );
     if (!raw) {
       return NextResponse.json(
         { ok: false, error: '전사·녹취 메모를 먼저 입력해 주세요.' },
@@ -58,20 +64,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const prompt = `다음은 학원 상담 녹취/메모입니다. 상담 제목: ${session.title}
-
-전사:
-${raw.slice(0, 8000)}
-
-요구사항:
-- 5~8문장 한국어 요약 (학부모·강사 공유용)
-- 핵심 이슈, 합의 사항, 후속 조치를 bullet 없이 문단으로
-- 추측하지 말고 전사에 있는 내용만`;
+    const cfg = TASK_GEMINI_CONFIG.counselingSummary;
+    const prompt = prompts.counselingSummary({
+      title: session.title as string,
+      transcript: raw,
+    });
 
     let summary = '';
     try {
-      const { text } = await generateWithGemini(prompt);
-      summary = text.trim();
+      const { text } = await generateWithGemini(prompt, {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: cfg.temperature,
+        maxOutputTokens: cfg.maxOutputTokens,
+      });
+      summary = guardAiOutput(text);
     } catch {
       summary = raw.length > 400 ? `${raw.slice(0, 400)}…` : raw;
     }
@@ -90,7 +96,6 @@ ${raw.slice(0, 8000)}
 
     return NextResponse.json({ ok: true, summary, transcript: raw, source: 'ai_summary' });
   } catch (e) {
-    const message = e instanceof Error ? e.message : '서버 오류';
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: sanitizeApiError(e) }, { status: 500 });
   }
 }

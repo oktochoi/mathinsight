@@ -16,7 +16,7 @@ import {
   pointsToStrings,
   useConsultationCardAi,
 } from '@/hooks/useConsultationCardAi';
-import { fetchAiGenerate } from '@/lib/ai/client';
+import { fetchAiGenerateBatch } from '@/lib/ai/client';
 import { calculateScoreTrend } from '@/lib/analytics';
 import { PageLoader, EmptyState } from '@/components/ui/DataStates';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -119,36 +119,38 @@ export default function ConsultationCardPage() {
 
     setGenerating(true);
 
-    const base = {
-      logs: periodLogs,
-      student: { name: student.name, grade: student.grade },
-      periodStart,
-      periodEnd,
-      academyName: academy?.name ?? '학원',
-    };
-
     try {
-      const [ls, ev, cp, pm] = await Promise.all([
-        fetchAiGenerate({ ...base, task: 'learningSummary' }),
-        fetchAiGenerate({ ...base, task: 'evidenceSummary' }),
-        fetchAiGenerate({ ...base, task: 'consultationPoints' }),
-        fetchAiGenerate({ ...base, task: 'parentMessage' }),
-      ]);
+      const batch = await fetchAiGenerateBatch({
+        studentId: student.id,
+        periodStart,
+        periodEnd,
+      });
 
-      if (!ls.ok && !ev.ok) {
-        showToast(ls.error ?? ev.error ?? '생성 실패');
+      if (!batch.ok) {
+        showToast(batch.error ?? '생성 실패');
+        return;
+      }
+
+      const ls = batch.learningSummary;
+      const ev = batch.evidenceSummary;
+      const cp = batch.consultationPoints;
+      const pm = batch.parentMessage;
+
+      if (!ls?.text && !ev?.text) {
+        showToast('생성 실패');
         return;
       }
 
       dispatch({
         type: 'SET_GENERATED',
-        learningSummary: ls.text ?? '',
-        evidenceSummary: ev.text ?? '',
-        consultationPoints: cp.points ?? (cp.text ? cp.text.split('\n').filter(Boolean) : []),
-        parentMessage: pm.text ?? '',
-        source: ls.source ?? ev.source ?? null,
-        fallbackReason: ls.fallbackReason ?? ev.fallbackReason ?? null,
-        backend: ls.backend ?? ev.backend ?? null,
+        learningSummary: ls?.text ?? '',
+        evidenceSummary: ev?.text ?? '',
+        consultationPoints:
+          cp?.points ?? (cp?.text ? cp.text.split('\n').filter(Boolean) : []),
+        parentMessage: pm?.text ?? '',
+        source: ls?.source ?? ev?.source ?? null,
+        fallbackReason: ls?.fallbackReason ?? ev?.fallbackReason ?? null,
+        backend: ls?.backend ?? ev?.backend ?? null,
       });
     } finally {
       setGenerating(false);

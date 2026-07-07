@@ -235,7 +235,11 @@ export default function StudentDetail({
         )}
       </StudentDetailSection>
 
-      <StudentLearningTrend />
+      <StudentLearningTrend
+        logs={logs}
+        scoreTrend={analytics?.scoreTrend ?? { direction: 'insufficient', recentAvg: null, previousAvg: null, delta: null, points: [] }}
+        hwTrend={analytics?.hwTrend ?? { direction: 'insufficient', recentRate: 0, previousRate: 0, weeklyRates: [] }}
+      />
 
       <StudentConsultationCenter
         studentId={studentId}

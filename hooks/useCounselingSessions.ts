@@ -4,12 +4,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
+import { useStaffScope } from '@/hooks/useStaffScope';
 import { syncCounselingSessionArtifacts } from '@/lib/syncCounselingSession';
 import { resolveCounselingContext } from '@/lib/studentParents';
 import type { CounselingSession, CounselingSessionStatus, CounselingSessionType } from '@/types/database';
 
 export function useCounselingSessions(studentId?: string) {
   const { profile } = useAuth();
+  const scope = useStaffScope();
   const dataVersion = useAppStore((s) => s.dataVersion);
   const bumpDataVersion = useAppStore((s) => s.bumpDataVersion);
   const [sessions, setSessions] = useState<CounselingSession[]>([]);
@@ -32,6 +34,9 @@ export function useCounselingSessions(studentId?: string) {
       .order('created_at', { ascending: false })
       .limit(80);
     if (studentId) q = q.eq('student_id', studentId);
+    else if (scope.isTeacher && scope.studentIds.length > 0) {
+      q = q.in('student_id', scope.studentIds);
+    }
     const { data, error: err } = await q;
     if (err) {
       setError('상담 목록을 불러오지 못했습니다.');
@@ -40,7 +45,7 @@ export function useCounselingSessions(studentId?: string) {
       setSessions((data ?? []) as CounselingSession[]);
     }
     setLoading(false);
-  }, [profile?.academy_id, studentId]);
+  }, [profile?.academy_id, studentId, scope.isTeacher, scope.studentIds]);
 
   useEffect(() => {
     fetchSessions();

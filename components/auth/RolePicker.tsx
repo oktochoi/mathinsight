@@ -36,15 +36,22 @@ export const roleOptions: {
 ];
 
 type Props = {
-  value: SignupRole;
+  value?: SignupRole;
   onChange: (role: SignupRole) => void;
+  /** 지정 시 해당 역할만 표시 (예: join 페이지에서 owner 제외) */
+  allowedRoles?: SignupRole[];
 };
 
-export function RolePicker({ value, onChange }: Props) {
+export function RolePicker({ value, onChange, allowedRoles }: Props) {
+  const options = allowedRoles
+    ? roleOptions.filter((r) => allowedRoles.includes(r.value))
+    : roleOptions;
+  const gridCols = options.length <= 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2';
+
   return (
-    <div className="grid grid-cols-2 gap-2">
-      {roleOptions.map((role) => {
-        const isActive = value === role.value;
+    <div className={cn('grid gap-2', gridCols)}>
+      {options.map((role) => {
+        const isActive = value !== undefined && value === role.value;
         return (
           <button
             key={role.value}
