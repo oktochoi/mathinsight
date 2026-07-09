@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
-import { postAuthDestination } from '@/lib/authRedirectPolicy';
 import {
   PROFILE_SETUP_COMPLETE,
   PROFILE_SETUP_PENDING,
@@ -10,6 +9,7 @@ import {
 import { repairProfileRole } from '@/lib/profileIntegrity';
 import { normalizeUserProfile } from '@/lib/roles';
 import { absolutePath, getRequestSiteOrigin } from '@/lib/siteUrl';
+import { resolvePostAuthWithWorkspaces, WORKSPACE_COOKIE } from '@/lib/workspace/postAuth';
 import type { UserProfile } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -86,6 +86,13 @@ export async function GET(request: Request) {
     user = refreshed.data.user ?? user;
   }
 
-  const path = postAuthDestination(user, profile, rawDbRole ?? null);
+  const path = await resolvePostAuthWithWorkspaces(
+    supabase,
+    user,
+    profile,
+    rawDbRole ?? null,
+    null,
+    cookieStore.get(WORKSPACE_COOKIE)?.value ?? null
+  );
   return NextResponse.redirect(absolutePath(path, origin));
 }

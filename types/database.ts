@@ -104,6 +104,8 @@ export interface Student {
   withdrawal_reason: string | null;
   acquisition_source?: string | null;
   acquisition_source_other?: string | null;
+  login_code?: string | null;
+  pin_must_reset?: boolean;
   created_at: string;
   classes?: ClassRow | null;
   parent_user?: { id: string; email: string; name: string } | null;

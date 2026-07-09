@@ -24,6 +24,7 @@ import {
   type GuardianInput,
 } from '@/lib/studentRegistration';
 import { GuardianFields } from '@/components/students/GuardianFields';
+import { StudentInviteShareModal } from '@/components/students/StudentInviteShareModal';
 import { isParentLinked, isStudentPortalLinked } from '@/lib/studentPortal';
 import type { ConnectionRelationship } from '@/types/database';
 import { formatPhoneDisplay } from '@/lib/phone';
@@ -149,6 +150,13 @@ function StudentsPageContent() {
   const [lastContactByStudent, setLastContactByStudent] = useState<
     Map<string, { date: string; pending: boolean }>
   >(new Map());
+  const [inviteShare, setInviteShare] = useState<{
+    studentName: string;
+    loginCode: string;
+    initialPin: string;
+    inviteUrl: string;
+    parentInviteUrls: { label: string; url: string }[];
+  } | null>(null);
 
   const filteredParents = useMemo(() => {
     return students.filter((s) => {
@@ -237,7 +245,19 @@ function StudentsPageContent() {
     })();
   }, [tab, profile?.academy_id, students]);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string;
+    grade: string;
+    class_id: string;
+    school: string;
+    phone: string;
+    status: StudentStatus;
+    enrollment_status: EnrollmentStatus;
+    registered_at: string;
+    withdrawn_at: string;
+    withdrawal_reason: string;
+    guardians: GuardianInput[];
+  }>({
     name: '',
     grade: '중1',
     class_id: '' as string,
@@ -248,7 +268,7 @@ function StudentsPageContent() {
     registered_at: '',
     withdrawn_at: '',
     withdrawal_reason: '',
-    guardians: [{ name: '', relationship: 'mother' as GuardianInput['relationship'], phone: '' }],
+    guardians: [{ name: '', relationship: 'mother' as GuardianInput['relationship'], phone: '', email: '' }],
   });
 
   const activeCount     = students.filter((s) => s.enrollment_status !== 'withdrawn' && s.enrollment_status !== 'graduated').length;
@@ -297,7 +317,7 @@ function StudentsPageContent() {
       registered_at: new Date().toISOString().slice(0, 10),
       withdrawn_at: '',
       withdrawal_reason: '',
-      guardians: [{ name: '', relationship: 'mother', phone: '' }],
+      guardians: [{ name: '', relationship: 'mother', phone: '', email: '' }],
     });
     setShowModal(true);
   };
@@ -420,9 +440,51 @@ function StudentsPageContent() {
       }
     }
 
+    const inviteRes = await fetch('/api/students/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId }),
+    });
+    const inviteData = (await inviteRes.json()) as {
+      ok?: boolean;
+      loginCode?: string;
+      initialPin?: string;
+      inviteUrl?: string;
+      error?: string;
+    };
+
+    const parentInviteUrls: { label: string; url: string }[] = [];
+    if (inviteData.ok && inviteData.loginCode) {
+      const guardians = await fetchStudentGuardianInputs(studentId);
+      for (const g of guardians) {
+        if (!g.parentId || !g.email?.trim()) continue;
+        const parentRes = await fetch('/api/parents/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ parentId: g.parentId, studentId }),
+        });
+        const parentData = (await parentRes.json()) as { ok?: boolean; inviteUrl?: string };
+        if (parentData.ok && parentData.inviteUrl) {
+          parentInviteUrls.push({ label: g.name || '보호자', url: parentData.inviteUrl });
+        }
+      }
+
+      setInviteShare({
+        studentName: form.name.trim(),
+        loginCode: inviteData.loginCode,
+        initialPin: inviteData.initialPin ?? '',
+        inviteUrl: inviteData.inviteUrl ?? '',
+        parentInviteUrls,
+      });
+    } else {
+      showToast(inviteData.error ?? '학생은 등록되었으나 초대 코드 발급에 실패했습니다.');
+    }
+
     setSubmitting(false);
     setShowModal(false);
-    showToast('등록되었습니다. 학생·학부모에게 초대 링크를 공유하세요.');
+    if (inviteData.ok) {
+      showToast('등록되었습니다. 초대 정보를 확인하세요.');
+    }
     await refetch();
   };
 
@@ -1141,6 +1203,16 @@ function StudentsPageContent() {
             </div>
           </div>
         </div>
+      )}
+      {inviteShare && (
+        <StudentInviteShareModal
+          studentName={inviteShare.studentName}
+          loginCode={inviteShare.loginCode}
+          initialPin={inviteShare.initialPin}
+          inviteUrl={inviteShare.inviteUrl}
+          parentInviteUrls={inviteShare.parentInviteUrls}
+          onClose={() => setInviteShare(null)}
+        />
       )}
     </div>
   );

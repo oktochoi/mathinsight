@@ -26,7 +26,7 @@ export function GuardianFields({ guardians, onChange, allowEmpty = false }: Prop
   };
 
   const add = () => {
-    onChange([...guardians, { name: '', relationship: 'mother', phone: '' }]);
+    onChange([...guardians, { name: '', relationship: 'mother', phone: '', email: '' }]);
   };
 
   return (
@@ -83,10 +83,18 @@ export function GuardianFields({ guardians, onChange, allowEmpty = false }: Prop
               </button>
             )}
           </div>
+          <input
+            type="email"
+            placeholder="이메일 (학부모 초대용)"
+            value={g.email ?? ''}
+            onChange={(e) => update(i, { email: e.target.value })}
+            className="w-full px-2 py-1.5 rounded-lg text-sm border"
+            style={{ borderColor: 'var(--app-border)' }}
+          />
         </div>
       ))}
       <p className="text-[11px]" style={{ color: 'var(--app-ink-4)' }}>
-        보호자 휴대폰으로 학부모 가입 시 자동 연결됩니다.
+        보호자 이메일로 학부모 초대 링크가 발송됩니다. 휴대폰은 연락·SMS용입니다.
       </p>
     </div>
   );

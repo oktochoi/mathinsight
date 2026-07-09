@@ -8,6 +8,7 @@ export type GuardianInput = {
   name: string;
   relationship: 'mother' | 'father' | 'guardian' | 'other';
   phone: string;
+  email?: string;
 };
 
 async function upsertParentByPhone(
@@ -22,7 +23,11 @@ async function upsertParentByPhone(
   if (guardian.parentId) {
     const { error } = await supabase
       .from('parents')
-      .update({ name: guardian.name.trim(), phone })
+      .update({
+        name: guardian.name.trim(),
+        phone,
+        email: guardian.email?.trim() || null,
+      })
       .eq('id', guardian.parentId)
       .eq('academy_id', academyId);
     if (error) return { error: error.message };
@@ -44,7 +49,7 @@ async function upsertParentByPhone(
     parentId = existing.id as string;
     const { error } = await supabase
       .from('parents')
-      .update({ name: guardian.name.trim() })
+      .update({ name: guardian.name.trim(), email: guardian.email?.trim() || null })
       .eq('id', parentId);
     if (error) return { error: error.message };
   } else {
@@ -54,6 +59,7 @@ async function upsertParentByPhone(
         academy_id: academyId,
         name: guardian.name.trim(),
         phone,
+        email: guardian.email?.trim() || null,
         preferred_channel: 'sms',
       })
       .select('id')
@@ -70,12 +76,13 @@ async function upsertParentByPhone(
 export async function fetchStudentGuardianInputs(studentId: string): Promise<GuardianInput[]> {
   const links = await fetchStudentParents(studentId);
   if (links.length === 0) {
-    return [{ name: '', relationship: 'mother', phone: '' }];
+    return [{ name: '', relationship: 'mother', phone: '', email: '' }];
   }
   return links.map((link) => ({
     parentId: link.parent_id,
     name: link.parents?.name ?? '',
     phone: link.parents?.phone ?? '',
+    email: (link.parents as { email?: string } | null)?.email ?? '',
     relationship: (link.relationship as GuardianInput['relationship']) || 'guardian',
   }));
 }

@@ -1,7 +1,5 @@
-'use client';
-
-import { PhoneSignupWizard } from '@/components/auth/PhoneSignupWizard';
+import { InviteOnlyNotice } from '@/components/auth/InviteOnlyNotice';
 
 export default function StudentSignupPage() {
-  return <PhoneSignupWizard mode="student" />;
+  return <InviteOnlyNotice role="student" title="학생 가입" />;
 }

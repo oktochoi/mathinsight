@@ -7,10 +7,10 @@ import { toast } from 'sonner';
 import {
   fetchUserProfile,
   oauthLoginErrorMessage,
-  resolvePostLoginPath,
   signInWithLoginId,
 } from '@/lib/auth';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
+import { fetchPostAuthDestination } from '@/lib/workspace/postAuthClient';
 import { AuthPageScaffold } from '@/components/auth/AuthPageScaffold';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
 import {
@@ -64,8 +64,17 @@ function LoginFormInner() {
       toast.success('비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.');
     }
     const as = searchParams.get('as');
-    if (as === 'parent' || as === 'student') setAudience(as);
-  }, [searchParams]);
+    if (as === 'parent') setAudience('parent');
+    if (as === 'student') {
+      router.replace('/login/student');
+    }
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    if (audience === 'student') {
+      router.replace('/login/student');
+    }
+  }, [audience, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +102,10 @@ function LoginFormInner() {
         return;
       }
       const fresh = (await fetchUserProfile(user.id)) ?? profile;
-      const dest = resolvePostLoginPath(user, fresh, searchParams.get('next'), rawDbRole);
+      const dest = await fetchPostAuthDestination(
+        searchParams.get('next'),
+        rawDbRole ?? fresh?.role ?? null
+      );
       router.replace(dest);
     } finally {
       setLoading(false);
@@ -151,15 +163,16 @@ function LoginFormInner() {
 
         {audience !== 'staff' && (
           <p className="mt-3 text-[11px] text-center" style={{ color: 'var(--auth-muted)' }}>
-            아직 계정이 없으신가요?{' '}
-            <Link
-              href={audience === 'student' ? '/signup/student' : '/signup/parent'}
-              className="auth-link"
-            >
-              {audience === 'student' ? '학생' : '학부모'} 가입
-            </Link>
+            계정은 학원 초대로만 만들 수 있습니다. 초대 메일을 확인하거나 학원에 문의해 주세요.
           </p>
         )}
+
+        <p className="mt-3 text-center text-xs" style={{ color: 'var(--auth-muted)' }}>
+          학생이신가요?{' '}
+          <Link href="/login/student" className="auth-link">
+            학생 로그인
+          </Link>
+        </p>
 
         {audience === 'staff' && <AuthLoginFooter />}
       </AuthFormCard>

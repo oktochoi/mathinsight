@@ -1,7 +1,5 @@
-'use client';
-
-import { PhoneSignupWizard } from '@/components/auth/PhoneSignupWizard';
+import { InviteOnlyNotice } from '@/components/auth/InviteOnlyNotice';
 
 export default function ParentSignupPage() {
-  return <PhoneSignupWizard mode="parent" />;
+  return <InviteOnlyNotice role="parent" title="학부모 가입" />;
 }
