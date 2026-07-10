@@ -47,7 +47,7 @@ export function MarketingFooter() {
               <ul className="space-y-1">
                 {col.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-slate-600 hover:text-sky-700">
+                    <Link href={link.href} className="text-sm text-slate-600 hover:text-teal-700">
                       {link.label}
                     </Link>
                   </li>
@@ -62,7 +62,7 @@ export function MarketingFooter() {
             <strong className="text-slate-700">{COMPANY_LEGAL_NAME}</strong>
           </p>
           <p>
-            <a href={SITE_URL} className="text-slate-600 hover:text-sky-700">
+            <a href={SITE_URL} className="text-slate-600 hover:text-teal-700">
               {COMPANY_DOMAIN}
             </a>
             {' · '}
@@ -70,7 +70,7 @@ export function MarketingFooter() {
           </p>
           <p className="mt-1">
             문의 메일:{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-sky-700 hover:underline">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-teal-700 hover:underline">
               {CONTACT_EMAIL}
             </a>
           </p>

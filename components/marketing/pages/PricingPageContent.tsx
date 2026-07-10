@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { cn } from '@/lib/cn';
 import {
   FAQ_ITEMS,
@@ -43,7 +42,7 @@ export function PricingPageContent() {
   return (
     <>
       {/* ── HERO ─────────────────────────────────────── */}
-      <section className="border-b border-slate-100 bg-gradient-to-br from-slate-50 to-sky-50/60 py-14 md:py-20">
+      <section className="border-b border-slate-100 bg-gradient-to-br from-slate-50 to-emerald-50/60 py-14 md:py-20">
         <div className={cn(mkt.container, 'text-center')}>
           <FadeIn>
             <p className={cn(mkt.eyebrow, 'mb-3')}>Pricing</p>
@@ -117,7 +116,7 @@ export function PricingPageContent() {
                     className={cn(
                       'relative flex h-full flex-col rounded-2xl border bg-white p-7 transition-shadow hover:shadow-lg',
                       plan.featured
-                        ? 'border-sky-400 shadow-lg shadow-sky-500/15 ring-1 ring-sky-400/50'
+                        ? 'border-emerald-400 shadow-lg shadow-emerald-500/15 ring-1 ring-emerald-400/50'
                         : 'border-slate-200 shadow-sm'
                     )}
                   >
@@ -168,7 +167,7 @@ export function PricingPageContent() {
                     <ul className="mb-8 flex-1 space-y-2.5">
                       {plan.features.map((f) => (
                         <li key={f} className="flex items-center gap-2.5 text-sm text-slate-600">
-                          <span className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-sky-100 text-sky-700 text-[10px]">
+                          <span className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-[10px]">
                             <i className="ri-check-line" />
                           </span>
                           {f}
@@ -210,10 +209,10 @@ export function PricingPageContent() {
             {VALUE_PROPS.map((v) => (
               <RevealItem key={v.title}>
                 <div className={cn(mkt.card, 'p-6 text-center')}>
-                  <span className="flex h-12 w-12 mx-auto items-center justify-center rounded-2xl bg-sky-50 text-sky-600 text-xl mb-4">
+                  <span className="flex h-12 w-12 mx-auto items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 text-xl mb-4">
                     <i className={v.icon} />
                   </span>
-                  <h3 className={cn(mkt.h3, 'text-sky-700')}>{v.title}</h3>
+                  <h3 className={cn(mkt.h3, 'text-teal-700')}>{v.title}</h3>
                   <p className={cn(mkt.body, 'mt-2')}>{v.desc}</p>
                 </div>
               </RevealItem>
@@ -234,11 +233,11 @@ export function PricingPageContent() {
                   {PRICING_PLANS.map((p) => (
                     <th key={p.name} className={cn(
                       'px-4 py-4 text-center font-bold',
-                      p.featured ? 'text-sky-700' : 'text-slate-700'
+                      p.featured ? 'text-teal-700' : 'text-slate-700'
                     )}>
                       {p.name}
                       {p.featured && (
-                        <span className="ml-1.5 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-bold text-sky-700">추천</span>
+                        <span className="ml-1.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">추천</span>
                       )}
                     </th>
                   ))}
@@ -275,7 +274,7 @@ export function PricingPageContent() {
       </Section>
 
       <CTASection
-        variant="blue"
+        variant="green"
         title={PROMO_ALL_FREE.active ? `${PROMO_ALL_FREE.badge} — 모든 플랜 무료` : '3일 무료 체험으로 시작하세요'}
         description={
           PROMO_ALL_FREE.active

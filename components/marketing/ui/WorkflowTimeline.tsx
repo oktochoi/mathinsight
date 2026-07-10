@@ -15,7 +15,7 @@ export function WorkflowTimeline({ steps, className }: { steps: readonly Step[];
         {steps.map((step, i) => (
           <RevealItem key={step.title}>
             <li className="relative flex gap-5 pb-8 md:pb-10">
-              <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-xs font-bold text-sky-800">
+              <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-800">
                 {i + 1}
               </span>
               <div className="pt-0.5">

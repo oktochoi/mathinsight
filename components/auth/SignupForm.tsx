@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { AuthPageScaffold } from '@/components/auth/AuthPageScaffold';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
 import { AuthDivider, GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
@@ -24,17 +23,8 @@ export function SignupForm() {
         <PhoneSignupWizard mode="owner" embedded />
 
         <AuthSignupFooter />
-        <p className="mt-4 text-center text-xs" style={{ color: 'var(--auth-muted)' }}>
-          이미 계정이 있으신가요?{' '}
-          <Link href="/login" className="auth-link">
-            로그인
-          </Link>
-        </p>
         <p className="mt-2 text-center text-xs" style={{ color: 'var(--auth-muted)' }}>
-          초대를 받으셨나요?{' '}
-          <Link href="/login" className="auth-link">
-            초대 링크로 로그인
-          </Link>
+          초대를 받으셨나요? 이메일이나 문자로 받은 초대 링크를 열어주세요.
         </p>
       </AuthFormCard>
     </AuthPageScaffold>

@@ -22,7 +22,7 @@ export function MetricCard({
 }) {
   return (
     <FadeIn className={cn(mkt.card, 'p-6 md:p-7', className)}>
-      <p className="text-3xl font-extrabold tracking-tight text-sky-800 md:text-4xl">
+      <p className="text-3xl font-extrabold tracking-tight text-teal-800 md:text-4xl">
         {prefix}
         <CountUp end={value} duration={1.6} decimals={decimals} enableScrollSpy scrollSpyOnce />
         {suffix}

@@ -3,301 +3,177 @@ import { MARKETING_ROUTES } from '@/lib/marketing/siteStructure';
 import { CTASection } from '@/components/marketing/ui/CTASection';
 import { Reveal, RevealItem } from '@/components/marketing/motion/Reveal';
 import { FadeIn } from '@/components/marketing/motion/FadeIn';
+import { RecordJourney } from '@/components/marketing/home/RecordJourney';
+import { MarketingScreenMockup } from '@/components/marketing/ui/MarketingScreenMockup';
 import { ScreenshotPlaceholder } from '@/components/marketing/ui/ScreenshotPlaceholder';
-import { VideoPlaceholder } from '@/components/marketing/ui/VideoPlaceholder';
 import { Section, SectionInner } from '@/components/marketing/ui/Section';
-import { SectionHeader } from '@/components/marketing/ui/SectionHeader';
 import { cn } from '@/lib/cn';
 import { mkt } from '@/lib/marketing/ui';
 import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 
-const PROBLEMS = [
-  {
-    icon: 'ri-time-line',
-    color: 'bg-rose-50 text-rose-600',
-    title: '상담 준비에 30분이 걸립니다',
-    desc: '출결·숙제·성적·메모가 여러 곳에 흩어져 있어 상담마다 자료를 다시 모읍니다.',
-  },
-  {
-    icon: 'ri-alert-line',
-    color: 'bg-amber-50 text-amber-600',
-    title: '관리 필요 학생을 놓칩니다',
-    desc: '점수 하락·숙제 미제출이 기록돼 있어도 위험 신호를 한눈에 보기가 어렵습니다.',
-  },
-  {
-    icon: 'ri-user-unfollow-line',
-    color: 'bg-sky-50 text-sky-600',
-    title: '재등록 타이밍을 놓칩니다',
-    desc: '상담 기록과 재등록 판단이 연결되지 않아 이탈 전에 대화하기 어렵습니다.',
-  },
-];
+const WIDE = 'mx-auto w-full max-w-[1400px] px-6 md:px-12 lg:px-16';
 
-const WORKFLOW = [
-  { step: '01', label: '수업 기록', desc: '출결·숙제·성적을 1분 안에' },
-  { step: '02', label: 'AI 브리핑', desc: '상담 전 30초 학생 요약' },
-  { step: '03', label: '상담 관리', desc: '맥락 유지된 상담 기록' },
-  { step: '04', label: '학부모 리포트', desc: '앱으로 즉시 전달' },
-  { step: '05', label: '재등록 추적', desc: '위험 학생 큐로 관리' },
-];
-
-const FEATURES = [
-  {
-    icon: 'ri-book-open-line',
-    label: 'Today Workspace',
-    desc: '오늘 수업 출결·숙제·점수를 한 화면에서',
-    color: 'bg-sky-500',
-  },
-  {
-    icon: 'ri-user-heart-line',
-    label: 'Student CRM',
-    desc: '학생 타임라인 · AI 상담 브리핑',
-    color: 'bg-violet-500',
-  },
-  {
-    icon: 'ri-parent-line',
-    label: '학부모 포털',
-    desc: '리포트·채팅·AI 24시간 응답',
-    color: 'bg-emerald-500',
-  },
-  {
-    icon: 'ri-bar-chart-grouped-line',
-    label: '재등록 관리',
-    desc: '위험도·상담·전환을 한 Workflow로',
-    color: 'bg-orange-500',
-  },
-];
+/** Hero 우측 목업 주위에 흩어진 신호 조각 — RecordJourney 1막(수렴)의 예고. 장식용, 스크린리더 노출 안 함 */
+const HERO_FRAGMENTS = [
+  { icon: 'ri-chat-3-line', text: '숙제 못 냈어요', pos: '-left-6 -top-10 md:-left-16', rotate: '-rotate-6', float: 'animate-float' },
+  { icon: 'ri-sticky-note-line', text: '또 틀림', pos: '-right-4 -top-14 md:-right-14', rotate: 'rotate-3', float: 'animate-float-slow' },
+  { icon: 'ri-table-line', text: '점수 92점', pos: '-left-10 -bottom-8 md:-left-20', rotate: 'rotate-2', float: 'animate-float-slow' },
+  { icon: 'ri-question-line', text: '뭐였더라···', pos: '-right-6 -bottom-12 md:-right-16', rotate: '-rotate-3', float: 'animate-float' },
+] as const;
 
 export function HomePageContent() {
   return (
     <>
-      {/* ── HERO ─────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-slate-100 bg-white py-16 md:py-24">
-        {/* Gradient orbs */}
-        <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-sky-100/60 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-20 h-[400px] w-[400px] rounded-full bg-green-100/40 blur-3xl" />
+      {/* ── HERO — 화면 비율과 무관하게 항상 뷰포트 100%를 채운다 (헤더 높이 73px 제외) ── */}
+      <section className="relative flex h-[calc(100vh-73px)] items-start border-b border-slate-100 bg-white pt-[9vh] md:pt-[11vh]">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 h-[500px] w-[500px] animate-float-slow rounded-full bg-emerald-100/50 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-[400px] w-[400px] animate-float rounded-full bg-teal-100/40 blur-3xl" />
+        </div>
 
-        <div className={cn(mkt.container, 'relative')}>
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            {/* Left copy */}
-            <FadeIn>
-              <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3.5 py-1.5 text-xs font-semibold text-sky-700 mb-6">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                {PROMO_ALL_FREE.active ? PROMO_ALL_FREE.badge : 'AI Native 학원 운영 SaaS'}
-              </div>
-              <h1 className="text-4xl font-extrabold leading-[1.15] tracking-tight text-slate-900 md:text-[3rem]">
-                학생 기록이
-                <br />
-                <span className="bg-gradient-to-r from-sky-600 to-blue-700 bg-clip-text text-transparent">
-                  상담 준비
-                </span>
-                가 됩니다
-              </h1>
-              <p className={cn(mkt.lead, 'mt-5 max-w-md')}>
-                수업 입력 → AI 브리핑 → 상담 → 학부모 리포트 → 재등록까지,
-                EduFlow는 기록이 운영으로 이어지는 흐름을 만듭니다.
-              </p>
+        <div className={cn(WIDE, 'relative grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10')}>
+          <FadeIn>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 md:mb-7">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {PROMO_ALL_FREE.active ? PROMO_ALL_FREE.badge : 'AI Native 학원 운영 SaaS'}
+            </div>
+            <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-[4.5rem]">
+              학생 기록이
+              <br />
+              <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-600 bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer">
+                상담 준비
+              </span>
+              가 됩니다
+            </h1>
+            <p className="mt-4 max-w-md text-base leading-relaxed text-slate-500 md:mt-6 md:text-xl">
+              수업 입력 → AI 브리핑 → 상담 → 학생·학부모 포털까지,
+              EduFlow는 원장의 하루가 기록으로 이어지는 흐름을 만듭니다.
+            </p>
 
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link
-                  href={MARKETING_ROUTES.signup}
-                  className={cn(mkt.btnGreen, 'px-6 py-3 text-[15px]')}
+            <div className="mt-6 flex flex-wrap gap-3 md:mt-8">
+              <Link href={MARKETING_ROUTES.signup} className={cn(mkt.btnGreen, 'px-6 py-3 text-[15px]')}>
+                {PROMO_ALL_FREE.active ? `${PROMO_ALL_FREE.cta} →` : '3일 무료 체험 →'}
+              </Link>
+              <Link
+                href={`${MARKETING_ROUTES.product}#tour`}
+                className={cn(mkt.btnOutline, 'px-6 py-3 text-[15px] transition-transform hover:-translate-y-0.5')}
+              >
+                <i className="ri-play-circle-line mr-1.5" />
+                Demo 먼저 보기
+              </Link>
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-slate-500 md:mt-8">
+              <span className="flex items-center gap-1.5">
+                <i className="ri-check-line text-green-500" /> 카드 등록 없음
+              </span>
+              <span className="h-4 w-px bg-slate-200" />
+              <span className="flex items-center gap-1.5">
+                <i className="ri-check-line text-green-500" />{' '}
+                {PROMO_ALL_FREE.active ? '행사 기간 전 플랜 무료' : '3일 무료 체험'}
+              </span>
+              <span className="h-4 w-px bg-slate-200" />
+              <span className="flex items-center gap-1.5">
+                <i className="ri-check-line text-green-500" /> 즉시 시작
+              </span>
+            </div>
+          </FadeIn>
+
+          {/* 우측 — 실제 대시보드 화면. 흩어진 신호는 이 화면 주위에서 이미 정리되고 있다 */}
+          <FadeIn delay={0.1} className="relative hidden lg:block">
+            <div aria-hidden className="pointer-events-none absolute inset-0">
+              {HERO_FRAGMENTS.map((f) => (
+                <span
+                  key={f.text}
+                  className={cn(
+                    'absolute inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-white px-3.5 py-2 text-sm font-medium text-slate-500 shadow-md ring-1 ring-slate-200',
+                    f.pos,
+                    f.rotate,
+                    f.float
+                  )}
                 >
-                  {PROMO_ALL_FREE.active ? `${PROMO_ALL_FREE.cta} →` : '3일 무료 체험 →'}
-                </Link>
-                <Link
-                  href={`${MARKETING_ROUTES.product}#tour`}
-                  className={cn(mkt.btnOutline, 'px-6 py-3 text-[15px]')}
-                >
-                  <i className="ri-play-circle-line mr-1.5" />
-                  Demo 먼저 보기
-                </Link>
-              </div>
+                  <i className={f.icon} />
+                  {f.text}
+                </span>
+              ))}
+            </div>
+            <MarketingScreenMockup variant="dashboard" className="relative mx-auto w-full max-w-md" />
+          </FadeIn>
+        </div>
 
-              {/* Trust badges */}
-              <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-slate-500">
-                <span className="flex items-center gap-1.5">
-                  <i className="ri-check-line text-green-500" /> 카드 등록 없음
-                </span>
-                <span className="h-4 w-px bg-slate-200" />
-                <span className="flex items-center gap-1.5">
-                  <i className="ri-check-line text-green-500" />{' '}
-                  {PROMO_ALL_FREE.active ? '행사 기간 전 플랜 무료' : '3일 무료 체험'}
-                </span>
-                <span className="h-4 w-px bg-slate-200" />
-                <span className="flex items-center gap-1.5">
-                  <i className="ri-check-line text-green-500" /> 즉시 시작
-                </span>
-              </div>
-            </FadeIn>
-
-            {/* Right — app mockup */}
-            <FadeIn delay={0.1}>
-              <ScreenshotPlaceholder
-                screenshotKey="dashboard"
-                priority
-                className="shadow-2xl shadow-sky-900/10"
-              />
-            </FadeIn>
+        {/* 스크롤 유도 — Workflow 문구 섹션 대신, 바로 아래 기록의 하루로 이어진다는 신호만 남긴다 */}
+        <div className="absolute inset-x-0 bottom-6 flex justify-center">
+          <div className="flex animate-bounce flex-col items-center gap-1 text-slate-400">
+            <span className="text-xs font-medium">스크롤해서 보기</span>
+            <i className="ri-arrow-down-line text-xl" />
           </div>
         </div>
       </section>
 
-      {/* ── PROBLEM ──────────────────────────────────── */}
-      <Section>
-        <SectionInner>
-          <SectionHeader
-            eyebrow="Problem"
-            title="이런 어려움이 있으신가요?"
-            align="center"
-          />
-          <Reveal className="mt-8 grid gap-4 md:grid-cols-3">
-            {PROBLEMS.map((p) => (
-              <RevealItem key={p.title}>
-                <div className={cn(mkt.card, mkt.cardHover, 'p-6')}>
-                  <span className={cn('flex h-10 w-10 items-center justify-center rounded-xl text-lg mb-4', p.color)}>
-                    <i className={p.icon} />
-                  </span>
-                  <h3 className={mkt.h3}>{p.title}</h3>
-                  <p className={cn(mkt.body, 'mt-2')}>{p.desc}</p>
-                </div>
-              </RevealItem>
-            ))}
-          </Reveal>
-        </SectionInner>
-      </Section>
+      {/* ── 기록의 하루 — 흩어짐 → 수렴 → AI 브리핑 → 상담 → 리포트 → 재등록 ── */}
+      <RecordJourney />
 
-      {/* ── SOLUTION / VIDEO ─────────────────────────── */}
+      {/* ── 실제 화면 — 방금 본 흐름이 일어나는 곳 ──────────────────── */}
       <Section muted>
-        <SectionInner>
-          <div className="grid items-center gap-12 lg:grid-cols-2">
-            <FadeIn>
-              <p className={cn(mkt.eyebrow, 'mb-3')}>Solution</p>
-              <h2 className={mkt.h2}>
-                기록이 곧<br />
-                <span className="text-sky-700">상담 준비</span>입니다
-              </h2>
-              <p className={cn(mkt.lead, 'mt-4')}>
-                EduFlow는 수업 입력만으로 AI 브리핑·학부모 전달·재등록 판단의 기반을 만듭니다.
-                ERP처럼 화면을 나누지 않고, 학생 중심의 하나의 흐름으로 설계했습니다.
-              </p>
-              <ul className="mt-6 space-y-3">
-                {[
-                  '수업·출결·숙제·성적이 학생 타임라인에 연결됩니다',
-                  'AI 브리핑으로 상담 준비 시간을 5분으로 줄입니다',
-                  '학부모 리포트와 재등록이 같은 맥락을 유지합니다',
-                ].map((line) => (
-                  <li key={line} className="flex items-start gap-2.5 text-sm text-slate-600">
-                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-sky-100 text-sky-700 text-xs">
-                      <i className="ri-check-line" />
-                    </span>
-                    {line}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-7 flex gap-3">
-                <Link href={MARKETING_ROUTES.product} className={mkt.btnOutline}>
-                  Product 보기
-                </Link>
-                <Link href={MARKETING_ROUTES.workflow} className={cn(mkt.link, 'flex items-center py-3')}>
-                  Workflow 전체 →
-                </Link>
+        <div className={WIDE}>
+          <FadeIn className="max-w-2xl">
+            <p className={cn(mkt.eyebrow, 'mb-3')}>Product</p>
+            <h2 className="text-3xl font-extrabold leading-[1.2] tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
+              지금 보신 흐름이, 실제 이 화면에서 일어납니다
+            </h2>
+          </FadeIn>
+          <Reveal className="mt-10 grid gap-8 lg:grid-cols-2" stagger={0.12}>
+            <RevealItem>
+              <div>
+                <ScreenshotPlaceholder
+                  screenshotKey="dashboard"
+                  className="shadow-xl shadow-slate-900/8 transition-shadow duration-300 hover:shadow-slate-900/15"
+                />
+                <p className="mt-3 text-base font-semibold text-slate-700">오늘 해야 할 일 — Dashboard</p>
               </div>
-            </FadeIn>
-            <FadeIn delay={0.08}>
-              <VideoPlaceholder
-                title="EduFlow 2분 소개"
-                subtitle="수업 → 상담 → 재등록 흐름 확인"
-                duration="2:15"
-                accent="sky"
-              />
-            </FadeIn>
-          </div>
-        </SectionInner>
+            </RevealItem>
+            <RevealItem>
+              <div>
+                <ScreenshotPlaceholder
+                  screenshotKey="student-hub"
+                  className="shadow-xl shadow-slate-900/8 transition-shadow duration-300 hover:shadow-slate-900/15"
+                />
+                <p className="mt-3 text-base font-semibold text-slate-700">학생 기록 → 상담 허브 — Student Hub</p>
+              </div>
+            </RevealItem>
+          </Reveal>
+        </div>
       </Section>
 
-      {/* ── WORKFLOW ─────────────────────────────────── */}
-      <Section>
-        <SectionInner>
-          <SectionHeader
-            eyebrow="Workflow"
-            title="기록 → 상담 → 재등록, 하나의 흐름"
-            align="center"
-          />
-          <div className="relative mt-10">
-            {/* Connecting line */}
-            <div className="absolute top-7 left-0 right-0 hidden h-px bg-gradient-to-r from-transparent via-sky-200 to-transparent md:block" />
-            <div className="grid gap-6 md:grid-cols-5">
-              {WORKFLOW.map((w, i) => (
-                <FadeIn key={w.step} delay={i * 0.06}>
-                  <div className="flex flex-col items-center text-center">
-                    <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/30 mb-3">
-                      <span className="text-xs font-bold opacity-60 absolute top-1 right-1.5">{w.step}</span>
-                      <i className={['ri-book-open-line','ri-robot-line','ri-chat-smile-3-line','ri-parent-line','ri-loop-right-line'][i] + ' text-xl'} />
-                    </div>
-                    <p className="text-sm font-bold text-slate-800">{w.label}</p>
-                    <p className="mt-1 text-[13px] text-slate-500">{w.desc}</p>
-                  </div>
-                </FadeIn>
-              ))}
-            </div>
-          </div>
-        </SectionInner>
-      </Section>
-
-      {/* ── FEATURES + SCREENSHOT ────────────────────── */}
-      <Section muted>
-        <SectionInner>
-          <SectionHeader
-            eyebrow="Features"
-            title="핵심 기능 한눈에"
-            description="Workflow를 지원하는 기능들을 직접 확인해 보세요."
-            align="center"
-          />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((f) => (
-              <FadeIn key={f.label}>
-                <div className={cn(mkt.card, mkt.cardHover, 'p-5 h-full')}>
-                  <span className={cn('flex h-9 w-9 items-center justify-center rounded-xl text-white text-base mb-3', f.color)}>
-                    <i className={f.icon} />
-                  </span>
-                  <p className="text-sm font-bold text-slate-800">{f.label}</p>
-                  <p className="mt-1 text-xs text-slate-500">{f.desc}</p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-
-          <div className="mt-8">
-            <ScreenshotPlaceholder
-              screenshotKey="student-hub"
-              className="shadow-xl shadow-slate-900/8"
-            />
-          </div>
-        </SectionInner>
-      </Section>
-
-      {/* ── PRICING TEASER ───────────────────────────── */}
+      {/* ── PRICING TEASER (관습적 형태 유지 — 가격 비교는 익숙함이 신뢰) ── */}
       <Section>
         <SectionInner narrow>
+          <FadeIn className="mb-8 text-center">
+            <p className={cn(mkt.body, 'text-slate-500')}>이 흐름을 우리 학원에도 — 지금 바로 시작할 수 있습니다.</p>
+          </FadeIn>
           <div className={cn(mkt.card, 'overflow-hidden')}>
             <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
               {[
-                { plan: '스타터', price: PROMO_ALL_FREE.active ? '무료' : '39,000', students: '50명', color: 'text-slate-700' },
-                { plan: '성장', price: PROMO_ALL_FREE.active ? '무료' : '79,000', students: '150명', color: 'text-sky-700', badge: '추천' },
-                { plan: '프로', price: PROMO_ALL_FREE.active ? '무료' : '149,000', students: '무제한', color: 'text-violet-700' },
+                { plan: '스타터', price: '39,000', students: '50명', color: 'text-slate-700' },
+                { plan: '성장', price: '79,000', students: '150명', color: 'text-teal-700', badge: '추천', featured: true },
+                { plan: '프로', price: '149,000', students: '무제한', color: 'text-slate-700' },
               ].map((p) => (
-                <div key={p.plan} className="relative p-6 text-center">
+                <div
+                  key={p.plan}
+                  className={cn(
+                    'relative p-6 text-center transition-all duration-300 hover:-translate-y-0.5',
+                    p.featured && 'bg-emerald-50/40 ring-1 ring-inset ring-emerald-200'
+                  )}
+                >
                   {p.badge && (
-                    <span className="absolute top-4 right-4 rounded-full bg-green-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                    <span className="absolute top-4 right-4 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white animate-pulse">
                       {p.badge}
                     </span>
                   )}
                   <p className={cn('text-sm font-bold', p.color)}>{p.plan}</p>
                   <p className={cn('mt-1 text-2xl font-extrabold', PROMO_ALL_FREE.active ? 'text-green-600' : 'text-slate-900')}>
-                    {PROMO_ALL_FREE.active ? p.price : `₩${p.price}`}
-                    {!PROMO_ALL_FREE.active && (
-                      <span className="text-sm font-normal text-slate-400">/월</span>
-                    )}
+                    {PROMO_ALL_FREE.active ? '무료' : `₩${p.price}`}
+                    {!PROMO_ALL_FREE.active && <span className="text-sm font-normal text-slate-400">/월</span>}
                   </p>
                   <p className="mt-1 text-xs text-slate-400">학생 {p.students}</p>
                 </div>

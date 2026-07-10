@@ -17,7 +17,7 @@ export function PageHero({
   children,
   align = 'left',
   size = 'default',
-  tone = 'sky',
+  tone = 'mint',
   className,
 }: {
   eyebrow?: string;
@@ -88,15 +88,15 @@ export function PageHeroMinimal(props: {
   primary?: Action;
   secondary?: Action;
 }) {
-  return <PageHero {...props} size="compact" tone="sky" />;
+  return <PageHero {...props} size="compact" tone="mint" />;
 }
 
 export function ExploreLink({ href, label, desc }: { href: string; label: string; desc: string }) {
   return (
     <Link href={href} className={cn(mkt.card, mkt.cardHover, 'group block p-6')}>
-      <p className="text-sm font-bold text-slate-800 group-hover:text-sky-700">{label}</p>
+      <p className="text-sm font-bold text-slate-800 group-hover:text-teal-700">{label}</p>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">{desc}</p>
-      <span className="mt-4 inline-block text-sm font-semibold text-sky-700">자세히 →</span>
+      <span className="mt-4 inline-block text-sm font-semibold text-teal-700">자세히 →</span>
     </Link>
   );
 }

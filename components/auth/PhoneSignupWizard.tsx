@@ -283,7 +283,7 @@ export function PhoneSignupWizard({ mode, embedded }: Props) {
         subtitle="휴대폰 인증 후 로그인에 사용할 비밀번호를 설정합니다"
       >
         {formBody}
-        <AuthSignupFooter audience={mode === 'owner' || mode === 'teacher' ? undefined : mode} />
+        <AuthSignupFooter audience={mode === 'student' ? mode : undefined} />
       </AuthFormCard>
     </AuthPageScaffold>
   );

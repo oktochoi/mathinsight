@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { BRAND_NAME } from '@/lib/brand';
 import { BrandLogo } from '@/components/brand/BrandLogo';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
 import { mkt } from '@/lib/marketing/ui';
@@ -35,7 +34,7 @@ export function AuthMobileLogo() {
 export function AuthBrandPanel({ className = '' }: { className?: string }) {
   return (
     <aside
-      className={`relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-sky-600 via-blue-700 to-slate-800 px-10 py-12 text-white ${className}`}
+      className={`relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-emerald-700 via-teal-800 to-slate-900 px-10 py-12 text-white ${className}`}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.12),transparent_45%)]" />
       <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl" />

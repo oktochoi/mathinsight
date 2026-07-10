@@ -6,6 +6,10 @@
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    /* 한글은 음절 단위가 아니라 단어(어절) 단위로만 줄바꿈되어야 "포털까지"가
+       "포/털까지"처럼 쪼개지지 않는다 — CJK 기본 줄바꿈 동작을 한글에 맞게 덮어쓴다. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
   body {
     overflow-x: hidden;
@@ -4707,16 +4711,16 @@
    ═══════════════════════════════════════════════════ */
 .auth-shell {
   --auth-bg-from: #f8fafc;
-  --auth-bg-via: #eff6ff;
+  --auth-bg-via: #ecfdf5;
   --auth-bg-to: #f5f5f7;
   --auth-ink: var(--app-ink);
   --auth-muted: var(--app-ink-3);
   --auth-border: var(--app-border-md);
   --auth-surface: rgba(255, 255, 255, 0.96);
-  --auth-accent: var(--app-accent);
-  --auth-accent-dark: var(--app-accent-dark);
-  --auth-accent-bg: var(--app-accent-bg);
-  --auth-accent-text: var(--app-accent-text);
+  --auth-accent: #047857;
+  --auth-accent-dark: #065f46;
+  --auth-accent-bg: #ecfdf5;
+  --auth-accent-text: #065f46;
   --auth-danger-bg: var(--app-danger-bg);
   --auth-danger-text: var(--app-danger-text);
   --auth-danger-border: var(--app-danger-border);

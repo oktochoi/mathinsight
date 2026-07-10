@@ -31,7 +31,7 @@ export function CTASection({
             className={cn(
               'flex flex-col gap-5 rounded-2xl px-8 py-10 md:flex-row md:items-center md:justify-between',
               isBlue && 'bg-gradient-to-br from-blue-700 to-sky-600 text-white shadow-lg shadow-blue-700/20',
-              isGreen && 'bg-gradient-to-r from-lime-500 to-green-600 text-white',
+              isGreen && 'bg-gradient-to-r from-emerald-700 to-teal-700 text-white',
               variant === 'light' && 'border border-slate-200 bg-slate-50'
             )}
           >

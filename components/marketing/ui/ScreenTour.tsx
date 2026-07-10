@@ -51,8 +51,8 @@ export function ScreenTour({ sections, demoHref, signupHref }: Props) {
             className={cn(
               'flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-all whitespace-nowrap',
               activeId === section.id
-                ? 'border-sky-500 bg-sky-500 text-white shadow-md shadow-sky-500/25'
-                : 'border-slate-200 bg-white text-slate-600 hover:border-sky-300 hover:text-sky-700'
+                ? 'border-emerald-600 bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
+                : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-300 hover:text-teal-700'
             )}
           >
             <i className={TAB_ICONS[section.id] ?? 'ri-window-line'} />
@@ -87,7 +87,7 @@ export function ScreenTour({ sections, demoHref, signupHref }: Props) {
                   onClick={() => setActiveId(s.id)}
                   className={cn(
                     'h-1.5 rounded-full transition-all',
-                    s.id === activeId ? 'w-5 bg-sky-500' : 'w-1.5 bg-slate-200 hover:bg-slate-300'
+                    s.id === activeId ? 'w-5 bg-emerald-600' : 'w-1.5 bg-slate-200 hover:bg-slate-300'
                   )}
                   aria-label={s.title}
                 />
@@ -106,7 +106,7 @@ export function ScreenTour({ sections, demoHref, signupHref }: Props) {
           type="button"
           disabled={activeIdx <= 0}
           onClick={() => setActiveId(sections[activeIdx - 1]?.id ?? '')}
-          className="flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-1.5 text-sm font-medium text-slate-600 hover:border-sky-300 disabled:opacity-30"
+          className="flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-1.5 text-sm font-medium text-slate-600 hover:border-emerald-300 disabled:opacity-30"
         >
           <i className="ri-arrow-left-line" /> 이전
         </button>
@@ -114,7 +114,7 @@ export function ScreenTour({ sections, demoHref, signupHref }: Props) {
           type="button"
           disabled={activeIdx >= sections.length - 1}
           onClick={() => setActiveId(sections[activeIdx + 1]?.id ?? '')}
-          className="flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-1.5 text-sm font-medium text-slate-600 hover:border-sky-300 disabled:opacity-30"
+          className="flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-1.5 text-sm font-medium text-slate-600 hover:border-emerald-300 disabled:opacity-30"
         >
           다음 <i className="ri-arrow-right-line" />
         </button>

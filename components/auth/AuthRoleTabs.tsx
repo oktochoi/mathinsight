@@ -2,21 +2,14 @@
 
 import { cn } from '@/lib/cn';
 
-export type AuthAudience = 'staff' | 'parent' | 'student';
+export type AuthAudience = 'staff' | 'student';
 
 const OPTIONS: { key: AuthAudience; label: string }[] = [
-  { key: 'staff', label: '원장·강사' },
-  { key: 'parent', label: '학부모' },
-  { key: 'student', label: '학생' },
+  { key: 'staff', label: '일반 로그인' },
+  { key: 'student', label: '학생 로그인' },
 ];
 
-export function authAudienceHint(audience: AuthAudience): string {
-  if (audience === 'staff') return 'Google 또는 휴대폰 번호로 로그인합니다. Google 사용 시 휴대폰 인증이 필요합니다.';
-  return 'Google 또는 휴대폰 번호로 로그인합니다. Google 사용 시 휴대폰 인증이 필요합니다.';
-}
-
-export function authLoginPlaceholder(audience: AuthAudience): string {
-  if (audience === 'staff') return '휴대폰 번호 (01012345678)';
+export function authLoginPlaceholder(): string {
   return '휴대폰 번호 (01012345678)';
 }
 

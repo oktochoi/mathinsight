@@ -31,10 +31,10 @@ export function ProductPageContent() {
             <span className="mt-3 block leading-[1.3] md:mt-4">AI Native 학원 운영 SaaS</span>
           </>
         }
-        description="수업 기록 → AI 브리핑 → 상담 → 학부모 전달 → 재등록. 하나의 흐름입니다."
+        description="수업 기록 → AI 브리핑 → 상담 → 학부모 전달 → 재등록."
         primary={{ href: MARKETING_ROUTES.signup, label: '3일 무료 체험' }}
         secondary={{ href: '#tour', label: '화면 둘러보기', variant: 'secondary' }}
-        tone="sky"
+        tone="mint"
       >
         <ScreenshotPlaceholder screenshotKey="dashboard" priority />
       </PageHero>
@@ -144,7 +144,7 @@ export function ProductPageContent() {
             {PRODUCT_IMPACT_METRICS.map((m) => (
               <RevealItem key={m.label}>
                 <div className={cn(mkt.card, 'p-4 text-center')}>
-                  <p className="text-2xl font-extrabold text-sky-700">{m.value}</p>
+                  <p className="text-2xl font-extrabold text-teal-700">{m.value}</p>
                   <p className="mt-1 text-xs font-semibold text-slate-700">{m.label}</p>
                 </div>
               </RevealItem>
@@ -154,7 +154,7 @@ export function ProductPageContent() {
       </Section>
 
       <CTASection
-        variant="blue"
+        variant="green"
         title="3일 무료로 Workflow 확인"
         description="카드 없이 시작 · 데모 계정 제공"
         primary={{ href: MARKETING_ROUTES.signup, label: '무료 체험', variant: 'accent' }}

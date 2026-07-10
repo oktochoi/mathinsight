@@ -19,16 +19,16 @@ const STEP_ICONS = [
 ] as const;
 
 const PHASES = [
-  { label: '수업 기록', count: 6, tone: 'sky', from: 0, to: 5 },
+  { label: '수업 기록', count: 6, tone: 'teal', from: 0, to: 5 },
   { label: 'AI 요약', count: 1, tone: 'violet', from: 6, to: 6 },
   { label: '전달 · 재등록', count: 2, tone: 'emerald', from: 7, to: 8 },
 ] as const;
 
 const toneStyles = {
-  sky: {
-    band: 'from-sky-100/90 to-sky-50/40 border-sky-200/80',
-    node: 'border-sky-300 bg-white text-sky-700 shadow-sky-200/60',
-    line: 'bg-sky-300',
+  teal: {
+    band: 'from-teal-100/90 to-teal-50/40 border-teal-200/80',
+    node: 'border-teal-300 bg-white text-teal-700 shadow-teal-200/60',
+    line: 'bg-teal-300',
   },
   violet: {
     band: 'from-violet-100/90 to-indigo-50/40 border-violet-200/80',

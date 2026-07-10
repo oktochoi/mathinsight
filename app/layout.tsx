@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Pacifico } from "next/font/google";
+import { Geist_Mono, Pacifico } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { ROOT_SITE_METADATA } from "@/lib/marketing/seo";
 import { SITE_THEME_COLOR } from "@/lib/marketing/siteAssets";
@@ -12,9 +13,15 @@ const pacifico = Pacifico({
   variable: '--font-pacifico',
 });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+/**
+ * Geist는 라틴 문자만 지원해 한글은 브라우저 시스템 폰트로 폴백되고 있었다(신뢰감 저하 원인).
+ * Pretendard는 한글·라틴을 한 세트로 디자인한 가변 폰트라 국문 위주인 이 서비스에 더 맞는다.
+ */
+const pretendard = localFont({
+  src: "../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
+  display: "swap",
+  weight: "45 920",
+  variable: "--font-pretendard",
 });
 
 const geistMono = Geist_Mono({
@@ -40,7 +47,7 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning={true}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} antialiased bg-white overflow-x-hidden`}
+        className={`${pretendard.variable} ${geistMono.variable} ${pacifico.variable} antialiased bg-white overflow-x-hidden`}
       >
         {children}
         <Analytics />

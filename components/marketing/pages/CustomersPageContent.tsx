@@ -73,7 +73,7 @@ export function CustomersPageContent() {
       </Section>
 
       <CTASection
-        variant="blue"
+        variant="green"
         title="파일럿 학원을 모집합니다"
         description="상담·재등록 운영 개선에 함께해 주실 학원을 찾습니다."
         primary={{ href: MARKETING_ROUTES.contact, label: '파일럿 문의', variant: 'accent' }}

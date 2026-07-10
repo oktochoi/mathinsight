@@ -23,8 +23,8 @@ export function MarketingHeader() {
               key={item.href}
               href={item.href}
               className={cn(
-                'rounded-md px-3.5 py-2 text-[15px] font-medium text-slate-600 hover:bg-sky-50 hover:text-sky-700',
-                pathname === item.href && 'bg-sky-50 text-sky-700'
+                'rounded-md px-3.5 py-2 text-[15px] font-medium text-slate-600 hover:bg-emerald-50 hover:text-teal-700',
+                pathname === item.href && 'bg-emerald-50 text-teal-700'
               )}
             >
               {item.label}
