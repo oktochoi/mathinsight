@@ -13,6 +13,49 @@
   }
   body {
     overflow-x: hidden;
+    font-family: var(--font-pretendard), -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo',
+      'Malgun Gothic', sans-serif;
+    letter-spacing: -0.012em;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* 마케팅 셸 — Hangul 타이포 리듬 (디스플레이 / 본문 / 아이브로우) */
+@layer components {
+  .mkt-typo {
+    font-family: var(--font-pretendard), -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo',
+      'Malgun Gothic', sans-serif;
+    letter-spacing: -0.014em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .mkt-typo h1,
+  .mkt-typo h2,
+  .mkt-typo h3 {
+    letter-spacing: -0.028em;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  .mkt-typo p,
+  .mkt-typo li {
+    letter-spacing: -0.012em;
+    text-wrap: pretty;
+  }
+
+  .mkt-display {
+    font-weight: 700;
+    letter-spacing: -0.032em;
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+
+  .mkt-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 }
 

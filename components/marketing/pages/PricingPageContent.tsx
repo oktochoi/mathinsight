@@ -95,7 +95,7 @@ export function PricingPageContent() {
           </FadeIn>
 
           <FadeIn delay={0.06} y={14}>
-            <h1 className="mt-8 max-w-[24ch] text-[clamp(2rem,4.4vw,3.25rem)] font-extrabold leading-[1.12] tracking-[-0.03em] text-slate-900 md:mt-10">
+            <h1 className="mkt-display mt-8 max-w-[24ch] text-[clamp(2rem,4.4vw,3.25rem)] text-slate-900 md:mt-10">
               {PROMO_ALL_FREE.active ? (
                 <>
                   지금은 모든 플랜이 <span className="text-emerald-700">무료</span>입니다
@@ -111,7 +111,7 @@ export function PricingPageContent() {
           </FadeIn>
 
           <FadeIn delay={0.12}>
-            <p className="mt-6 max-w-[52ch] text-[17px] leading-[1.75] text-slate-600">
+            <p className="mt-6 max-w-[52ch] text-[17px] leading-[1.75] tracking-[-0.012em] text-slate-600">
               {PROMO_ALL_FREE.active
                 ? PROMO_ALL_FREE.subtitle
                 : '모든 플랜에 3일 무료 체험이 포함됩니다. 카드 등록 없이 바로 시작하실 수 있습니다.'}
@@ -279,7 +279,7 @@ export function PricingPageContent() {
         <div className={DOC}>
           <FadeIn className="max-w-2xl">
             <p className={cn(mkt.eyebrow, 'mb-4')}>Value</p>
-            <h2 className="text-2xl font-extrabold tracking-[-0.02em] text-slate-900 md:text-3xl">
+            <h2 className="mkt-display text-[clamp(1.5rem,3vw,1.875rem)] text-slate-900 md:text-3xl">
               요금이 아니라, 원장이 시간을 쓰는 지점이 달라집니다
             </h2>
           </FadeIn>
@@ -302,7 +302,7 @@ export function PricingPageContent() {
         <div className={DOC}>
           <FadeIn className="max-w-2xl">
             <p className={cn(mkt.eyebrow, 'mb-4')}>Compare</p>
-            <h2 className="text-2xl font-extrabold tracking-[-0.02em] text-slate-900 md:text-3xl">
+            <h2 className="mkt-display text-[clamp(1.5rem,3vw,1.875rem)] text-slate-900 md:text-3xl">
               플랜별로 무엇이 포함되나요
             </h2>
           </FadeIn>
@@ -378,7 +378,7 @@ export function PricingPageContent() {
         <div className={DOC}>
           <FadeIn className="max-w-2xl">
             <p className={cn(mkt.eyebrow, 'mb-4')}>Terms</p>
-            <h2 className="text-2xl font-extrabold tracking-[-0.02em] text-slate-900 md:text-3xl">
+            <h2 className="mkt-display text-[clamp(1.5rem,3vw,1.875rem)] text-slate-900 md:text-3xl">
               결정 전에 확인하실 것
             </h2>
           </FadeIn>
@@ -415,7 +415,7 @@ export function PricingPageContent() {
         <div className={DOC}>
           <FadeIn className="max-w-2xl">
             <p className={cn(mkt.eyebrow, 'mb-4')}>FAQ</p>
-            <h2 className="text-2xl font-extrabold tracking-[-0.02em] text-slate-900 md:text-3xl">
+            <h2 className="mkt-display text-[clamp(1.5rem,3vw,1.875rem)] text-slate-900 md:text-3xl">
               자주 묻는 질문
             </h2>
           </FadeIn>

@@ -14,15 +14,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let blogPages: MetadataRoute.Sitemap = [];
   try {
-    const { BLOG_POSTS } = await import('@/lib/marketing/blogPosts');
-    blogPages = BLOG_POSTS.map((post) => ({
+    const { getAllBlogPosts } = await import('@/lib/marketing/blogPosts');
+    blogPages = getAllBlogPosts().map((post) => ({
       url: `${SITE_URL}/blog/${post.slug}`,
       lastModified: new Date(post.date),
       changeFrequency: 'monthly' as const,
       priority: 0.6,
     }));
   } catch {
-    // blogPosts module not yet created
+    // blogPosts module unavailable
   }
 
   return [...staticPages, ...blogPages];

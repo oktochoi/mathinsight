@@ -90,7 +90,7 @@ function Eyebrow({ children, tone = 'brand' }: { children: React.ReactNode; tone
   return (
     <p
       className={cn(
-        'text-sm font-bold uppercase tracking-[0.2em]',
+        'mkt-eyebrow',
         tone === 'ai' && 'text-violet-700',
         tone === 'brand' && 'text-teal-700'
       )}
@@ -138,7 +138,7 @@ function DashboardAct({ scrollYProgress }: { scrollYProgress: MotionValue<number
       <div className={cn(WIDE, 'grid items-center gap-10 lg:grid-cols-[1fr_1.1fr] lg:gap-16')}>
         <div>
           <Eyebrow>01 · 오늘</Eyebrow>
-          <p className="mt-4 text-5xl font-extrabold leading-[1.08] tracking-tight text-slate-900 md:text-6xl lg:text-7xl">
+          <p className="mkt-display mt-4 text-[clamp(2.25rem,5vw,4.25rem)] text-slate-900">
             로그인하면
             <br />
             <span className="text-emerald-700">오늘 할 일</span>이
@@ -243,7 +243,7 @@ function RecordAct({ scrollYProgress }: { scrollYProgress: MotionValue<number> }
       <div className={cn(WIDE, 'grid items-center gap-10 lg:grid-cols-[1fr_1.1fr] lg:gap-16')}>
         <div>
           <Eyebrow>02 · 기록</Eyebrow>
-          <p className="mt-4 text-5xl font-extrabold leading-[1.08] tracking-tight text-slate-900 md:text-6xl lg:text-7xl">
+          <p className="mkt-display mt-4 text-[clamp(2.25rem,5vw,4.25rem)] text-slate-900">
             카톡·메모·엑셀이
             <br />
             <span className="text-emerald-700">한 기록</span>으로
@@ -300,7 +300,7 @@ function AiAct({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
       <div className={cn(WIDE, 'grid items-center gap-12 lg:grid-cols-[1fr_1fr] lg:gap-20')}>
         <div>
           <Eyebrow tone="ai">03 · AI 브리핑</Eyebrow>
-          <p className="mt-4 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
+          <p className="mkt-display mt-4 text-[clamp(2rem,4.5vw,3.5rem)] text-slate-900">
             상담 3분 전,
             <br />
             읽을 문장만
@@ -373,7 +373,7 @@ function CounselingAct({ scrollYProgress }: { scrollYProgress: MotionValue<numbe
         </motion.div>
         <div>
           <Eyebrow>04 · 상담</Eyebrow>
-          <p className="mt-4 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
+          <p className="mkt-display mt-4 text-[clamp(2rem,4.5vw,3.5rem)] text-slate-900">
             기록이 여기서
             <br />
             대화가 됩니다
@@ -431,7 +431,7 @@ function RetentionAct({ scrollYProgress }: { scrollYProgress: MotionValue<number
         </motion.div>
         <div>
           <Eyebrow>05 · 재등록</Eyebrow>
-          <p className="mt-4 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
+          <p className="mkt-display mt-4 text-[clamp(2rem,4.5vw,3.5rem)] text-slate-900">
             재등록은
             <br />
             <span className="text-emerald-700">결제일 전</span>에

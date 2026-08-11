@@ -70,7 +70,7 @@ export function HomePageContent() {
           </FadeIn>
 
           <FadeIn delay={0.05} y={16}>
-            <h1 className="mt-5 max-w-[18ch] text-[clamp(2.4rem,5.8vw,4.5rem)] font-extrabold leading-[1.05] tracking-[-0.035em] text-slate-900">
+            <h1 className="mkt-display mt-5 max-w-[18ch] text-[clamp(2.4rem,5.8vw,4.4rem)] text-slate-900">
               기록이 상담이 되고
               <br />
               상담이 <span className="text-emerald-700">재등록</span>을 지킵니다
@@ -78,7 +78,7 @@ export function HomePageContent() {
           </FadeIn>
 
           <FadeIn delay={0.1}>
-            <p className="mt-6 max-w-[40ch] text-[17px] leading-[1.7] text-slate-600 md:text-lg">
+            <p className="mt-6 max-w-[40ch] text-[17px] leading-[1.75] tracking-[-0.012em] text-slate-600 md:text-lg">
               수업 기록이 쌓이면 상담 브리핑이 준비되고, 흔들리는 학생은 결제일보다 먼저 보입니다.
             </p>
           </FadeIn>
@@ -135,7 +135,7 @@ export function HomePageContent() {
         <div className={WIDE}>
           <FadeIn className="max-w-xl">
             <p className={cn(mkt.eyebrow, 'mb-3')}>Explore</p>
-            <h2 className="text-3xl font-extrabold tracking-[-0.02em] text-slate-900 md:text-[2.35rem]">
+            <h2 className="mkt-display text-[clamp(1.75rem,3.2vw,2.35rem)] text-slate-900">
               방금 본 흐름을
               <br />
               영역별로 더 볼 수 있습니다

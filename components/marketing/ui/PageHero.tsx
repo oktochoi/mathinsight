@@ -53,7 +53,7 @@ export function PageHero({
         >
           <FadeIn>
             {eyebrow && <p className={cn(mkt.eyebrow, 'mb-3')}>{eyebrow}</p>}
-            <h1 className={size === 'compact' ? 'text-2xl font-extrabold text-slate-800 md:text-3xl' : mkt.h1}>
+            <h1 className={size === 'compact' ? 'mkt-display text-[clamp(1.5rem,3vw,1.875rem)] text-slate-900' : mkt.h1}>
               {title}
             </h1>
             {description && (

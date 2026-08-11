@@ -14,7 +14,6 @@ module.exports = {
           '-apple-system',
           'BlinkMacSystemFont',
           'system-ui',
-          'Roboto',
           'Apple SD Gothic Neo',
           'Malgun Gothic',
           'sans-serif',
