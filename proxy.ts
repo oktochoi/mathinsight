@@ -5,11 +5,18 @@ import { authGateRedirect, isAuthGatePath, readUserDbRole } from '@/lib/middlewa
 import { needsPhoneVerification } from '@/lib/phoneVerificationPolicy';
 import { subscriptionRedirectPath } from '@/lib/subscription';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
+import { getRequiredPermissionForPath, staffHasPermission } from '@/lib/serverAuth';
+import { fromDbRole, isStaffRole } from '@/lib/roles';
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  if (!isAuthGatePath(path) && !isProtectedAppPath(path) && path !== '/onboarding' && !path.startsWith('/onboarding/')) {
+  if (
+    !isAuthGatePath(path) &&
+    !isProtectedAppPath(path) &&
+    path !== '/onboarding' &&
+    !path.startsWith('/onboarding/')
+  ) {
     return NextResponse.next();
   }
 
@@ -86,6 +93,26 @@ export async function proxy(request: NextRequest) {
       redirect.pathname = dest;
       redirect.search = '';
       return NextResponse.redirect(redirect);
+    }
+
+    const appRole = fromDbRole(rawDbRole ?? '') ?? profile?.role;
+    if (isStaffRole(appRole) && profile?.academy_id && rawDbRole) {
+      const required = getRequiredPermissionForPath(path);
+      if (required) {
+        const allowed = await staffHasPermission(
+          supabase,
+          user.id,
+          profile.academy_id,
+          rawDbRole,
+          required
+        );
+        if (!allowed) {
+          const redirect = request.nextUrl.clone();
+          redirect.pathname = '/dashboard';
+          redirect.search = '';
+          return NextResponse.redirect(redirect);
+        }
+      }
     }
 
     const subDest = await subscriptionRedirectPath(path, profile, rawDbRole);

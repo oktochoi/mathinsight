@@ -165,7 +165,7 @@ export function TodayCommandCenter({
         </div>
 
         <div
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 mt-8 pt-8 border-t"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-6 mt-8 pt-8 border-t"
           style={{ borderColor: 'var(--app-border)' }}
         >
           <MetricCell label="오늘 수업" value={stats.todayLessonCount} unit="개" href="#today-lessons" delta={deltas?.todayLessonCount} />
@@ -185,6 +185,13 @@ export function TodayCommandCenter({
             href="/lesson-logs"
             delta={deltas?.unclosed}
           />
+          <MetricCell
+            label="오늘 결석"
+            value={stats.absentTodayCount}
+            unit="명"
+            tone={stats.absentTodayCount > 0 ? 'danger' : 'default'}
+            href="/attendance"
+          />
           <MetricCell label="상담 예정" value={counselingToday} unit="건" href="/counseling" delta={deltas?.counselingToday} />
           <MetricCell
             label="미납·연체"
@@ -202,6 +209,12 @@ export function TodayCommandCenter({
             href="/messages"
             delta={deltas?.pendingParentMessages}
             deltaVariant="todayInflow"
+          />
+          <MetricCell
+            label="최근 공지"
+            value={stats.recentNotices.length}
+            unit="건"
+            href="/notices"
           />
         </div>
       </div>

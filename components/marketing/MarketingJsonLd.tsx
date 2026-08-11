@@ -15,7 +15,7 @@ export function MarketingJsonLd() {
     alternateName: BRAND_NAME,
     url: SITE_URL,
     email: CONTACT_EMAIL,
-    description: BRAND_DESCRIPTION,
+    description: '학원 학생 관리, 상담 기록, 학부모 상담 및 재등록 관리를 위한 학원 운영 서비스',
     logo: SITE_OG_IMAGE_ABSOLUTE,
     sameAs: [SITE_URL],
   };
@@ -48,7 +48,7 @@ export function MarketingJsonLd() {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'KRW',
-      description: '무료 체험 및 학원 규모별 요금제 제공',
+      description: '학원 상담·학생 관리·재등록 관리를 위한 학원 운영 프로그램. 행사 기간 중 전 기능 무료.',
     },
   };
 

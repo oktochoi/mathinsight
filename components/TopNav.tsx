@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/cn';
-import { GlobalSearchBar } from '@/components/navigation/GlobalSearchBar';
 import { QuickActionsMenu } from '@/components/navigation/QuickActionsMenu';
+import { useAiUsage } from '@/hooks/useAiUsage';
 
 type TopNavProps = {
   onMenuOpen?: () => void;
@@ -17,6 +17,7 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const { profile, academy } = useAuth();
   const router = useRouter();
+  const { used, quota, loading: aiLoading } = useAiUsage();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -24,7 +25,13 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
   };
 
   const roleLabel =
-    profile?.role === 'owner' ? '원장' : profile?.role === 'teacher' ? '선생님' : profile?.role === 'desk' ? '원무' : '';
+    profile?.role === 'owner'
+      ? '원장'
+      : profile?.role === 'teacher'
+        ? '선생님'
+        : profile?.role === 'desk'
+          ? '원무'
+          : '';
 
   return (
     <header
@@ -61,9 +68,24 @@ export default function TopNav({ onMenuOpen }: TopNavProps) {
         )}
       </div>
 
-      <GlobalSearchBar />
+      <div className="flex-1 min-w-0" />
 
       <div className="flex items-center gap-2 shrink-0 ml-auto">
+        {!aiLoading && quota > 0 && (
+          <span
+            className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium tabular-nums"
+            style={{
+              background: 'var(--app-surface)',
+              border: '1px solid var(--app-border-md)',
+              color: used >= quota ? 'var(--app-danger, #b91c1c)' : 'var(--app-ink-2)',
+            }}
+            title="이번 달 AI 사용량"
+          >
+            <i className="ri-sparkling-line text-[10px]" />
+            AI {used}/{quota}
+          </span>
+        )}
+
         <QuickActionsMenu />
 
         <div className="relative">

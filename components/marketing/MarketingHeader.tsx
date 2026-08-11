@@ -31,16 +31,16 @@ export function MarketingHeader() {
             </Link>
           ))}
           <Link
-            href={MARKETING_ROUTES.signup}
+            href={MARKETING_ROUTES.contact}
             className={cn(mkt.btnGreenSm, 'ml-2 shadow-lg shadow-green-600/30')}
           >
-            무료 체험
+            도입 문의
           </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-2 lg:hidden">
-          <Link href={MARKETING_ROUTES.signup} className={cn(mkt.btnGreenSm, 'shadow-lg shadow-green-600/30')}>
-            무료 체험
+          <Link href={MARKETING_ROUTES.contact} className={cn(mkt.btnGreenSm, 'shadow-lg shadow-green-600/30')}>
+            도입 문의
           </Link>
           <button
             type="button"
@@ -67,11 +67,11 @@ export function MarketingHeader() {
             </Link>
           ))}
           <Link
-            href={MARKETING_ROUTES.signup}
+            href={MARKETING_ROUTES.contact}
             onClick={() => setOpen(false)}
             className={cn(mkt.btnGreen, 'mt-3 w-full text-center')}
           >
-            무료 체험
+            도입 문의
           </Link>
           <Link
             href={MARKETING_ROUTES.auth}

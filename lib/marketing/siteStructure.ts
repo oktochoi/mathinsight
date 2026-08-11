@@ -17,10 +17,18 @@ export const MARKETING_ROUTES = {
   terms: '/terms',
   signup: '/signup',
   auth: '/login',
+  academyManagement: '/academy-management',
+  academyConsulting: '/academy-consulting',
+  studentManagement: '/student-management',
+  retention: '/re-enrollment',
+  blog: '/blog',
 } as const;
 
 export const HEADER_NAV = [
   { href: MARKETING_ROUTES.product, label: 'Product' },
+  { href: MARKETING_ROUTES.academyManagement, label: '학원 관리' },
+  { href: MARKETING_ROUTES.academyConsulting, label: '상담 관리' },
+  { href: MARKETING_ROUTES.retention, label: '재등록 관리' },
   { href: MARKETING_ROUTES.pricing, label: 'Pricing' },
   { href: MARKETING_ROUTES.auth, label: '로그인' },
 ] as const;
@@ -178,12 +186,20 @@ export const DEMO_TOUR_SECTIONS = [
 
 export const FOOTER_COLUMNS = [
   {
+    title: '솔루션',
+    links: [
+      { href: MARKETING_ROUTES.academyManagement, label: '학원 관리' },
+      { href: MARKETING_ROUTES.academyConsulting, label: '상담 관리' },
+      { href: MARKETING_ROUTES.studentManagement, label: '학생 관리' },
+      { href: MARKETING_ROUTES.retention, label: '재등록 관리' },
+    ],
+  },
+  {
     title: 'Product',
     links: [
-      { href: `${MARKETING_ROUTES.product}#workflow`, label: 'Workflow' },
-      { href: MARKETING_ROUTES.product, label: 'Features' },
-      { href: `${MARKETING_ROUTES.product}#ai`, label: 'AI Assistant' },
+      { href: MARKETING_ROUTES.product, label: '기능 소개' },
       { href: MARKETING_ROUTES.demo, label: 'Demo' },
+      { href: MARKETING_ROUTES.pricing, label: 'Pricing' },
     ],
   },
   {
@@ -199,7 +215,6 @@ export const FOOTER_COLUMNS = [
     links: [
       { href: MARKETING_ROUTES.faq, label: 'FAQ' },
       { href: MARKETING_ROUTES.security, label: 'Security' },
-      { href: MARKETING_ROUTES.pricing, label: 'Pricing' },
     ],
   },
   {

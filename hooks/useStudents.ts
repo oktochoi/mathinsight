@@ -32,8 +32,13 @@ export function useStudents() {
       .eq('academy_id', profile.academy_id)
       .order('created_at', { ascending: false });
 
-    // teacher는 담당 반 학생만 조회
-    if (scope.isTeacher && scope.classIds.length > 0) {
+    // teacher는 담당 반 학생만 조회 (담당 반 없으면 빈 목록)
+    if (scope.isTeacher) {
+      if (scope.classIds.length === 0) {
+        setStudents([]);
+        setLoading(false);
+        return;
+      }
       query = query.in('class_id', scope.classIds);
     }
 

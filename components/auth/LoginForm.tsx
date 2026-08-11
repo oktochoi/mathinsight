@@ -11,33 +11,20 @@ import {
 } from '@/lib/auth';
 import { AUTH_ROUTES } from '@/lib/authRoutes';
 import { fetchPostAuthDestination } from '@/lib/workspace/postAuthClient';
+import { CONTACT_EMAIL } from '@/lib/brand';
+import { PROMO_ALL_FREE } from '@/lib/marketing/promoPricing';
 import { AuthPageScaffold } from '@/components/auth/AuthPageScaffold';
 import { AuthFormCard } from '@/components/auth/AuthFormCard';
-import {
-  AuthRoleTabs,
-  authLoginPlaceholder,
-  type AuthAudience,
-} from '@/components/auth/AuthRoleTabs';
 import {
   AuthField,
   AuthInput,
   AuthPasswordInput,
   AuthSubmitButton,
 } from '@/components/auth/AuthField';
-import { AuthDivider, GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
-import { AuthLoginFooter } from '@/components/auth/AuthFooter';
-
-function audienceFromParam(value: string | null): AuthAudience {
-  if (value === 'student') return value;
-  return 'staff';
-}
 
 function LoginFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [audience, setAudience] = useState<AuthAudience>(() =>
-    audienceFromParam(searchParams.get('as'))
-  );
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -62,17 +49,7 @@ function LoginFormInner() {
     if (searchParams.get('reset') === '1') {
       toast.success('비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.');
     }
-    const as = searchParams.get('as');
-    if (as === 'student') {
-      router.replace('/login/student');
-    }
-  }, [searchParams, router]);
-
-  useEffect(() => {
-    if (audience === 'student') {
-      router.replace('/login/student');
-    }
-  }, [audience, router]);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,28 +87,34 @@ function LoginFormInner() {
     }
   };
 
+  const subject = encodeURIComponent('EduFlow 도입 문의');
+  const body = encodeURIComponent(
+    '안녕하세요.\n\n학원명:\n학생 수:\n문의 내용:\n'
+  );
+  const mailto = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+
   return (
     <AuthPageScaffold>
-      <AuthFormCard title="로그인" subtitle="EduFlow에 다시 오신 것을 환영해요">
-        <div className="mb-5">
-          <AuthRoleTabs value={audience} onChange={setAudience} />
-        </div>
+      <AuthFormCard title="로그인" subtitle="EduFlow 계정으로 로그인하세요">
+        {PROMO_ALL_FREE.active && (
+          <div className="mb-5 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-center">
+            <p className="text-xs font-medium text-green-700">
+              지금 도입하시면 행사 기간 중 전 기능 무료
+            </p>
+          </div>
+        )}
 
         {error && <div className="auth-error-banner">{error}</div>}
 
-        <GoogleSignInButton disabled={loading} />
-
-        <AuthDivider />
-
         <form onSubmit={handleSubmit} className="space-y-4">
-          <AuthField label="휴대폰 번호">
+          <AuthField label="이메일">
             <AuthInput
               required
-              autoComplete="username"
+              type="email"
+              autoComplete="email"
               value={loginId}
               onChange={(e) => setLoginId(e.target.value)}
-              placeholder={authLoginPlaceholder()}
-              inputMode="numeric"
+              placeholder="you@academy.kr"
             />
           </AuthField>
           <AuthField label="비밀번호">
@@ -152,12 +135,23 @@ function LoginFormInner() {
           <AuthSubmitButton loading={loading}>{loading ? '로그인 중...' : '로그인'}</AuthSubmitButton>
         </form>
 
-        <AuthLoginFooter />
-        <p className="mt-2 text-center text-[11px] leading-relaxed" style={{ color: 'var(--auth-muted)' }}>
-          강사·학부모 계정은 학원에서 보낸 초대 링크로만 만들 수 있습니다.
-          <br />
-          초대 메일을 확인하거나 학원에 문의해 주세요.
-        </p>
+        <hr className="my-5 border-slate-100" />
+
+        <div className="text-center">
+          <p className="text-sm text-slate-500 mb-3">
+            아직 계정이 없으신가요?
+          </p>
+          <a
+            href={mailto}
+            className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+          >
+            <i className="ri-mail-send-line" />
+            도입 문의하기
+          </a>
+          <p className="mt-2 text-[11px] text-slate-400">
+            {CONTACT_EMAIL}으로 메일을 보내주시면 안내드리겠습니다
+          </p>
+        </div>
       </AuthFormCard>
     </AuthPageScaffold>
   );
@@ -168,9 +162,9 @@ export function LoginForm() {
     <Suspense
       fallback={
         <AuthPageScaffold>
-          <AuthFormCard title="로그인" subtitle="불러오는 중...">
-            <p className="py-8 text-center text-sm" style={{ color: 'var(--auth-muted)' }}>
-              잠시만 기다려 주세요
+          <AuthFormCard title="로그인" subtitle="잠시만 기다려 주세요">
+            <p className="py-8 text-center text-sm text-slate-400">
+              불러오는 중...
             </p>
           </AuthFormCard>
         </AuthPageScaffold>

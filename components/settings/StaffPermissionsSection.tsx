@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { ErrorBanner } from '@/components/ui/DataStates';
-import { computePermissions, DEFAULT_PERMISSIONS, type PermissionKey } from '@/lib/permissions';
+import { computePermissions, DEFAULT_PERMISSIONS, type PermissionKey } from '@/lib/permissionKeys';
 import { setStaffPermissionOverride, updateStaffMemberRole } from '@/lib/staffPermissions';
 import { toDbRole } from '@/lib/roles';
 import { cn } from '@/lib/cn';
@@ -40,6 +40,7 @@ const EDITABLE_PERMISSIONS: { key: PermissionKey; label: string; roles: string[]
   { key: 'settings.academy', label: '학원 정보 수정', roles: ['admin'] },
   { key: 'analytics.view', label: '분석 리포트 조회', roles: ['admin', 'teacher', 'desk'] },
   { key: 'billing.view', label: '수강료 조회', roles: ['teacher'] },
+  { key: 'schedule.manage', label: '시간표 생성·수정·삭제', roles: ['teacher', 'desk'] },
 ];
 
 function PermissionSwitch({

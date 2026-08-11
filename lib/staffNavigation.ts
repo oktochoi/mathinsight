@@ -46,7 +46,12 @@ export const STAFF_NAV_SECTIONS: NavSection[] = [
         icon: 'ri-book-open-line',
         requiredPermissions: ['lessons.view'],
       },
-      { label: '시간표', href: '/schedule', icon: 'ri-calendar-line' },
+      {
+        label: '시간표',
+        href: '/schedule',
+        icon: 'ri-calendar-line',
+        requiredPermissions: ['schedule.view'],
+      },
       {
         label: '출결',
         href: '/attendance',
@@ -168,7 +173,12 @@ export const STAFF_NAV_SECTIONS: NavSection[] = [
     icon: 'ri-pie-chart-2-line',
     dividerAbove: true,
     items: [
-      { label: '경영 리포트', href: '/analytics', icon: 'ri-pie-chart-2-line' },
+      {
+        label: '경영 리포트',
+        href: '/analytics',
+        icon: 'ri-pie-chart-2-line',
+        requiredPermissions: ['analytics.view'],
+      },
     ],
   },
   {
@@ -181,6 +191,12 @@ export const STAFF_NAV_SECTIONS: NavSection[] = [
         href: '/settings',
         icon: 'ri-settings-3-line',
         requiredPermissions: ['settings.academy'],
+      },
+      {
+        label: '직원·권한',
+        href: '/settings?tab=permissions',
+        icon: 'ri-shield-user-line',
+        requiredPermissions: ['settings.permissions'],
       },
       {
         label: '문자·알림',

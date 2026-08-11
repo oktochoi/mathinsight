@@ -11,18 +11,16 @@ import type { UserRole } from '@/types/database';
 
 import StepProfile from './steps/StepProfile';
 import StepOwnerAcademy from './steps/StepOwnerAcademy';
-import StepTeacherJoin from './steps/StepTeacherJoin';
-import StepParentConnect from './steps/StepParentConnect';
-import StepStudentConnect from './steps/StepStudentConnect';
+import StepInviteComplete from './steps/StepInviteComplete';
 
 type StepConfig = { label: string; icon: string };
 
 const STEPS_CONFIG: Record<UserRole, StepConfig[]> = {
-  owner:   [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '학원 설정', icon: 'ri-building-2-line' }],
-  teacher: [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '학원 참여', icon: 'ri-key-2-line' }],
-  desk:    [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '학원 참여', icon: 'ri-key-2-line' }],
-  parent:  [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '자녀 연결', icon: 'ri-parent-line' }],
-  student: [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '학원 연결', icon: 'ri-school-line' }],
+  owner: [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '학원 설정', icon: 'ri-building-2-line' }],
+  teacher: [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '초대 안내', icon: 'ri-mail-send-line' }],
+  desk: [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '초대 안내', icon: 'ri-mail-send-line' }],
+  parent: [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '초대 안내', icon: 'ri-mail-send-line' }],
+  student: [{ label: '기본 정보', icon: 'ri-user-line' }, { label: '초대 안내', icon: 'ri-mail-send-line' }],
 };
 
 const ROLE_META: Record<UserRole, {
@@ -164,17 +162,16 @@ export default function OnboardingClient() {
             <span className="text-sm font-semibold">{meta.label} 온보딩</span>
           </div>
 
-          <h2 className="text-2xl font-extrabold leading-snug">
-            {meta.label === '원장'
-              ? '우리 학원을\n설정해 보세요'
-              : meta.label === '강사' || meta.label === '원무'
-              ? '학원에\n참여하세요'
-              : '포털에\n연결하세요'
-            }
-          </h2>
-          <p className="mt-3 text-sm text-white/70 leading-relaxed">
-            기본 정보만 입력하면 바로 사용할 수 있습니다.
-          </p>
+            <h2 className="text-2xl font-extrabold leading-snug">
+              {meta.label === '원장'
+                ? '우리 학원을\n설정해 보세요'
+                : '초대로\n시작하세요'}
+            </h2>
+            <p className="mt-3 text-sm text-white/70 leading-relaxed">
+              {meta.label === '원장'
+                ? '기본 정보만 입력하면 바로 사용할 수 있습니다.'
+                : '학원에서 보낸 초대 링크로 계정이 연결됩니다.'}
+            </p>
 
           {/* Benefits */}
           <ul className="mt-8 space-y-3">
@@ -265,10 +262,13 @@ export default function OnboardingClient() {
           {/* Form card */}
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-7 min-h-[380px]">
             {step === 1 && <StepProfile onNext={() => setStep(2)} />}
-            {step === 2 && role === 'owner'   && <StepOwnerAcademy   onNext={completeOnboarding} />}
-            {step === 2 && (role === 'teacher' || role === 'desk') && <StepTeacherJoin onNext={completeOnboarding} />}
-            {step === 2 && role === 'parent'  && <StepParentConnect  onNext={completeOnboarding} />}
-            {step === 2 && role === 'student' && <StepStudentConnect onNext={completeOnboarding} />}
+            {step === 2 && role === 'owner' && <StepOwnerAcademy onNext={completeOnboarding} />}
+            {step === 2 && role !== 'owner' && (
+              <StepInviteComplete
+                roleLabel={meta.label}
+                onNext={completeOnboarding}
+              />
+            )}
           </div>
 
           {/* Back + meta */}

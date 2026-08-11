@@ -172,7 +172,7 @@ export function InviteAcceptClient({ token }: { token: string }) {
             <GoogleSignInButton />
             <p className="text-center text-xs">
               <Link href={`/login?next=/invite/${encodeURIComponent(token)}`} className="auth-link">
-                휴대폰으로 로그인
+                이메일로 로그인
               </Link>
             </p>
           </div>

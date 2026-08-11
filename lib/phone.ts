@@ -26,10 +26,11 @@ export function phoneToAuthEmail(phone: string): string {
   return `${normalizePhoneKr(phone)}@phone.eduflow.local`;
 }
 
-/** 로그인 아이디 → Supabase Auth 이메일 (휴대폰 또는 이메일) */
+/** 로그인 아이디 → Supabase Auth 이메일.
+ * 이메일 통일이 기본. 레거시 휴대폰 계정(@phone.eduflow.local)만 하위 호환. */
 export function resolveLoginEmail(loginId: string): string {
   const trimmed = loginId.trim();
-  if (trimmed.includes('@')) return trimmed;
+  if (trimmed.includes('@')) return trimmed.toLowerCase();
   if (isValidPhoneKr(trimmed)) return phoneToAuthEmail(trimmed);
-  return trimmed;
+  return trimmed.toLowerCase();
 }

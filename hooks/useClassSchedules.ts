@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useAppStore } from '@/store/useAppStore';
+import { useStaffScope } from '@/hooks/useStaffScope';
 import type { ClassSchedule, ScheduleType } from '@/types/database';
 
 export type ClassScheduleInsert = {
@@ -23,6 +24,7 @@ export type ClassScheduleInsert = {
 export function useClassSchedules() {
   const { profile } = useAuth();
   const dataVersion = useAppStore((s) => s.dataVersion);
+  const scope = useStaffScope();
   const [schedules, setSchedules] = useState<ClassSchedule[]>([]);
   const [exceptions, setExceptions] = useState<
     import('@/types/database').ScheduleException[]
@@ -31,28 +33,43 @@ export function useClassSchedules() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!profile?.academy_id) {
+    if (!profile?.academy_id || scope.loading) {
       setSchedules([]);
       setExceptions([]);
       setLoading(false);
       return;
     }
+
+    if (scope.isTeacher && scope.classIds.length === 0) {
+      setSchedules([]);
+      setExceptions([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    const [schRes, exRes] = await Promise.all([
-      supabase
-        .from('class_schedules')
-        .select('*, classes(id, name, grade)')
-        .eq('academy_id', profile.academy_id)
-        .order('day_of_week')
-        .order('start_time'),
-      supabase
-        .from('schedule_exceptions')
-        .select('*')
-        .eq('academy_id', profile.academy_id)
-        .order('exception_date', { ascending: false })
-        .limit(200),
-    ]);
+
+    let schQuery = supabase
+      .from('class_schedules')
+      .select('*, classes(id, name, grade)')
+      .eq('academy_id', profile.academy_id)
+      .order('day_of_week')
+      .order('start_time');
+
+    let exQuery = supabase
+      .from('schedule_exceptions')
+      .select('*')
+      .eq('academy_id', profile.academy_id)
+      .order('exception_date', { ascending: false })
+      .limit(200);
+
+    if (scope.isTeacher) {
+      schQuery = schQuery.in('class_id', scope.classIds);
+      exQuery = exQuery.in('class_id', scope.classIds);
+    }
+
+    const [schRes, exRes] = await Promise.all([schQuery, exQuery]);
 
     if (schRes.error || exRes.error) {
       setError('일정을 불러오지 못했습니다.');
@@ -61,7 +78,7 @@ export function useClassSchedules() {
       setExceptions(exRes.data ?? []);
     }
     setLoading(false);
-  }, [profile?.academy_id]);
+  }, [profile?.academy_id, scope.loading, scope.isTeacher, scope.classIds]);
 
   useEffect(() => {
     load();

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { PermissionKey } from '@/lib/permissions';
+import type { PermissionKey } from '@/lib/permissionKeys';
 
 const ERROR_MESSAGES: Record<string, string> = {
   not_authenticated: '로그인이 필요합니다.',

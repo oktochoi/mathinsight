@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
-import { requireStaff } from '@/lib/api/staffAuth';
+import { requirePermission } from '@/lib/serverAuth';
 import {
   buildPaymentCreatedMessage,
   buildPaymentOverdueMessage,
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
-    const auth = await requireStaff(supabase);
+    const auth = await requirePermission(supabase, 'billing.manage');
     if (!auth.ok) {
       return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
     }

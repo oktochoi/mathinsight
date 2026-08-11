@@ -10,7 +10,7 @@ const OPTIONS: { key: AuthAudience; label: string }[] = [
 ];
 
 export function authLoginPlaceholder(): string {
-  return '휴대폰 번호 (01012345678)';
+  return 'you@academy.kr';
 }
 
 export function AuthRoleTabs({

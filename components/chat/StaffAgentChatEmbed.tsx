@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getSuggestedStaffQuestions, type StaffAgentChatMessage } from '@/lib/staffAgent';
+import { CONTACT_EMAIL } from '@/lib/brand';
 import { cn } from '@/lib/cn';
 
 export function StaffAgentChatEmbed() {
@@ -135,6 +136,14 @@ export function StaffAgentChatEmbed() {
           전송
         </button>
       </form>
+
+      <a
+        href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('EduFlow 고객센터 문의')}`}
+        className="shrink-0 mt-2 text-center text-[11px] font-medium py-1.5 rounded-lg"
+        style={{ color: 'var(--app-accent)', background: 'var(--app-surface-2)' }}
+      >
+        EduFlow 고객센터에 문의
+      </a>
     </div>
   );
 }

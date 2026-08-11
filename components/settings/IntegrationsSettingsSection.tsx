@@ -113,24 +113,20 @@ export function IntegrationsSettingsSection() {
               placeholder="발신자명"
               className="mt-3 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
             />
+            <p className="mt-2 text-[11px] text-slate-500">
+              Solapi 키가 설정된 환경에서만 실발송됩니다.
+            </p>
           </div>
-          <div className={cn('rounded-xl border p-4', integrations.kakao_enabled ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200')}>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={integrations.kakao_enabled}
-                disabled={saving}
-                onChange={(e) => void patch({ kakao_enabled: e.target.checked })}
-              />
-              <span className="text-sm font-semibold">카카오 알림톡</span>
-            </label>
-            <input
-              key={integrations.kakao_channel_name ?? 'kakao'}
-              defaultValue={integrations.kakao_channel_name ?? ''}
-              onBlur={(e) => void patch({ kakao_channel_name: e.target.value || null })}
-              placeholder="채널명"
-              className="mt-3 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-            />
+          <div className="rounded-xl border border-slate-200 p-4 opacity-80">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-slate-700">카카오 알림톡</span>
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                출시 예정
+              </span>
+            </div>
+            <p className="mt-2 text-[11px] text-slate-500">
+              알림톡 연동은 준비 중입니다. 토글은 비활성화되어 있습니다.
+            </p>
           </div>
         </div>
       </section>

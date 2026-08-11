@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
-import { requireStaff } from '@/lib/api/staffAuth';
+import { requirePermission } from '@/lib/serverAuth';
 import type { AcademyInfoCategory } from '@/lib/academyInfo';
 
 // GET — 학원 정보 전체 조회 (설정 화면용)
@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
-    const auth = await requireStaff(supabase);
+    const auth = await requirePermission(supabase, 'settings.academy');
     if (!auth.ok) {
       return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
     }
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
-    const auth = await requireStaff(supabase);
+    const auth = await requirePermission(supabase, 'settings.academy');
     if (!auth.ok) {
       return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
     }
@@ -81,7 +81,7 @@ export async function PATCH(request: Request) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
-    const auth = await requireStaff(supabase);
+    const auth = await requirePermission(supabase, 'settings.academy');
     if (!auth.ok) {
       return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
     }
@@ -124,7 +124,7 @@ export async function DELETE(request: Request) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
-    const auth = await requireStaff(supabase);
+    const auth = await requirePermission(supabase, 'settings.academy');
     if (!auth.ok) {
       return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
     }
